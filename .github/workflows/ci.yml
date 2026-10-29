@@ -313,3 +313,26 @@ jobs:
       - name: Log out of GHCR
         if: always()
         run: docker logout ghcr.io
+        
+  deploy-staging:
+    name: Trigger staging deployment
+    needs: publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Trigger infrastructure deployment
+        env:
+          GH_TOKEN: ${{ secrets.INFRA_DISPATCH_TOKEN }}
+          FRONTEND_IMAGE: ${{ needs.publish.outputs.image }}
+        run: |
+          set -euo pipefail
+
+          : "${GH_TOKEN:?Missing INFRA_DISPATCH_TOKEN}"
+          : "${FRONTEND_IMAGE:?Missing published frontend image}"
+
+          gh workflow run deploy-staging.yml \
+            --repo 68CS-hotel-booking-system/infrastructure \
+            --ref main \
+            -f frontend_image="$FRONTEND_IMAGE"
