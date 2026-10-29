@@ -1,4 +1,4 @@
-import {
+git fetch originimport {
   CheckCircleFilled,
   SafetyCertificateFilled,
   ThunderboltFilled,
@@ -37,7 +37,7 @@ export function HeroSection({
           </div>
 
           <h1 id="stayvibe-hero-heading" className="stayvibe-hero-title">
-            Tuyệt tác nghỉ dưỡng mang đậm{' '}
+            Thử nghiệm deploy mới — mang đậm{' '}
             <span className="stayvibe-gradient-text">dấu ấn độc bản</span> của bạn
           </h1>
 
