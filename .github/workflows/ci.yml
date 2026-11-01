@@ -85,6 +85,7 @@ jobs:
           docker build --pull --platform linux/amd64 \
             --label "org.opencontainers.image.source=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
             --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --label "io.hotelbooking.source-tree=$(git rev-parse 'HEAD^{tree}')" \
             --tag "$LOCAL_IMAGE" .
 
           docker image inspect --format '{{.Id}}' "$LOCAL_IMAGE" > image-id.txt
@@ -313,16 +314,17 @@ jobs:
       - name: Log out of GHCR
         if: always()
         run: docker logout ghcr.io
-        
+ 
   deploy-staging:
-    name: Trigger staging deployment
+    name: Request frontend deployment to staging
     needs: publish
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
 
     steps:
-      - name: Trigger infrastructure deployment
+      # Cập nhật frontend, giữ backend đang dùng trên staging.
+      - name: Request infrastructure deployment
         env:
           GH_TOKEN: ${{ secrets.INFRA_DISPATCH_TOKEN }}
           FRONTEND_IMAGE: ${{ needs.publish.outputs.image }}
