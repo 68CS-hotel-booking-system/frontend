@@ -314,7 +314,7 @@ jobs:
       - name: Log out of GHCR
         if: always()
         run: docker logout ghcr.io
-
+ 
   deploy-staging:
     name: Request frontend deployment to staging
     needs: publish
@@ -323,7 +323,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      # Cập nhật frontend và giữ backend đang chạy trên staging.
+      # Cập nhật frontend, giữ backend đang dùng trên staging.
       - name: Request infrastructure deployment
         env:
           GH_TOKEN: ${{ secrets.INFRA_DISPATCH_TOKEN }}
