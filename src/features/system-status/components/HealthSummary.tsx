@@ -12,7 +12,8 @@ interface HealthSummaryProps {
 export function HealthSummary({ health, updatedAt, refreshSeconds }: HealthSummaryProps) {
   const up = health.status === 'UP'
   const checkedAt = new Intl.DateTimeFormat('vi-VN', {
-    dateStyle: 'short', timeStyle: 'medium',
+    dateStyle: 'short',
+    timeStyle: 'medium',
   }).format(updatedAt)
 
   return (
@@ -21,16 +22,15 @@ export function HealthSummary({ health, updatedAt, refreshSeconds }: HealthSumma
         {up ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}
       </div>
       <div className="connection-heading">
-        <Tag color={up ? 'success' : 'warning'}>{up ? 'Đang hoạt động' : health.status}</Tag>
-        <h2 id="connection-title">{up ? 'Đã kết nối với backend' : 'Backend báo trạng thái cần kiểm tra'}</h2>
-        <p className="muted">Kết quả được lấy trực tiếp từ dịch vụ, không sử dụng dữ liệu giả lập.</p>
+        <Tag color={up ? 'success' : 'warning'}>{up ? 'Đang hoạt động' : 'Cần kiểm tra'}</Tag>
+        <h2 id="connection-title">{up ? 'Đã kết nối với máy chủ' : 'Dịch vụ máy chủ báo trạng thái cần kiểm tra'}</h2>
+        <p className="muted">Kết quả được lấy trực tiếp từ dịch vụ hệ thống, không sử dụng dữ liệu giả lập.</p>
       </div>
       <dl className="connection-details">
-        <div><dt>Endpoint</dt><dd><code>GET /actuator/health</code></dd></div>
-        <div><dt>Trạng thái</dt><dd>{health.status}</dd></div>
+        <div><dt>Dịch vụ kiểm tra</dt><dd>Kiểm tra sức khỏe hệ thống</dd></div>
+        <div><dt>Trạng thái</dt><dd>{up ? 'Hoạt động bình thường' : health.status}</dd></div>
         <div><dt>Kiểm tra gần nhất</dt><dd>{checkedAt}</dd></div>
         <div><dt>Chế độ cập nhật</dt><dd>{refreshSeconds === 0 ? 'Thủ công' : 'Mỗi ' + refreshSeconds + ' giây'}</dd></div>
-        <div><dt>API nghiệp vụ</dt><dd><code>{env.apiBaseUrl}</code></dd></div>
         <div><dt>Thời gian chờ tối đa</dt><dd>{env.apiTimeoutMs / 1_000} giây</dd></div>
       </dl>
     </section>
