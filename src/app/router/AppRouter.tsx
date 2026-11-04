@@ -1,3 +1,4 @@
+import { LiveApiPage } from '@/pages/management/LiveApiPage'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import { AppLayout } from '@/app/layouts/AppLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
@@ -32,6 +33,9 @@ export function AppRouter() {
             path="management/financial-access"
             element={<FinancialAccessManagementPage />}
           />
+          <Route path="management/live" element={<LiveApiPage />} />
+          <Route path="verify-email" element={<LiveApiPage key="verify" initialOperation="email-verifications" />} />
+          <Route path="reset-password" element={<LiveApiPage key="reset" initialOperation="reset-password" />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

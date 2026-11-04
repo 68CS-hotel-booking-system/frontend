@@ -1,3 +1,25 @@
+# Tích hợp staging (backend develop 9a3d74b)
+
+Trang `/management/live` và `/login` kết nối 18 API thật, qua HTTP client cùng origin. Chọn chức năng để đăng ký, xác minh, login, refresh/logout, reset/đổi mật khẩu, đọc user; liệt kê/cấp/thu hồi role; tạo/xem khách sạn, tạo loại phòng/phòng. Các trang danh mục cũ vẫn là demo mock; nút chuyển API dẫn đến trang kiểm thử này.
+
+Token đăng nhập/refresh chỉ giữ trong bộ nhớ; reload cần login lại. Backend trả refresh token trong JSON, chưa có cookie HttpOnly. Refresh hiện thực hiện bằng nút Làm mới phiên, không tự gửi lại các mutation. Đổi/reset mật khẩu xóa phiên local. Kết quả login không hiển thị token.
+
+Link email `/verify-email?token=...` và `/reset-password?token=...` có form tương ứng, bỏ token khỏi URL sau khi đọc. Mật khẩu mới dài 15–128 ký tự. Test quyền cần tài khoản ADMIN/HOTEL_OWNER đã được cấp quyền trong database; đăng ký thông thường không tạo admin. City ID lấy từ seed DB; develop chưa có API cities. Không dùng ID mẫu từ giao diện demo.
+
+## QA staging
+
+1. Mở `/system-status`, kiểm tra UP.
+2. Đăng ký bằng hộp thư test do nhóm kiểm soát; nhận email và xác minh. Kiểm tra SMTP nếu không nhận được mail.
+3. Login, đọc user, refresh, logout; kiểm tra refresh bị thu hồi sau logout.
+4. Với ADMIN: đọc roles, đọc/cấp/thu hồi role theo user UUID và role ID dạng số. Với user thường: kiểm tra 403.
+5. ADMIN tạo khách sạn với `ownerId` và `cityId` thật. HOTEL_OWNER chỉ xem khách sạn được phân công; kiểm tra không truy cập được khách sạn khác.
+6. Tạo loại phòng, dùng ID trả về để tạo phòng; thời gian ISO 8601 cần múi giờ. Kiểm tra trùng số phòng, dữ liệu thiếu/sai.
+7. Test forgot/reset/change password và đăng nhập lại. Xác nhận phiên cũ bị vô hiệu hóa.
+
+Giá phòng, hợp đồng, tài chính, inventory và sửa khách sạn chưa có trong develop này; các màn hình demo không phải kết quả QA. CI/unit test không thay thế QA quyền và email trên staging.
+
+Phần tài liệu khởi tạo dưới đây mô tả khung trước khi có tích hợp này.
+
 # Hotel Booking Frontend
 
 Khung React + TypeScript + Vite để nhóm phát triển thống nhất. Node 24, npm; dùng lockfile.

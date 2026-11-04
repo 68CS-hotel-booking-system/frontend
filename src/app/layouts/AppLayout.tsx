@@ -18,7 +18,7 @@ import { useDataMode } from '@/shared/lib/data-mode-context'
 export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { mode, setMode } = useDataMode()
+  const { mode } = useDataMode()
 
   const isManagementRoute = location.pathname.startsWith('/management')
 
@@ -48,6 +48,7 @@ export function AppLayout() {
           </NavLink>
 
           <nav className="stayvibe-navbar__nav" aria-label="Điều hướng chính">
+            <NavLink to="/management/live" className="stayvibe-navbar__item">Kiểm thử API thật</NavLink>
             {isManagementRoute ? (
               <>
                 <NavLink
@@ -133,11 +134,11 @@ export function AppLayout() {
           </nav>
 
           <div className="stayvibe-navbar__actions">
-            {isManagementRoute && (
+            {isManagementRoute && !location.pathname.startsWith('/management/live') && (
               <Tooltip
                 title={
                   mode === 'mock'
-                    ? 'Đang dùng dữ liệu mẫu — Bật để kết nối máy chủ hệ thống'
+                    ? 'Mở trang kiểm thử các API đã triển khai'
                     : 'Đang kết nối trực tiếp với máy chủ hệ thống'
                 }
               >
@@ -145,7 +146,7 @@ export function AppLayout() {
                   <Switch
                     size="small"
                     checked={mode === 'api'}
-                    onChange={(checked) => setMode(checked ? 'api' : 'mock')}
+                    onChange={() => void navigate('/management/live')}
                     aria-label="Chuyển đổi nguồn dữ liệu"
                   />
                   <span>{mode === 'mock' ? 'Dữ liệu mẫu' : 'Hệ thống thực'}</span>
