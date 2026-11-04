@@ -123,7 +123,7 @@ export const operations: Operation[] = [
     'Đăng nhập',
     [
       f('email', 'Email', email),
-      f('password', 'Mật khẩu', z.string().min(1).max(128)),
+      f('password', 'Mật khẩu', z.string().min(1, 'Vui lòng nhập mật khẩu.').max(128, 'Mật khẩu không được quá 128 ký tự.')),
     ],
     login,
   ),
@@ -188,7 +188,7 @@ export const operations: Operation[] = [
     method: 'POST',
     path: () => '/users/me/password',
     fields: [
-      f('currentPassword', 'Mật khẩu hiện tại', z.string().min(1).max(128)),
+      f('currentPassword', 'Mật khẩu hiện tại', z.string().min(1, 'Vui lòng nhập mật khẩu.').max(128, 'Mật khẩu không được quá 128 ký tự.')),
       f('newPassword', 'Mật khẩu mới', password),
     ],
     body: (v) => v,
