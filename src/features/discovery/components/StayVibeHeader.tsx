@@ -8,6 +8,7 @@ import {
 } from '@ant-design/icons'
 import { Button, Space, Tag } from 'antd'
 import { useNavigate } from 'react-router'
+import { useAuth } from '@/features/auth/hooks/use-auth'
 
 export type DiscoveryViewState = 'success' | 'loading' | 'empty' | 'error'
 
@@ -23,6 +24,7 @@ export function StayVibeHeader({
   savedCount,
 }: StayVibeHeaderProps) {
   const navigate = useNavigate()
+  const { user, isAuthenticated, logout } = useAuth()
 
   return (
     <header className="stayvibe-top-header" role="banner">
@@ -59,6 +61,13 @@ export function StayVibeHeader({
           <a href="#hotels-section" className="stayvibe-nav-link">
             <FireOutlined aria-hidden="true" /> Khu nghỉ dưỡng tiêu biểu
           </a>
+          <button
+            type="button"
+            className="stayvibe-nav-link stayvibe-nav-link--btn"
+            onClick={() => void navigate('/admin')}
+          >
+            <BankOutlined aria-hidden="true" /> Admin Dashboard
+          </button>
           <button
             type="button"
             className="stayvibe-nav-link stayvibe-nav-link--btn"
@@ -109,13 +118,33 @@ export function StayVibeHeader({
                 ♥ {savedCount}
               </span>
             )}
-            <Button
-              type="primary"
-              icon={<UserOutlined aria-hidden="true" />}
-              onClick={() => void navigate('/login')}
-            >
-              Đăng nhập
-            </Button>
+            {isAuthenticated && user ? (
+              <Space size={8}>
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: 'var(--atelier-on-surface, #1a1b22)',
+                  }}
+                >
+                  {user.fullName || user.email}
+                </span>
+                <Button
+                  size="small"
+                  onClick={() => void logout()}
+                >
+                  Đăng xuất
+                </Button>
+              </Space>
+            ) : (
+              <Button
+                type="primary"
+                icon={<UserOutlined aria-hidden="true" />}
+                onClick={() => void navigate('/login')}
+              >
+                Đăng nhập
+              </Button>
+            )}
           </Space>
         </div>
       </div>

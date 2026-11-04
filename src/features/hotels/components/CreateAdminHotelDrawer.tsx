@@ -4,10 +4,10 @@ import {
   Alert,
   App as AntApp,
   Button,
-  Drawer,
   Form,
   Input,
   InputNumber,
+  Modal,
   Select,
   Space,
 } from 'antd'
@@ -93,17 +93,40 @@ export function CreateAdminHotelDrawer({
   }
 
   return (
-    <Drawer
-      title="Tạo khách sạn mới & Phân công Chủ sở hữu"
-      size="large"
+    <Modal
+      title={
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span
+            className="material-symbols-outlined"
+            style={{ color: 'var(--atelier-primary)', fontSize: 22 }}
+            aria-hidden="true"
+          >
+            add_business
+          </span>
+          <span style={{ fontWeight: 700, fontSize: 16 }}>
+            Tạo khách sạn mới &amp; Phân công Chủ sở hữu
+          </span>
+        </div>
+      }
       open={open}
-      onClose={onClose}
-      destroyOnHidden={false}
+      onCancel={onClose}
+      centered
+      width={720}
+      footer={null}
+      destroyOnClose
     >
-      <p className="muted" style={{ marginBottom: 16 }}>
-        Khởi tạo hồ sơ khu nghỉ dưỡng / khách sạn ở trạng thái bản nháp và phân
-        công chủ sở hữu quản lý chính.
-      </p>
+      <div
+        style={{
+          maxHeight: 'calc(85vh - 120px)',
+          overflowY: 'auto',
+          paddingRight: 6,
+          paddingTop: 8,
+        }}
+      >
+        <p className="muted" style={{ marginBottom: 16 }}>
+          Khởi tạo hồ sơ khu nghỉ dưỡng / khách sạn ở trạng thái bản nháp và phân
+          công chủ sở hữu quản lý chính.
+        </p>
 
       {createMutation.isError && (
         <Alert
@@ -390,7 +413,17 @@ export function CreateAdminHotelDrawer({
           />
         </Form.Item>
 
-        <div className="drawer-form-actions">
+        <div
+          className="drawer-form-actions"
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 12,
+            marginTop: 24,
+            paddingTop: 16,
+            borderTop: '1px solid var(--atelier-surface-highest)',
+          }}
+        >
           <Button htmlType="button" onClick={onClose}>
             Hủy
           </Button>
@@ -403,7 +436,8 @@ export function CreateAdminHotelDrawer({
           </Button>
         </div>
       </Form>
-    </Drawer>
+    </div>
+  </Modal>
   )
 }
 

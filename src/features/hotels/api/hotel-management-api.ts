@@ -2,6 +2,10 @@ import { z } from 'zod'
 import { http } from '@/shared/api/http'
 import {
   type CreateAdminHotelFormValues,
+  createdPhysicalRoomResponseSchema,
+  createdRoomTypeResponseSchema,
+  type CreatePhysicalRoomFormValues,
+  type CreateRoomTypeFormValues,
   dailyRoomRateSchema,
   managementHotelDetailSchema,
   type ManagementHotelListQuery,
@@ -39,7 +43,18 @@ export function createAdminHotel(
 ) {
   return http.request('/admin/hotels', {
     method: 'POST',
-    body: payload,
+    body: {
+      ownerId: payload.ownerUserId,
+      cityId: payload.cityId,
+      name: payload.name,
+      description: payload.description?.trim() ? payload.description.trim() : null,
+      address: payload.address,
+      latitude: payload.latitude,
+      longitude: payload.longitude,
+      starRating: payload.starRating,
+      checkInTime: payload.checkInTime,
+      checkOutTime: payload.checkOutTime,
+    },
     signal,
     schema: managementHotelDetailSchema,
   })
@@ -111,6 +126,57 @@ export function getRoomTypeDailyRates(
     {
       signal,
       schema: z.array(dailyRoomRateSchema),
+    },
+  )
+}
+
+/**
+ * POST /api/v1/management/hotels/{hotelId}/room-types — Tạo loại phòng thuộc khách sạn.
+ */
+export function createManagementRoomType(
+  hotelId: string,
+  payload: CreateRoomTypeFormValues,
+  signal?: AbortSignal,
+) {
+  return http.request(
+    `/management/hotels/${encodeURIComponent(hotelId)}/room-types`,
+    {
+      method: 'POST',
+      body: {
+        name: payload.name,
+        description: payload.description ?? null,
+        maxAdults: payload.maxAdults,
+        maxChildren: payload.maxChildren,
+      },
+      signal,
+      schema: createdRoomTypeResponseSchema,
+    },
+  )
+}
+
+/**
+ * POST /api/v1/management/hotels/{hotelId}/rooms — Tạo phòng vật lý thuộc khách sạn.
+ */
+export function createManagementRoom(
+  hotelId: string,
+  payload: CreatePhysicalRoomFormValues,
+  signal?: AbortSignal,
+) {
+  return http.request(
+    `/management/hotels/${encodeURIComponent(hotelId)}/rooms`,
+    {
+      method: 'POST',
+      body: {
+        roomTypeId: payload.roomTypeId,
+        roomNumber: payload.roomNumber,
+        floor: payload.floor?.trim() ? payload.floor.trim() : null,
+        operationalFrom: payload.operationalFrom,
+        operationalUntil: payload.operationalUntil?.trim()
+          ? payload.operationalUntil.trim()
+          : null,
+      },
+      signal,
+      schema: createdPhysicalRoomResponseSchema,
     },
   )
 }

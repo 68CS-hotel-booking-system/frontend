@@ -49,24 +49,31 @@ export const managementRoomTypeSummarySchema = z.object({
 export type ManagementRoomTypeSummary = z.infer<typeof managementRoomTypeSummarySchema>
 
 /** HT07: GET /api/v1/management/hotels (Item trong danh sách phân trang) */
-export const managementHotelSummarySchema = z.object({
-  id: z.string().min(1),
-  ownerUserId: z.string().min(1),
-  ownerName: z.string().optional(),
-  cityId: z.string().min(1),
-  cityName: z.string().optional(),
-  name: z.string().min(1),
-  slug: z.string().min(1),
-  address: z.string().min(1),
-  starRating: z.number().int().min(1).max(5).nullable(),
-  checkInTime: z.string().min(4),
-  checkOutTime: z.string().min(4),
-  status: hotelStatusSchema,
-  coverImageUrl: z.string().nullable().optional(),
-  vibeTags: z.array(z.string()).optional(),
-  roomTypeCount: z.number().int().min(0).optional(),
-  updatedAt: z.string(),
-})
+export const managementHotelSummarySchema = z
+  .object({
+    id: z.string().min(1),
+    ownerId: z.string().min(1).optional(),
+    ownerUserId: z.string().min(1).optional(),
+    ownerName: z.string().optional(),
+    cityId: z.string().min(1),
+    cityName: z.string().optional(),
+    name: z.string().min(1),
+    slug: z.string().min(1),
+    address: z.string().min(1),
+    starRating: z.number().int().min(1).max(5).nullable(),
+    checkInTime: z.string().min(4),
+    checkOutTime: z.string().min(4),
+    status: hotelStatusSchema,
+    coverImageUrl: z.string().nullable().optional(),
+    vibeTags: z.array(z.string()).optional(),
+    roomTypeCount: z.number().int().min(0).optional(),
+    updatedAt: z.string(),
+    version: z.number().int().nonnegative().optional(),
+  })
+  .transform((item) => ({
+    ...item,
+    ownerUserId: item.ownerUserId || item.ownerId || '',
+  }))
 export type ManagementHotelSummary = z.infer<typeof managementHotelSummarySchema>
 
 /** Phân trang chuẩn PageResponse bắt đầu từ page = 0 */
@@ -82,14 +89,43 @@ export const managementHotelPageSchema = z.object({
 export type ManagementHotelPage = z.infer<typeof managementHotelPageSchema>
 
 /** HT08: GET /api/v1/management/hotels/{hotelId} */
-export const managementHotelDetailSchema = managementHotelSummarySchema.extend({
-  description: z.string().nullable(),
-  latitude: z.number().min(-90).max(90).nullable(),
-  longitude: z.number().min(-180).max(180).nullable(),
-  amenityIds: z.array(z.string()),
-  roomTypes: z.array(managementRoomTypeSummarySchema),
-  createdAt: z.string(),
-})
+export const managementHotelDetailSchema = z
+  .object({
+    id: z.string().min(1),
+    ownerId: z.string().min(1).optional(),
+    ownerUserId: z.string().min(1).optional(),
+    ownerName: z.string().optional(),
+    cityId: z.string().min(1),
+    cityName: z.string().optional(),
+    name: z.string().min(1),
+    slug: z.string().min(1),
+    address: z.string().min(1),
+    starRating: z.number().int().min(1).max(5).nullable(),
+    checkInTime: z.string().min(4),
+    checkOutTime: z.string().min(4),
+    status: hotelStatusSchema,
+    coverImageUrl: z.string().nullable().optional(),
+    vibeTags: z.array(z.string()).optional(),
+    roomTypeCount: z.number().int().min(0).optional(),
+    description: z.string().nullable().optional(),
+    latitude: z.number().min(-90).max(90).nullable().optional(),
+    longitude: z.number().min(-180).max(180).nullable().optional(),
+    amenityIds: z.array(z.string()).default([]),
+    roomTypes: z.array(managementRoomTypeSummarySchema).default([]),
+    createdAt: z.string().optional(),
+    updatedAt: z.string(),
+    version: z.number().int().nonnegative().optional(),
+  })
+  .transform((item) => ({
+    ...item,
+    ownerUserId: item.ownerUserId || item.ownerId || '',
+    description: item.description ?? null,
+    latitude: item.latitude ?? null,
+    longitude: item.longitude ?? null,
+    amenityIds: item.amenityIds ?? [],
+    roomTypes: item.roomTypes ?? [],
+    createdAt: item.createdAt ?? item.updatedAt,
+  }))
 export type ManagementHotelDetail = z.infer<typeof managementHotelDetailSchema>
 
 const timeFormatRegex = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/
@@ -187,6 +223,98 @@ export const dailyRoomRateSchema = z.object({
   currency: z.string().length(3),
 })
 export type DailyRoomRate = z.infer<typeof dailyRoomRateSchema>
+
+/**
+ * ManagementRoomTypeController:
+ * POST /api/v1/management/hotels/{hotelId}/room-types
+ */
+export const createRoomTypeFormSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Tên loại phòng không được để trống.')
+    .max(100, 'Tên loại phòng không được vượt quá 100 ký tự.'),
+  description: z
+    .string()
+    .trim()
+    .max(1000, 'Mô tả loại phòng tối đa 1000 ký tự.')
+    .optional(),
+  maxAdults: z
+    .number({ error: 'Số người lớn tối đa không được để trống.' })
+    .int()
+    .min(1, 'Số người lớn tối đa phải từ 1.'),
+  maxChildren: z
+    .number({ error: 'Số trẻ em tối đa không được để trống.' })
+    .int()
+    .min(0, 'Số trẻ em tối đa không được âm.'),
+})
+export type CreateRoomTypeFormValues = z.infer<typeof createRoomTypeFormSchema>
+
+export const createdRoomTypeResponseSchema = z.object({
+  id: z.string().min(1),
+  hotelId: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().nullable().optional(),
+  maxAdults: z.number().int().min(1),
+  maxChildren: z.number().int().min(0),
+  active: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  version: z.number().int().nonnegative(),
+})
+export type CreatedRoomTypeResponse = z.infer<typeof createdRoomTypeResponseSchema>
+
+/**
+ * ManagementRoomController:
+ * POST /api/v1/management/hotels/{hotelId}/rooms
+ */
+export const roomReadinessValues = ['READY', 'DIRTY'] as const
+export const roomReadinessSchema = z.enum(roomReadinessValues)
+export type RoomReadiness = z.infer<typeof roomReadinessSchema>
+
+export const createPhysicalRoomFormSchema = z.object({
+  roomTypeId: z
+    .string()
+    .trim()
+    .regex(uuidRegex, 'Loại phòng phải là UUID hợp lệ.'),
+  roomNumber: z
+    .string()
+    .trim()
+    .min(1, 'Số phòng không được để trống.')
+    .max(20, 'Số phòng không được vượt quá 20 ký tự.'),
+  floor: z
+    .string()
+    .trim()
+    .max(20, 'Tầng không được vượt quá 20 ký tự.')
+    .optional(),
+  operationalFrom: z
+    .string()
+    .trim()
+    .min(1, 'Thời điểm bắt đầu phục vụ không được để trống.'),
+  operationalUntil: z.string().trim().nullable().optional(),
+})
+export type CreatePhysicalRoomFormValues = z.infer<
+  typeof createPhysicalRoomFormSchema
+>
+
+export const createdPhysicalRoomResponseSchema = z.object({
+  id: z.string().min(1),
+  hotelId: z.string().min(1),
+  roomTypeId: z.string().min(1),
+  roomNumber: z.string().min(1),
+  floor: z.string().nullable().optional(),
+  readiness: roomReadinessSchema,
+  readinessUpdatedAt: z.string(),
+  readinessUpdatedBy: z.string().nullable().optional(),
+  operationalFrom: z.string(),
+  operationalUntil: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  version: z.number().int().nonnegative(),
+})
+export type CreatedPhysicalRoomResponse = z.infer<
+  typeof createdPhysicalRoomResponseSchema
+>
 
 export interface ManagementHotelListQuery {
   page?: number
