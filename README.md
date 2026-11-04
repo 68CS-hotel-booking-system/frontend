@@ -35,7 +35,7 @@ npm.cmd run dev
 Chỉ copy env khi chưa có .env.local. Backend chạy ở http://localhost:8080 với profile dev.
 FE chạy http://localhost:5173. Đổi API_PROXY_TARGET trong .env.local nếu backend ở địa chỉ khác; khởi động lại Vite sau khi sửa env.
 
-Trang / gọi GET /actuator/health thật qua Vite proxy. Backend dừng sẽ hiển thị lỗi và nút thử lại, không tự thay bằng mock.
+Trang /system-status gọi GET /actuator/health thật qua Vite proxy. Backend dừng sẽ hiển thị lỗi và nút thử lại, không tự thay bằng mock.
 Luồng mẫu: SystemStatusPage -> useBackendHealth -> getBackendHealth -> shared HTTP client -> backend.
 Đây là feature kiểm tra kết nối; chưa phải danh sách khách sạn hoặc test nghiệp vụ.
 
@@ -79,16 +79,9 @@ Không đổi domain API bằng VITE_API_BASE_URL cho staging/production: gatewa
 Đổi environment trong container không thay các biến đã bundle vào JavaScript.
 Vite proxy chỉ dùng local. nginx.conf của FE phục vụ static/SPA; gateway /api thuộc repo infra.
 
-## Hướng auth đã chuẩn bị
+## Xác thực
 
-BE hiện dùng HTTP Basic và CSRF; chưa có JWT/login/refresh/logout contract nghiệp vụ.
-FE hiện chưa tạo phiên, chưa lưu token và không giả lập người đăng nhập.
-Trang /login thông báo đúng trạng thái chưa được kết nối.
-
-Định hướng để nhóm BE/FE chốt contract: access JWT chỉ giữ trong memory, refresh token qua cookie HttpOnly,
-Secure khi chạy HTTPS, refresh/logout cùng origin qua /api. Thời hạn, CSRF, endpoint và response phải được hai nhóm chốt trước triển khai.
-Đây là định hướng, chưa phải chức năng đã làm. Không tự thêm Basic credentials trong env hay lưu password/token vào localStorage.
-BE quyết định quyền truy cập; route guard/menu FE không thay thế authorization phía server.
+Xem hướng dẫn tích hợp và QA ở đầu tài liệu. Backend dùng JWT Bearer; các route xác minh/reset mật khẩu đã nối. Quyền ADMIN/HOTEL_OWNER do backend kiểm tra.
 
 ## Chất lượng và CI
 

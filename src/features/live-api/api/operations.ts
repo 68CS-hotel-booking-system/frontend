@@ -3,6 +3,8 @@ import { http } from '@/shared/api/http'
 import { getSession, setSession } from '@/shared/api/session'
 import { queryClient } from '@/shared/lib/query-client'
 
+z.config(z.locales.vi())
+
 const required = z.string().trim().min(1, 'Vui lòng nhập giá trị.')
 const uuid = z.string().uuid('Nhập UUID hợp lệ.')
 const email = z.string().trim().email('Email không hợp lệ.').max(255)
