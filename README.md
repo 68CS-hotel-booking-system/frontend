@@ -1,5 +1,7 @@
 # Tích hợp staging (backend develop 9a3d74b)
 
+Mở `/register` để đăng ký tài khoản; trang `/login` có liên kết Đăng ký và Quên mật khẩu hiển thị trực tiếp. Trang `/forgot-password` gửi yêu cầu đặt lại mật khẩu.
+
 Trang `/management/live` và `/login` kết nối 18 API thật, qua HTTP client cùng origin. Chọn chức năng để đăng ký, xác minh, login, refresh/logout, reset/đổi mật khẩu, đọc user; liệt kê/cấp/thu hồi role; tạo/xem khách sạn, tạo loại phòng/phòng. Các trang danh mục cũ vẫn là demo mock; nút chuyển API dẫn đến trang kiểm thử này.
 
 Token đăng nhập/refresh chỉ giữ trong bộ nhớ; reload cần login lại. Backend trả refresh token trong JSON, chưa có cookie HttpOnly. Refresh hiện thực hiện bằng nút Làm mới phiên, không tự gửi lại các mutation. Đổi/reset mật khẩu xóa phiên local. Kết quả login không hiển thị token.

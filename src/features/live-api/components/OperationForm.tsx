@@ -1,4 +1,5 @@
 import { useId, useState, useSyncExternalStore } from 'react'
+import { Link } from 'react-router'
 import { Alert, Button, Form, Input, Space } from 'antd'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -53,6 +54,15 @@ export function OperationForm({
   return (
     <section aria-labelledby={id + '-title'}>
       <h2 id={id + '-title'}>{operation.title}</h2>
+      {operation.id === 'login' && (
+        <Space wrap size="large" style={{ marginBottom: 8 }}>
+          <p>Chưa có tài khoản? <Link to="/register">Đăng ký</Link></p>
+          <Link to="/forgot-password">Quên mật khẩu?</Link>
+        </Space>
+      )}
+      {operation.id === 'register' && (
+        <p>Đã có tài khoản? <Link to="/login">Đăng nhập</Link></p>
+      )}
       {operation.authenticated && !session && (
         <Alert
           type="warning"
@@ -82,7 +92,7 @@ export function OperationForm({
                     {...input}
                     id={id + field.key}
                     autoComplete={
-                      field.key === 'password'
+                      field.key === 'password' && operation.id === 'login'
                         ? 'current-password'
                         : 'new-password'
                     }

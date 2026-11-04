@@ -37,6 +37,8 @@ export function AppRouter() {
           <Route path="verify-email" element={<LiveApiPage key="verify" initialOperation="email-verifications" />} />
           <Route path="reset-password" element={<LiveApiPage key="reset" initialOperation="reset-password" />} />
           <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<LiveApiPage key="register" initialOperation="register" />} />
+          <Route path="forgot-password" element={<LiveApiPage key="forgot" initialOperation="forgot-password" />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
