@@ -6,6 +6,7 @@ import { CreateAdminHotelDrawer } from '@/features/hotels/components/CreateAdmin
 import { CreatePhysicalRoomDrawer } from '@/features/hotels/components/CreatePhysicalRoomDrawer'
 import { CreateRoomTypeDrawer } from '@/features/hotels/components/CreateRoomTypeDrawer'
 import { HotelStatusBadge } from '@/features/hotels/components/HotelStatusBadge'
+import { UserRolesModal } from '@/features/users/components/UserRolesModal'
 import {
   useCitiesQuery,
   useManagementHotelDetailQuery,
@@ -151,6 +152,7 @@ export function AdminDashboardPage() {
   const [createHotelOpen, setCreateHotelOpen] = useState(false)
   const [createRoomTypeOpen, setCreateRoomTypeOpen] = useState(false)
   const [createRoomOpen, setCreateRoomOpen] = useState(false)
+  const [userRolesOpen, setUserRolesOpen] = useState(false)
   const [selectedHotelId, setSelectedHotelId] = useState<string>('')
   const [roomReadinessMap, setRoomReadinessMap] = useState<
     Record<string, 'READY' | 'DIRTY'>
@@ -329,6 +331,20 @@ export function AdminDashboardPage() {
                     add
                   </span>
                   <span>Thêm khách sạn mới</span>
+                </button>
+                <button
+                  type="button"
+                  className="atelier-action-btn"
+                  onClick={() => setUserRolesOpen(true)}
+                >
+                  <span
+                    className="material-symbols-outlined"
+                    style={{ fontSize: 18 }}
+                    aria-hidden="true"
+                  >
+                    admin_panel_settings
+                  </span>
+                  <span>Phân quyền vai trò</span>
                 </button>
               </div>
             </section>
@@ -2327,7 +2343,7 @@ export function AdminDashboardPage() {
               )}
             </section>
 
-      {/* Backend-Connected Drawers */}
+      {/* Backend-Connected Drawers & Modals */}
       <CreateAdminHotelDrawer
         open={createHotelOpen}
         onClose={() => setCreateHotelOpen(false)}
@@ -2335,6 +2351,11 @@ export function AdminDashboardPage() {
         onCreated={(created) => {
           setSelectedHotelId(created.id)
         }}
+      />
+
+      <UserRolesModal
+        open={userRolesOpen}
+        onClose={() => setUserRolesOpen(false)}
       />
 
       {activeHotelId && (

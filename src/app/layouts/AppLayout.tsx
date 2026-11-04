@@ -1,9 +1,11 @@
 import { Outlet, useLocation, useNavigate } from 'react-router'
+import { useAuth } from '@/features/auth/hooks/use-auth'
 import { AtelierSidebar } from '@/shared/ui/AtelierSidebar'
 
 export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user, isAuthenticated, logout } = useAuth()
 
   const pathname = location.pathname
 
@@ -124,20 +126,46 @@ export function AppLayout() {
 
               <div className="atelier-header__divider" aria-hidden="true" />
 
-              <div className="atelier-user-badge">
-                <div className="atelier-user-badge__text">
-                  <span className="atelier-user-badge__name">Julian Vance</span>
-                  <span className="atelier-user-badge__role">Giám đốc Ca trực</span>
-                </div>
-                <div className="atelier-user-badge__avatar" aria-hidden="true">
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontSize: 18 }}
+              {isAuthenticated && user ? (
+                <div
+                  className="atelier-user-badge"
+                  style={{ display: 'flex', alignItems: 'center', gap: 10 }}
+                >
+                  <div className="atelier-user-badge__text">
+                    <span className="atelier-user-badge__name">
+                      {user.fullName || user.email}
+                    </span>
+                    <span className="atelier-user-badge__role">
+                      {user.roles.length > 0 ? user.roles[0] : 'Quản trị viên'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="atelier-icon-circle-btn"
+                    title="Đăng xuất"
+                    aria-label="Đăng xuất khỏi hệ thống"
+                    onClick={() => void logout()}
+                    style={{ width: 32, height: 32 }}
                   >
-                    person
-                  </span>
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontSize: 16 }}
+                      aria-hidden="true"
+                    >
+                      logout
+                    </span>
+                  </button>
                 </div>
-              </div>
+              ) : (
+                <button
+                  type="button"
+                  className="gh-btn-primary"
+                  style={{ padding: '6px 14px', fontSize: 12 }}
+                  onClick={() => void navigate('/login')}
+                >
+                  Đăng nhập
+                </button>
+              )}
             </div>
           </header>
 

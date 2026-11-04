@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { App as AntApp, ConfigProvider } from 'antd'
 import viVN from 'antd/locale/vi_VN'
+import { AuthProvider } from '@/features/auth/components/AuthProvider'
 import { DataModeProvider } from '@/shared/lib/data-mode'
 import { queryClient } from '@/shared/lib/query-client'
 import { AppErrorBoundary } from '@/shared/ui/AppErrorBoundary'
@@ -44,7 +45,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
           Table: {
             headerBg: '#f4f2fd',
             headerColor: '#59413b',
-            borderColor: '#eeedf7',
           },
         },
       }}
@@ -53,7 +53,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <AppErrorBoundary>
           <DataModeProvider>
             <QueryClientProvider client={queryClient}>
-              {children}
+              <AuthProvider>
+                {children}
+              </AuthProvider>
             </QueryClientProvider>
           </DataModeProvider>
         </AppErrorBoundary>
