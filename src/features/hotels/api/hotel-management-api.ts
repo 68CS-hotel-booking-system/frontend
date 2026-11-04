@@ -43,7 +43,18 @@ export function createAdminHotel(
 ) {
   return http.request('/admin/hotels', {
     method: 'POST',
-    body: payload,
+    body: {
+      ownerId: payload.ownerUserId,
+      cityId: payload.cityId,
+      name: payload.name,
+      description: payload.description?.trim() ? payload.description.trim() : null,
+      address: payload.address,
+      latitude: payload.latitude,
+      longitude: payload.longitude,
+      starRating: payload.starRating,
+      checkInTime: payload.checkInTime,
+      checkOutTime: payload.checkOutTime,
+    },
     signal,
     schema: managementHotelDetailSchema,
   })
