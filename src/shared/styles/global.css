@@ -1,57 +1,58 @@
 :root {
-  /* === StayVibe Sovereign — Modern Luxury Design System Tokens (design.md) === */
-  --font-editorial: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  /* === Grand Heritage & Atelier OS — Unified Design System Tokens === */
+  --font-editorial: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
 
-  /* === Champagne Bronze & Obsidian Brand Palette === */
-  --color-primary: #A67C37;
-  --color-primary-hover: #8E6728;
-  --color-primary-active: #73521D;
-  --color-primary-soft: #F9F5EB;
-  --color-primary-border: #DECBA4;
+  /* === Terracotta, Emerald & Obsidian Palette (Landing Page + Admin OS) === */
+  --color-primary: #ab2f0c;
+  --color-primary-hover: #cd4723;
+  --color-primary-active: #891e00;
+  --color-primary-dark: #3c0800;
+  --color-primary-soft: #f4f2fd;
+  --color-primary-border: #ffb4a2;
 
-  --color-secondary: #2C4A52;
-  --color-secondary-hover: #1F363C;
-  --color-secondary-soft: #F0F4F5;
+  --color-secondary: #5e5e65;
+  --color-secondary-hover: #2f3038;
+  --color-secondary-soft: #eeedf7;
 
-  --color-accent: #141413;
-  --color-accent-soft: #F3EFE6;
-  --color-gold-light: #E5C98B;
+  --color-accent: #1a1b22;
+  --color-accent-soft: #eeedf7;
+  --color-gold-light: #ffdbd2;
 
   /* === Architectural Backgrounds & Surfaces === */
-  --bg-canvas: #FAF8F5;
-  --bg-surface: #FFFFFF;
-  --bg-elevated: #F3EFE6;
-  --bg-obsidian: #141413;
-  --bg-glass: rgba(250, 248, 245, 0.92);
+  --bg-canvas: #fbf8ff;
+  --bg-surface: #ffffff;
+  --bg-elevated: #eeedf7;
+  --bg-obsidian: #2f3038;
+  --bg-glass: rgba(251, 248, 255, 0.88);
 
   /* === Typography Colors === */
-  --text-primary: #141413;
-  --text-secondary: #524E46;
-  --text-muted: #7A7468;
-  --text-on-brand: #FFFFFF;
+  --text-primary: #1a1b22;
+  --text-secondary: #59413b;
+  --text-muted: #5e5e65;
+  --text-on-brand: #ffffff;
 
-  /* === Warm Limestone Borders === */
-  --border-subtle: #E6E1D6;
-  --border-strong: #CFC7B8;
-  --border-focus: #A67C37;
+  /* === Borders === */
+  --border-subtle: #eeedf7;
+  --border-strong: #e3e1ec;
+  --border-focus: #ab2f0c;
 
   /* === Architectural Radii === */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-2xl: 24px;
   --radius-pill: 9999px;
 
-  /* === Ambient Luxury Shadows === */
-  --shadow-sm: 0 1px 2px 0 rgba(20, 20, 19, 0.04);
-  --shadow-card: 0 2px 8px -2px rgba(20, 20, 19, 0.05), 0 1px 3px -1px rgba(20, 20, 19, 0.03);
-  --shadow-card-hover: 0 14px 32px -8px rgba(20, 20, 19, 0.09), 0 4px 12px -2px rgba(20, 20, 19, 0.04);
-  --shadow-floating: 0 16px 38px -8px rgba(20, 20, 19, 0.14), 0 4px 12px -2px rgba(20, 20, 19, 0.05);
+  /* === Ambient Shadows === */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 12px 28px rgba(0, 0, 0, 0.08);
+  --shadow-floating: 0 16px 38px rgba(0, 0, 0, 0.12);
 
   --duration-fast: 150ms;
   --duration-normal: 260ms;
@@ -259,7 +260,7 @@ code {
 }
 
 .is-up {
-  color: #1E6B4E;
+  color: #006947;
 }
 
 .is-warning {
@@ -1139,7 +1140,7 @@ code {
 }
 
 .rates-room-tab-btn.is-active {
-  background: #FAF6ED;
+  background: #f4f2fd;
   border-color: var(--color-primary);
   box-shadow: 0 2px 6px rgba(166, 124, 55, 0.12);
 }
@@ -1162,7 +1163,7 @@ code {
 
 /* Room Infobar */
 .rates-room-infobar {
-  background: #FAF9F6;
+  background: #f4f2fd;
   border: 1px solid var(--border-subtle);
   border-left: 3px solid var(--color-primary);
   border-radius: var(--radius-sm);
@@ -1257,7 +1258,7 @@ code {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1.2fr)) 1.5fr;
   gap: 16px;
-  background: #FAF9F6;
+  background: #f4f2fd;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 16px 22px;
@@ -1348,7 +1349,7 @@ code {
 }
 
 .rate-clean-cell.is-weekend {
-  background: #FCFBF7;
+  background: #f4f2fd;
   border-color: rgba(166, 124, 55, 0.38);
 }
 
@@ -1473,7 +1474,7 @@ code {
 
 .rate-day-card.is-weekend {
   border-color: var(--color-primary-border);
-  background: #FCF9F2;
+  background: #ffdbd2;
 }
 
 .rate-day-card__header {
@@ -1610,7 +1611,7 @@ code {
 }
 
 .fin-rep-card.is-active {
-  background: #FAF6ED;
+  background: #f4f2fd;
   border-color: var(--color-primary);
   box-shadow: 0 2px 8px rgba(166, 124, 55, 0.15);
 }
@@ -1732,9 +1733,9 @@ code {
 }
 
 .fin-perm-pill.is-granted {
-  background: #EDF7F2;
-  color: #14523B;
-  border-color: #B8DFCE;
+  background: #6ffbbe;
+  color: #002113;
+  border-color: #4edea3;
 }
 
 .fin-perm-pill.is-denied {
@@ -1826,7 +1827,7 @@ code {
 }
 
 .fin-version-sync-strip {
-  background: #FAF6ED;
+  background: #f4f2fd;
   border: 1px solid var(--color-primary-border);
   padding: 10px 14px;
   border-radius: var(--radius-sm);
@@ -1951,9 +1952,9 @@ code {
 }
 
 .perm-status-pill.is-granted {
-  background: #EDF7F2;
-  color: #14523B;
-  border-color: #B8DFCE;
+  background: #6ffbbe;
+  color: #002113;
+  border-color: #4edea3;
 }
 
 .perm-status-pill.is-denied {

@@ -62,6 +62,13 @@ export function StayVibeHeader({
           <button
             type="button"
             className="stayvibe-nav-link stayvibe-nav-link--btn"
+            onClick={() => void navigate('/admin')}
+          >
+            <BankOutlined aria-hidden="true" /> Admin Dashboard
+          </button>
+          <button
+            type="button"
+            className="stayvibe-nav-link stayvibe-nav-link--btn"
             onClick={() => void navigate('/management/hotels')}
           >
             <BankOutlined aria-hidden="true" /> Quản trị khách sạn

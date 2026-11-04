@@ -22,7 +22,6 @@ import {
   type HotelStatus,
   hotelStatusValues,
 } from '@/features/hotels/types/hotel-management'
-import { DataSourceBanner } from '@/shared/ui/DataSourceBanner'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
@@ -78,8 +77,6 @@ export function HotelManagementListPage() {
 
   return (
     <div className="management-page rates-management-page">
-      <DataSourceBanner />
-
       <header className="rates-page-header" aria-labelledby="mgmt-hero-title">
         <div className="rates-page-header__content">
           <span className="rates-page-header__kicker">

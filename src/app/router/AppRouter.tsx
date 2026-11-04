@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
 import { AppLayout } from '@/app/layouts/AppLayout'
+import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { FinancialAccessManagementPage } from '@/pages/management/FinancialAccessManagementPage'
 import { HotelContractsManagementPage } from '@/pages/management/HotelContractsManagementPage'
@@ -17,6 +18,9 @@ export function AppRouter() {
         <Route element={<AppLayout />}>
           <Route index element={<StayVibeHomePage />} />
           <Route path="explore" element={<StayVibeHomePage />} />
+          <Route path="admin" element={<AdminDashboardPage />} />
+          <Route path="admin/dashboard" element={<AdminDashboardPage />} />
+          <Route path="management/dashboard" element={<AdminDashboardPage />} />
           <Route path="system-status" element={<SystemStatusPage />} />
           <Route path="management/hotels" element={<HotelManagementListPage />} />
           <Route

@@ -3,6 +3,8 @@ import { useDataMode } from '@/shared/lib/data-mode-context'
 import { getAmenities, getCities } from '../api/catalog-api'
 import {
   createAdminHotel,
+  createManagementRoom,
+  createManagementRoomType,
   getManagementHotelDetail,
   getManagementHotels,
   getRoomTypeDailyRates,
@@ -11,16 +13,21 @@ import {
 } from '../api/hotel-management-api'
 import {
   createMockAdminHotel,
+  createMockManagementRoom,
+  createMockManagementRoomType,
   getMockAmenities,
   getMockCities,
   getMockManagementHotelDetail,
   getMockManagementHotels,
+  getMockPhysicalRoomsByHotel,
   getMockRoomTypeDailyRates,
   updateMockHotelAmenities,
   updateMockManagementHotel,
 } from '../api/hotel-management-mock'
 import type {
   CreateAdminHotelFormValues,
+  CreatePhysicalRoomFormValues,
+  CreateRoomTypeFormValues,
   ManagementHotelListQuery,
   UpdateHotelAmenitiesFormValues,
   UpdateManagementHotelFormValues,
@@ -43,6 +50,8 @@ export const hotelManagementKeys = {
       endDate: string
     },
   ) => ['hotels', 'room-rates', mode, params] as const,
+  physicalRooms: (mode: string, hotelId: string) =>
+    ['hotels', 'physical-rooms', mode, hotelId] as const,
 }
 
 /** HT01: Danh mục thành phố dùng chung */
@@ -159,5 +168,48 @@ export function useRoomTypeDailyRatesQuery(params: {
       params.hotelId && params.roomTypeId && params.startDate && params.endDate,
     ),
     retry: false,
+  })
+}
+
+/** Danh sách phòng vật lý thuộc khách sạn (dùng trong giao diện quản trị) */
+export function usePhysicalRoomsByHotelQuery(hotelId: string) {
+  const { mode } = useDataMode()
+  return useQuery({
+    queryKey: hotelManagementKeys.physicalRooms(mode, hotelId),
+    queryFn: () => getMockPhysicalRoomsByHotel(hotelId),
+    enabled: Boolean(hotelId),
+    retry: false,
+  })
+}
+
+/** POST /api/v1/management/hotels/{hotelId}/room-types — Tạo loại phòng mới */
+export function useCreateRoomTypeMutation(hotelId: string) {
+  const { mode } = useDataMode()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: CreateRoomTypeFormValues) =>
+      mode === 'mock'
+        ? createMockManagementRoomType(hotelId, payload)
+        : createManagementRoomType(hotelId, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: hotelManagementKeys.all })
+    },
+  })
+}
+
+/** POST /api/v1/management/hotels/{hotelId}/rooms — Tạo phòng vật lý mới */
+export function useCreatePhysicalRoomMutation(hotelId: string) {
+  const { mode } = useDataMode()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: CreatePhysicalRoomFormValues) =>
+      mode === 'mock'
+        ? createMockManagementRoom(hotelId, payload)
+        : createManagementRoom(hotelId, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: hotelManagementKeys.all })
+    },
   })
 }

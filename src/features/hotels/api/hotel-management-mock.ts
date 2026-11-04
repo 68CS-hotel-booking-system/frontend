@@ -2,6 +2,10 @@ import type {
   AmenityItem,
   CityItem,
   CreateAdminHotelFormValues,
+  CreatedPhysicalRoomResponse,
+  CreatedRoomTypeResponse,
+  CreatePhysicalRoomFormValues,
+  CreateRoomTypeFormValues,
   DailyRoomRate,
   ManagementHotelDetail,
   ManagementHotelListQuery,
@@ -524,5 +528,147 @@ export async function getMockRoomTypeDailyRates(params: {
   }
 
   return rates
+}
+
+let mockPhysicalRoomsStore: CreatedPhysicalRoomResponse[] = [
+  {
+    id: '55555555-5555-4555-8555-555555555501',
+    hotelId: '33333333-3333-4333-8333-333333333301',
+    roomTypeId: '44444444-4444-4444-8444-444444444401',
+    roomNumber: '402',
+    floor: 'Floor 4',
+    readiness: 'READY',
+    readinessUpdatedAt: '2026-11-04T06:30:00Z',
+    readinessUpdatedBy: '99999999-9999-4999-8999-999999999901',
+    operationalFrom: '2026-01-01T00:00:00Z',
+    operationalUntil: null,
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-11-04T06:30:00Z',
+    version: 2,
+  },
+  {
+    id: '55555555-5555-4555-8555-555555555502',
+    hotelId: '33333333-3333-4333-8333-333333333301',
+    roomTypeId: '44444444-4444-4444-8444-444444444402',
+    roomNumber: '218',
+    floor: 'Floor 2',
+    readiness: 'READY',
+    readinessUpdatedAt: '2026-11-04T07:15:00Z',
+    readinessUpdatedBy: '99999999-9999-4999-8999-999999999901',
+    operationalFrom: '2026-01-01T00:00:00Z',
+    operationalUntil: null,
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-11-04T07:15:00Z',
+    version: 1,
+  },
+  {
+    id: '55555555-5555-4555-8555-555555555503',
+    hotelId: '33333333-3333-4333-8333-333333333301',
+    roomTypeId: '44444444-4444-4444-8444-444444444402',
+    roomNumber: '12',
+    floor: 'Ground Floor',
+    readiness: 'DIRTY',
+    readinessUpdatedAt: '2026-11-04T08:40:00Z',
+    readinessUpdatedBy: '99999999-9999-4999-8999-999999999901',
+    operationalFrom: '2026-01-01T00:00:00Z',
+    operationalUntil: null,
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-11-04T08:40:00Z',
+    version: 3,
+  },
+  {
+    id: '55555555-5555-4555-8555-555555555504',
+    hotelId: '33333333-3333-4333-8333-333333333301',
+    roomTypeId: '44444444-4444-4444-8444-444444444403',
+    roomNumber: '304',
+    floor: 'Floor 3',
+    readiness: 'READY',
+    readinessUpdatedAt: '2026-11-04T09:05:00Z',
+    readinessUpdatedBy: '99999999-9999-4999-8999-999999999901',
+    operationalFrom: '2026-01-01T00:00:00Z',
+    operationalUntil: null,
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-11-04T09:05:00Z',
+    version: 1,
+  },
+]
+
+export async function getMockPhysicalRoomsByHotel(
+  hotelId: string,
+): Promise<CreatedPhysicalRoomResponse[]> {
+  return mockPhysicalRoomsStore.filter((room) => room.hotelId === hotelId)
+}
+
+export async function createMockManagementRoomType(
+  hotelId: string,
+  payload: CreateRoomTypeFormValues,
+): Promise<CreatedRoomTypeResponse> {
+  const now = new Date().toISOString()
+  const newId = `44444444-4444-4444-8444-${String(Date.now()).slice(-12).padStart(12, '0')}`
+  const created: CreatedRoomTypeResponse = {
+    id: newId,
+    hotelId,
+    name: payload.name,
+    description: payload.description ?? null,
+    maxAdults: payload.maxAdults,
+    maxChildren: payload.maxChildren,
+    active: true,
+    createdAt: now,
+    updatedAt: now,
+    version: 0,
+  }
+
+  mockHotelsStore = mockHotelsStore.map((hotel) => {
+    if (hotel.id !== hotelId) return hotel
+    const nextRoomTypes = [
+      ...hotel.roomTypes,
+      {
+        id: created.id,
+        hotelId,
+        name: created.name,
+        description: created.description ?? null,
+        maxAdults: created.maxAdults,
+        maxChildren: created.maxChildren,
+        isActive: true,
+        totalRooms: 0,
+      },
+    ]
+    return {
+      ...hotel,
+      roomTypes: nextRoomTypes,
+      roomTypeCount: nextRoomTypes.length,
+      updatedAt: now,
+    }
+  })
+
+  return created
+}
+
+export async function createMockManagementRoom(
+  hotelId: string,
+  payload: CreatePhysicalRoomFormValues,
+): Promise<CreatedPhysicalRoomResponse> {
+  const now = new Date().toISOString()
+  const newId = `55555555-5555-4555-8555-${String(Date.now()).slice(-12).padStart(12, '0')}`
+  const created: CreatedPhysicalRoomResponse = {
+    id: newId,
+    hotelId,
+    roomTypeId: payload.roomTypeId,
+    roomNumber: payload.roomNumber,
+    floor: payload.floor?.trim() ? payload.floor.trim() : null,
+    readiness: 'DIRTY',
+    readinessUpdatedAt: now,
+    readinessUpdatedBy: null,
+    operationalFrom: payload.operationalFrom,
+    operationalUntil: payload.operationalUntil?.trim()
+      ? payload.operationalUntil.trim()
+      : null,
+    createdAt: now,
+    updatedAt: now,
+    version: 0,
+  }
+
+  mockPhysicalRoomsStore = [created, ...mockPhysicalRoomsStore]
+  return created
 }
 
