@@ -16,9 +16,7 @@ import {
 } from '@ant-design/icons'
 import { Button, Select, Space, Tag } from 'antd'
 import { useNavigate } from 'react-router'
-
 import type { SmartSearchFormValues } from '@/features/discovery'
-
 import { EmptyState } from '@/shared/ui/EmptyState'
 
 export function StayVibeHomePage() {
@@ -55,7 +53,7 @@ export function StayVibeHomePage() {
   }
 
   return (
-    <div className="stayvibe-discovery-page">
+    <div className="w-full flex flex-col gap-10 sm:gap-14">
       {/* 1. Hero Banner + Thanh tìm kiếm thông minh */}
       <HeroSection
         onSearchSubmit={handleSearchSubmit}
@@ -76,39 +74,43 @@ export function StayVibeHomePage() {
       {/* 3. Danh sách chỗ nghỉ nổi bật + Thanh lọc nhanh theo phong cách lưu trú */}
       <section
         id="hotels-section"
-        className="stayvibe-hotels-section"
+        className="w-full scroll-mt-24"
         aria-labelledby="hotels-section-heading"
       >
-        <div className="stayvibe-section-header">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-6">
           <div>
-            <span className="stayvibe-section-kicker">BỘ SƯU TẬP TUYỂN CHỌN</span>
-            <h2 id="hotels-section-heading" className="stayvibe-section-title">
+            <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#A67C37]">
+              BỘ SƯU TẬP TUYỂN CHỌN
+            </span>
+            <h2 id="hotels-section-heading" className="font-editorial text-2xl sm:text-3xl font-semibold text-[#141413] mt-1">
               Khu nghỉ dưỡng &amp; Khách sạn tiêu biểu
             </h2>
-            <p className="stayvibe-section-desc">
+            <p className="text-xs sm:text-sm text-[#7A7468] mt-1">
               Tuyển tập các khu Glamping thượng lưu, Boutique Di Sản và Biệt thự
               biển có điểm đánh giá xuất sắc nhất.
             </p>
           </div>
 
-          <div className="stayvibe-hotels-toolbar">
+          <div className="flex items-center gap-3 flex-wrap">
             {hasActiveFilters && (
               <Button
                 icon={<CloseCircleOutlined aria-hidden="true" />}
                 onClick={handleResetFilters}
+                className="!text-xs !rounded-md"
               >
                 Xóa bộ lọc ({filteredHotels.length})
               </Button>
             )}
 
-            <div className="stayvibe-sort-box">
-              <label htmlFor="stayvibe-sort-select">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#524E46]">
+              <label htmlFor="stayvibe-sort-select" className="flex items-center gap-1 cursor-pointer">
                 <FilterOutlined aria-hidden="true" /> Sắp xếp:
               </label>
               <Select<SortOrder>
                 id="stayvibe-sort-select"
                 value={sortOrder}
                 onChange={(val) => setSortOrder(val)}
+                className="w-44"
                 options={[
                   { label: 'Phổ biến nhất', value: 'POPULAR' },
                   { label: 'Giá thấp đến cao', value: 'PRICE_ASC' },
@@ -128,15 +130,15 @@ export function StayVibeHomePage() {
 
         {hasActiveFilters && (
           <div
-            className="stayvibe-active-filters-bar"
+            className="flex items-center gap-2 flex-wrap p-3 rounded-xl bg-white border border-[#E6E1D6] mb-6 text-xs text-[#524E46]"
             role="status"
             aria-live="polite"
           >
-            <span className="muted">Đang lọc theo:</span>
+            <span className="text-[#7A7468] font-medium">Đang lọc theo:</span>
             {selectedVibe !== 'ALL' && (
               <Tag
                 closable
-                color="gold"
+                className="!bg-[#F9F5EB] !text-[#785718] !border-[#DECBA4] !font-medium !text-xs !rounded-md"
                 onClose={() => setSelectedVibe('ALL')}
               >
                 Phong cách: {selectedVibeLabel}
@@ -145,7 +147,7 @@ export function StayVibeHomePage() {
             {selectedCityId !== 'ALL' && (
               <Tag
                 closable
-                color="blue"
+                className="!bg-[#F9F5EB] !text-[#785718] !border-[#DECBA4] !font-medium !text-xs !rounded-md"
                 onClose={() => setSelectedCityId('ALL')}
               >
                 Điểm đến: {selectedCityName}
@@ -154,7 +156,7 @@ export function StayVibeHomePage() {
             {searchKeyword.trim() && (
               <Tag
                 closable
-                color="purple"
+                className="!bg-[#F9F5EB] !text-[#785718] !border-[#DECBA4] !font-medium !text-xs !rounded-md"
                 onClose={() => setSearchKeyword('')}
               >
                 Từ khóa: &ldquo;{searchKeyword}&rdquo;
@@ -163,7 +165,7 @@ export function StayVibeHomePage() {
             {petFriendlyOnly && (
               <Tag
                 closable
-                color="green"
+                className="!bg-[#F9F5EB] !text-[#785718] !border-[#DECBA4] !font-medium !text-xs !rounded-md"
                 onClose={() => setPetFriendlyOnly(false)}
               >
                 Thân thiện thú cưng
@@ -173,7 +175,7 @@ export function StayVibeHomePage() {
         )}
 
         {filteredHotels.length === 0 ? (
-          <div className="surface-card">
+          <div className="bg-white rounded-2xl border border-[#E6E1D6] p-10 text-center shadow-sm">
             <EmptyState
               title="Không tìm thấy chỗ nghỉ phù hợp"
               description="Thử chọn một phong cách khác, đổi địa điểm hoặc xóa bộ lọc để xem toàn bộ danh sách."
@@ -183,6 +185,7 @@ export function StayVibeHomePage() {
                     type="primary"
                     icon={<ReloadOutlined aria-hidden="true" />}
                     onClick={handleResetFilters}
+                    className="!bg-[#141413] hover:!bg-[#A67C37]"
                   >
                     Xem tất cả chỗ nghỉ
                   </Button>
@@ -191,7 +194,10 @@ export function StayVibeHomePage() {
             />
           </div>
         ) : (
-          <div className="stayvibe-hotels-grid" role="list">
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full"
+            role="list"
+          >
             {filteredHotels.map((hotel) => (
               <HotelCard
                 key={hotel.id}

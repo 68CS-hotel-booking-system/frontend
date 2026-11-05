@@ -40,22 +40,20 @@ export function HotelCard({
   }
 
   return (
-    <article className="stayvibe-hotel-card" role="listitem">
-      {/* Khung ảnh 4:3 kèm Carousel, Badge và Nút Yêu thích */}
-      <div className="stayvibe-hotel-card__media">
+    <article className="group bg-white rounded-2xl border border-[#E6E1D6] p-3.5 flex flex-col gap-3.5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 w-full" role="listitem">
+      {/* Media Carousel */}
+      <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[#F3EFE6]">
         <img
           src={hotel.images[imageIndex]}
           alt={`${hotel.name} - Ảnh ${imageIndex + 1}/${totalImages}`}
           loading="lazy"
-          className="stayvibe-hotel-card__img"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
 
-        {/* Góc trên bên trái: Nhãn giảm giá hoặc xu hướng */}
-        <div className="stayvibe-hotel-card__top-left">
+        {/* Top Badges */}
+        <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5 z-10">
           {hotel.badge && (
-            <span
-              className={`stayvibe-card-badge stayvibe-card-badge--${hotel.badge.variant}`}
-            >
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#A67C37] text-white text-[11px] font-bold tracking-wider uppercase shadow-sm">
               {hotel.badge.variant === 'discount' ? (
                 <FireFilled aria-hidden="true" />
               ) : (
@@ -65,16 +63,16 @@ export function HotelCard({
             </span>
           )}
           {hotel.roomsLeftNote && (
-            <span className="stayvibe-scarcity-badge">
+            <span className="inline-flex items-center px-2 py-0.5 rounded bg-black/75 text-white text-[10px] font-semibold tracking-wide backdrop-blur-sm">
               {hotel.roomsLeftNote}
             </span>
           )}
         </div>
 
-        {/* Góc trên bên phải: Nút Yêu thích (Heart Pop) */}
+        {/* Wishlist Button */}
         <button
           type="button"
-          className={`stayvibe-wishlist-btn ${isWishlisted ? 'is-liked' : ''}`}
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-sm shadow hover:scale-110 active:scale-95 transition-transform cursor-pointer z-10"
           aria-pressed={isWishlisted}
           aria-label={
             isWishlisted
@@ -83,17 +81,15 @@ export function HotelCard({
           }
           onClick={() => onToggleWishlist(hotel.id)}
         >
-          <span className="stayvibe-wishlist-btn__circle">
-            <HeartVectorIcon filled={isWishlisted} />
-          </span>
+          <HeartVectorIcon filled={isWishlisted} />
         </button>
 
-        {/* Điều hướng Carousel khi có từ 2 ảnh trở lên */}
+        {/* Carousel controls */}
         {totalImages > 1 && (
           <>
             <button
               type="button"
-              className="stayvibe-carousel-arrow stayvibe-carousel-arrow--prev"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/90 text-[#141413] flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white shadow cursor-pointer z-10"
               aria-label={`Ảnh trước của ${hotel.name}`}
               onClick={handlePrevImage}
             >
@@ -101,14 +97,14 @@ export function HotelCard({
             </button>
             <button
               type="button"
-              className="stayvibe-carousel-arrow stayvibe-carousel-arrow--next"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/90 text-[#141413] flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white shadow cursor-pointer z-10"
               aria-label={`Ảnh tiếp theo của ${hotel.name}`}
               onClick={handleNextImage}
             >
               <RightOutlined aria-hidden="true" />
             </button>
             <div
-              className="stayvibe-carousel-dots"
+              className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/40 backdrop-blur-sm z-10"
               role="tablist"
               aria-label="Chọn ảnh khách sạn"
             >
@@ -119,8 +115,8 @@ export function HotelCard({
                   role="tab"
                   aria-selected={idx === imageIndex}
                   aria-label={`Ảnh ${idx + 1}`}
-                  className={`stayvibe-carousel-dot ${
-                    idx === imageIndex ? 'is-active' : ''
+                  className={`w-1.5 h-1.5 rounded-full transition-all cursor-pointer ${
+                    idx === imageIndex ? 'bg-white w-3' : 'bg-white/50'
                   }`}
                   onClick={(e) => {
                     e.stopPropagation()
@@ -133,75 +129,73 @@ export function HotelCard({
         )}
       </div>
 
-      {/* Khối thông tin (Card Body) */}
-      <div className="stayvibe-hotel-card__body">
-        {/* Hàng 1: Điểm đánh giá + Tag khu vực */}
-        <div className="stayvibe-hotel-card__row1">
-          <div className="stayvibe-rating-cluster">
-            <span className="stayvibe-rating-pill">
-              <StarFilled aria-hidden="true" /> {hotel.rating.toFixed(1)}
+      {/* Card Info */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#141413] text-white text-xs font-bold">
+              <StarFilled className="text-[#E5C98B]" aria-hidden="true" /> {hotel.rating.toFixed(1)}
             </span>
-            <span className="stayvibe-review-count">
+            <span className="text-xs text-[#7A7468]">
               ({hotel.reviewCount} đánh giá)
             </span>
           </div>
-          <span className="stayvibe-distance-tag" title={hotel.distanceLabel}>
+          <span className="text-xs font-semibold text-[#524E46] flex items-center gap-1 truncate" title={hotel.distanceLabel}>
             <EnvironmentOutlined aria-hidden="true" /> {hotel.cityName}
           </span>
         </div>
 
-        {/* Hàng 2: Tên khách sạn (H3 - 20px Bold) */}
-        <h3 className="stayvibe-hotel-card__title">
+        <h3 className="text-left font-serif text-lg font-bold text-[#141413] hover:text-[#A67C37] transition cursor-pointer line-clamp-1">
           <button
             type="button"
-            className="stayvibe-card-title-btn"
+            className="text-left cursor-pointer w-full !text-[#141413] hover:!text-[#A67C37]"
             onClick={() => onInspectHotel(hotel)}
           >
             {hotel.name}
           </button>
         </h3>
 
-        <p className="stayvibe-hotel-card__location-sub">
+        <p className="text-xs text-[#7A7468] line-clamp-1">
           {hotel.distanceLabel}
         </p>
 
-        {/* Hàng 3: Tối đa 3 chip tiện ích nổi bật */}
-        <ul
-          className="stayvibe-hotel-card__amenities"
-          aria-label="Tiện ích nổi bật"
-        >
+        {/* Amenities */}
+        <ul className="flex flex-wrap gap-1.5 my-1 p-0 list-none" aria-label="Tiện ích nổi bật">
           {hotel.amenities.map((amenity) => (
-            <li key={amenity} className="stayvibe-amenity-chip">
-              <CheckOutlined aria-hidden="true" /> {amenity}
+            <li
+              key={amenity}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#F9F5EB] border border-[#DECBA4]/50 text-[#524E46] text-[11px] font-medium"
+            >
+              <CheckOutlined className="text-[#A67C37]" aria-hidden="true" /> {amenity}
             </li>
           ))}
         </ul>
 
-        {/* Hàng 4: Khu vực giá (tabular-nums) + Nút hành động */}
-        <div className="stayvibe-hotel-card__footer">
-          <div className="stayvibe-price-column">
+        {/* Price & Action */}
+        <div className="flex items-end justify-between gap-3 pt-2 border-t border-[#E6E1D6]/70 mt-1">
+          <div className="flex flex-col">
             {hotel.originalPricePerNight && (
-              <span className="stayvibe-price-original">
+              <span className="text-xs text-[#7A7468] line-through tabular-nums">
                 {formatCurrencyAmount(
                   hotel.originalPricePerNight,
                   hotel.currency,
                 )}
               </span>
             )}
-            <div className="stayvibe-price-main-row">
-              <span className="stayvibe-price-current">
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-bold text-[#141413] tabular-nums font-serif">
                 {formatCurrencyAmount(hotel.pricePerNight, hotel.currency)}
               </span>
-              <span className="stayvibe-price-unit">/ đêm</span>
+              <span className="text-xs text-[#7A7468]">/ đêm</span>
             </div>
-            <span className="stayvibe-price-tax-note">
+            <span className="text-[10px] text-[#7A7468]">
               {hotel.taxStatusNote}
             </span>
           </div>
 
           <button
             type="button"
-            className="stayvibe-card-cta-btn"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[#CFC7B8] text-xs font-bold !text-[#141413] hover:border-[#A67C37] hover:bg-[#F9F5EB] hover:!text-[#A67C37] transition cursor-pointer shrink-0 whitespace-nowrap"
             onClick={() => onInspectHotel(hotel)}
           >
             <span>Chi tiết</span>

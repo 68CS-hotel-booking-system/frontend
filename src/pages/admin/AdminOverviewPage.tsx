@@ -46,14 +46,6 @@ const MODULES: AdminModuleCard[] = [
     actionLabel: 'Xem phân quyền',
   },
   {
-    title: 'Kiểm thử API trực tiếp',
-    description: 'Bàn làm việc 18 thao tác tương tác trực tiếp với các API máy chủ đã triển khai.',
-    icon: 'terminal',
-    to: '/management/live',
-    actionLabel: 'Mở bàn API',
-    tag: 'Live Backend',
-  },
-  {
     title: 'Trạng thái hệ thống',
     description: 'Theo dõi tình trạng hoạt động thực tế của máy chủ qua Spring Boot Actuator.',
     icon: 'dns',

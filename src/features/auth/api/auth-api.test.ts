@@ -99,12 +99,29 @@ describe('independent authentication feature', () => {
       status: 'ACTIVE', emailVerified: true, version: 1, roles: ['ADMIN'],
     }
     respond(account)
-    const { runAuthAction } = await import('../hooks/use-auth-action')
+    const { getCurrentUser } = await import('./auth-api')
     const { setSession } = await import('@/shared/api/session')
     setSession(tokens)
-    expect(await runAuthAction('me', {})).toEqual(account)
+    expect(await getCurrentUser()).toEqual(account)
     expect(fetcher.mock.calls[0][0]).toBe('/api/v1/users/me')
     expect(new Headers(fetcher.mock.calls[0][1]?.headers).get('Authorization')).toBe('Bearer access')
+  })
+
+  it('rejects with ApiError 401 when fetching /users/me with invalid token', async () => {
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ detail: 'Unauthorized', code: 'UNAUTHORIZED' }), { status: 401 }))
+    const { getCurrentUser } = await import('./auth-api')
+    const { setSession } = await import('@/shared/api/session')
+    setSession(tokens)
+    await expect(getCurrentUser()).rejects.toMatchObject({ status: 401 })
+  })
+
+  it('preserves the session when /users/me fails with 500 internal server error', async () => {
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ detail: 'Server Error', code: 'INTERNAL_ERROR' }), { status: 500 }))
+    const { getCurrentUser } = await import('./auth-api')
+    const { getSession, setSession } = await import('@/shared/api/session')
+    setSession(tokens)
+    await expect(getCurrentUser()).rejects.toMatchObject({ status: 500 })
+    expect(getSession()).toMatchObject({ accessToken: 'access' })
   })
 
   it('keeps verification tokens out of the URL while preserving other parameters and hash', async () => {

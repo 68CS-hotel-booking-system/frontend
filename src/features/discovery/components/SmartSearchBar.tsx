@@ -82,29 +82,29 @@ export function SmartSearchBar({
   }
 
   return (
-    <div className="smart-search-wrapper">
+    <div className="w-full flex flex-col gap-3.5">
       <form
-        className={`smart-search-bar glass-floating-bar ${
-          activeSegment ? 'has-active-segment' : ''
-        }`}
+        className="w-full bg-white text-[#141413] rounded-2xl p-2 sm:p-2.5 shadow-2xl border border-[#DECBA4]/50 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1.4fr_1.3fr_1.25fr_auto] gap-2 items-center transition-all"
         onSubmit={(event) => void handleSubmit(onSearchSubmit)(event)}
         noValidate
         aria-label="Thanh tìm kiếm thông minh StayVibe"
       >
         {/* Phân vùng 1: Địa điểm */}
         <div
-          className={`smart-search-segment ${
-            activeSegment === 'location' ? 'is-focused' : ''
+          className={`flex items-center gap-3 p-2.5 sm:px-4 sm:py-3 rounded-xl border transition-colors duration-150 min-w-0 w-full ${
+            activeSegment === 'location'
+              ? 'bg-[#FAF8F5] border-[#A67C37]/50 ring-1 ring-[#A67C37]/30'
+              : 'border-transparent hover:bg-[#FAF8F5]'
           }`}
           onFocus={() => setActiveSegment('location')}
         >
-          <div className="smart-search-segment__icon" aria-hidden="true">
+          <div className="w-9 h-9 rounded-lg bg-[#F9F5EB] border border-[#DECBA4]/60 text-[#A67C37] flex items-center justify-center text-sm shrink-0" aria-hidden="true">
             <EnvironmentOutlined />
           </div>
-          <div className="smart-search-segment__body">
+          <div className="flex flex-col gap-1 min-w-0 flex-1">
             <label
               htmlFor={`${formId}-destination`}
-              className="smart-search-segment__label"
+              className="text-[10px] font-bold uppercase tracking-wider text-[#7A7468]"
             >
               Địa điểm
             </label>
@@ -116,8 +116,8 @@ export function SmartSearchBar({
                   {...field}
                   id={`${formId}-destination`}
                   type="text"
-                  className="smart-search-input"
-                  placeholder="Đà Lạt, Phú Quốc, Hội An hoặc tên chỗ nghỉ..."
+                  className="w-full bg-transparent border-0 outline-none text-xs sm:text-sm font-semibold text-[#141413] placeholder:text-[#7A7468]/70 p-0"
+                  placeholder="Điểm đến hoặc tên chỗ nghỉ..."
                   autoComplete="off"
                 />
               )}
@@ -127,25 +127,29 @@ export function SmartSearchBar({
 
         {/* Phân vùng 2: Ngày nhận - trả phòng */}
         <div
-          className={`smart-search-segment ${
-            activeSegment === 'dates' ? 'is-focused' : ''
+          className={`flex items-center gap-3 p-2.5 sm:px-4 sm:py-3 rounded-xl border transition-colors duration-150 min-w-0 w-full ${
+            activeSegment === 'dates'
+              ? 'bg-[#FAF8F5] border-[#A67C37]/50 ring-1 ring-[#A67C37]/30'
+              : 'border-transparent hover:bg-[#FAF8F5]'
           }`}
           onFocus={() => setActiveSegment('dates')}
         >
-          <div className="smart-search-segment__icon" aria-hidden="true">
+          <div className="w-9 h-9 rounded-lg bg-[#F9F5EB] border border-[#DECBA4]/60 text-[#A67C37] flex items-center justify-center text-sm shrink-0" aria-hidden="true">
             <CalendarOutlined />
           </div>
-          <div className="smart-search-segment__body">
-            <div className="smart-search-segment__label-row">
+          <div className="flex flex-col gap-1 min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
               <label
                 htmlFor={`${formId}-checkin`}
-                className="smart-search-segment__label"
+                className="text-[10px] font-bold uppercase tracking-wider text-[#7A7468]"
               >
                 Nhận — Trả phòng
               </label>
-              <span className="nights-pill-badge">{totalNights} đêm</span>
+              <span className="bg-[#F9F5EB] text-[#A67C37] border border-[#DECBA4]/60 text-[10px] font-bold px-1.5 py-0.5 rounded tabular-nums">
+                {totalNights} đêm
+              </span>
             </div>
-            <div className="smart-search-dates-row">
+            <div className="flex items-center gap-2 w-full min-w-0">
               <Controller
                 control={control}
                 name="checkIn"
@@ -155,11 +159,12 @@ export function SmartSearchBar({
                     id={`${formId}-checkin`}
                     type="date"
                     aria-label="Ngày nhận phòng"
-                    className="smart-search-date-input"
+                    onClick={(e) => e.currentTarget.showPicker?.()}
+                    className="flex-1 min-w-0 bg-transparent border-0 outline-none text-xs sm:text-sm font-semibold text-[#141413] p-0 cursor-pointer tabular-nums [&::-webkit-calendar-picker-indicator]:hidden"
                   />
                 )}
               />
-              <span className="date-arrow-sep" aria-hidden="true">
+              <span className="text-[#A67C37] text-xs font-bold shrink-0" aria-hidden="true">
                 →
               </span>
               <Controller
@@ -171,13 +176,14 @@ export function SmartSearchBar({
                     id={`${formId}-checkout`}
                     type="date"
                     aria-label="Ngày trả phòng"
-                    className="smart-search-date-input"
+                    onClick={(e) => e.currentTarget.showPicker?.()}
+                    className="flex-1 min-w-0 bg-transparent border-0 outline-none text-xs sm:text-sm font-semibold text-[#141413] p-0 cursor-pointer tabular-nums [&::-webkit-calendar-picker-indicator]:hidden"
                   />
                 )}
               />
             </div>
             {errors.checkOut && (
-              <span className="smart-search-error" role="alert">
+              <span className="text-[11px] text-[#B93829] font-medium" role="alert">
                 {errors.checkOut.message}
               </span>
             )}
@@ -186,21 +192,25 @@ export function SmartSearchBar({
 
         {/* Phân vùng 3: Số lượng khách & phòng */}
         <div
-          className={`smart-search-segment ${
-            activeSegment === 'guests' ? 'is-focused' : ''
+          className={`flex items-center gap-3 p-2.5 sm:px-4 sm:py-3 rounded-xl border transition-colors duration-150 min-w-0 w-full ${
+            activeSegment === 'guests'
+              ? 'bg-[#FAF8F5] border-[#A67C37]/50 ring-1 ring-[#A67C37]/30'
+              : 'border-transparent hover:bg-[#FAF8F5]'
           }`}
           onFocus={() => setActiveSegment('guests')}
         >
-          <div className="smart-search-segment__icon" aria-hidden="true">
+          <div className="w-9 h-9 rounded-lg bg-[#F9F5EB] border border-[#DECBA4]/60 text-[#A67C37] flex items-center justify-center text-sm shrink-0" aria-hidden="true">
             <TeamOutlined />
           </div>
-          <div className="smart-search-segment__body">
-            <span className="smart-search-segment__label">Khách &amp; Phòng</span>
-            <div className="smart-search-counters-row">
-              <div className="guest-stepper" aria-label="Số lượng khách">
+          <div className="flex flex-col gap-1 min-w-0 flex-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A7468]">
+              Khách &amp; Phòng
+            </span>
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <div className="inline-flex items-center gap-1.5" aria-label="Số lượng khách">
                 <button
                   type="button"
-                  className="stepper-circle-btn"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded border border-[#CFC7B8] bg-[#FAF8F5] text-[#141413] inline-flex items-center justify-center text-xs hover:border-[#A67C37] hover:text-[#A67C37] hover:bg-[#F9F5EB] transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   aria-label="Giảm số khách"
                   disabled={guestsValue <= 1}
                   onClick={() =>
@@ -211,10 +221,12 @@ export function SmartSearchBar({
                 >
                   <MinusOutlined />
                 </button>
-                <span className="stepper-value">{guestsValue} khách</span>
+                <span className="text-xs sm:text-sm font-semibold tabular-nums text-[#141413]">
+                  {guestsValue} khách
+                </span>
                 <button
                   type="button"
-                  className="stepper-circle-btn"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded border border-[#CFC7B8] bg-[#FAF8F5] text-[#141413] inline-flex items-center justify-center text-xs hover:border-[#A67C37] hover:text-[#A67C37] hover:bg-[#F9F5EB] transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   aria-label="Tăng số khách"
                   disabled={guestsValue >= 16}
                   onClick={() =>
@@ -227,14 +239,12 @@ export function SmartSearchBar({
                 </button>
               </div>
 
-              <span className="dot-sep" aria-hidden="true">
-                ·
-              </span>
+              <span className="text-[#7A7468] text-xs" aria-hidden="true">·</span>
 
-              <div className="guest-stepper" aria-label="Số lượng phòng">
+              <div className="inline-flex items-center gap-1.5" aria-label="Số lượng phòng">
                 <button
                   type="button"
-                  className="stepper-circle-btn"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded border border-[#CFC7B8] bg-[#FAF8F5] text-[#141413] inline-flex items-center justify-center text-xs hover:border-[#A67C37] hover:text-[#A67C37] hover:bg-[#F9F5EB] transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   aria-label="Giảm số phòng"
                   disabled={roomsValue <= 1}
                   onClick={() =>
@@ -245,10 +255,12 @@ export function SmartSearchBar({
                 >
                   <MinusOutlined />
                 </button>
-                <span className="stepper-value">{roomsValue} phòng</span>
+                <span className="text-xs sm:text-sm font-semibold tabular-nums text-[#141413]">
+                  {roomsValue} phòng
+                </span>
                 <button
                   type="button"
-                  className="stepper-circle-btn"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded border border-[#CFC7B8] bg-[#FAF8F5] text-[#141413] inline-flex items-center justify-center text-xs hover:border-[#A67C37] hover:text-[#A67C37] hover:bg-[#F9F5EB] transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   aria-label="Tăng số phòng"
                   disabled={roomsValue >= 8}
                   onClick={() =>
@@ -265,8 +277,11 @@ export function SmartSearchBar({
         </div>
 
         {/* Phân vùng 4: Nút CTA Tìm kiếm */}
-        <div className="smart-search-cta-zone">
-          <button type="submit" className="btn-sunset-explore">
+        <div className="w-full xl:w-auto">
+          <button
+            type="submit"
+            className="w-full xl:w-auto h-12 px-7 rounded-xl bg-[#141413] !text-[#FAF8F5] hover:bg-[#A67C37] hover:!text-white transition-colors duration-200 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+          >
             <SearchOutlined aria-hidden="true" />
             <span>Khám phá</span>
           </button>
@@ -274,9 +289,9 @@ export function SmartSearchBar({
       </form>
 
       {/* Thanh phụ dưới Search Bar: Gợi ý điểm đến nhanh + Toggle thú cưng */}
-      <div className="smart-search-subbar">
-        <div className="quick-destinations-group">
-          <span className="quick-destinations-label">Điểm đến xu hướng:</span>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 text-xs text-white/90">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-white/70 text-xs font-medium">Điểm đến xu hướng:</span>
           {QUICK_LOCATION_SUGGESTIONS.map((city) => {
             const isSelected =
               destinationValue.toLowerCase() === city.toLowerCase()
@@ -284,7 +299,11 @@ export function SmartSearchBar({
               <button
                 key={city}
                 type="button"
-                className={`quick-dest-pill ${isSelected ? 'is-active' : ''}`}
+                className={`px-2.5 py-1 rounded text-xs transition cursor-pointer ${
+                  isSelected
+                    ? 'bg-[#A67C37] !text-white border border-[#E5C98B] font-semibold'
+                    : 'bg-black/40 !text-white/90 border border-white/20 hover:border-[#E5C98B] hover:!text-[#E5C98B]'
+                }`}
                 onClick={() => handleQuickSelectCity(city)}
               >
                 {city}
@@ -294,7 +313,7 @@ export function SmartSearchBar({
           {(destinationValue || petFriendlyValue) && (
             <button
               type="button"
-              className="quick-dest-clear-btn"
+              className="text-xs text-white/70 hover:text-white underline cursor-pointer ml-1"
               onClick={() => {
                 reset({
                   destination: '',
@@ -312,7 +331,10 @@ export function SmartSearchBar({
           )}
         </div>
 
-        <label className="pet-toggle-pill" htmlFor={`${formId}-pet-friendly`}>
+        <label
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/40 border border-white/20 text-xs font-medium text-white/90 cursor-pointer hover:border-white/40 transition"
+          htmlFor={`${formId}-pet-friendly`}
+        >
           <Controller
             control={control}
             name="petFriendly"

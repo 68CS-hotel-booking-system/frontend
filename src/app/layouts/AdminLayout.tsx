@@ -35,7 +35,6 @@ const NAV_GROUPS: NavGroupDef[] = [
   {
     title: 'Hệ thống',
     items: [
-      { to: '/management/live', label: 'Kiểm thử API live', icon: 'terminal' },
       { to: '/system-status', label: 'Trạng thái máy chủ', icon: 'dns' },
     ],
   },
@@ -72,8 +71,6 @@ export function AdminLayout() {
     currentPageTitle = 'Hợp đồng đối tác'
   } else if (location.pathname.includes('/management/financial-access')) {
     currentPageTitle = 'Phân quyền tài chính'
-  } else if (location.pathname.includes('/management/live')) {
-    currentPageTitle = 'Kiểm thử API live'
   } else if (location.pathname.includes('/system-status')) {
     currentPageTitle = 'Trạng thái máy chủ'
   }
@@ -100,12 +97,6 @@ export function AdminLayout() {
       icon: <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>travel_explore</span>,
       label: 'Về trang chủ khách',
       onClick: () => navigate('/'),
-    },
-    {
-      key: 'live-api',
-      icon: <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>terminal</span>,
-      label: 'Bàn kiểm thử API',
-      onClick: () => navigate('/management/live'),
     },
     { type: 'divider' },
     {

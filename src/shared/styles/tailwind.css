@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #A67C37;
+  --color-primary-hover: #8E6728;
+  --color-primary-active: #73521D;
+  --color-primary-soft: #F9F5EB;
+  --color-primary-border: #DECBA4;
+
+  --color-secondary: #2C4A52;
+  --color-secondary-hover: #1F363C;
+  --color-secondary-soft: #F0F4F5;
+
+  --color-accent: #141413;
+  --color-accent-soft: #F3EFE6;
+  --color-gold-light: #E5C98B;
+  --color-gold-dark: #785718;
+
+  --color-canvas: #FAF8F5;
+  --color-surface: #FFFFFF;
+  --color-elevated: #F3EFE6;
+  --color-obsidian: #141413;
+
+  --color-text-primary: #141413;
+  --color-text-secondary: #524E46;
+  --color-text-muted: #7A7468;
+
+  --color-border-subtle: #E6E1D6;
+  --color-border-strong: #CFC7B8;
+
+  --font-editorial: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 20px;
+
+  --shadow-floating: 0 16px 40px -10px rgba(20, 20, 19, 0.12), 0 4px 12px rgba(20, 20, 19, 0.04);
+  --shadow-card: 0 4px 20px rgba(20, 20, 19, 0.04);
+  --shadow-card-hover: 0 16px 36px -8px rgba(20, 20, 19, 0.12);
+}
+
+/* Base custom utility helpers for smooth luxury feel */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.luxury-gradient-text {
+  background: linear-gradient(135deg, #A67C37 0%, #D4AF37 50%, #8E6728 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

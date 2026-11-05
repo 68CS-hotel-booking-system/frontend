@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { AppLayout } from '@/app/layouts/AppLayout'
 import { AdminLayout } from '@/app/layouts/AdminLayout'
+import { AdminRouteGuard } from '@/features/auth'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
@@ -13,7 +14,6 @@ import { HotelContractsManagementPage } from '@/pages/management/HotelContractsM
 import { HotelManagementDetailPage } from '@/pages/management/HotelManagementDetailPage'
 import { HotelManagementListPage } from '@/pages/management/HotelManagementListPage'
 import { HotelRatesManagementPage } from '@/pages/management/HotelRatesManagementPage'
-import { LiveApiPage } from '@/pages/management/LiveApiPage'
 import { NotFoundPage } from '@/pages/public/NotFoundPage'
 import { StayVibeHomePage } from '@/pages/public/StayVibeHomePage'
 import { SystemStatusPage } from '@/pages/public/SystemStatusPage'
@@ -22,8 +22,15 @@ export function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Admin Portal Layout Routes */}
-        <Route path="admin" element={<AdminLayout />}>
+        {/* Admin Portal Layout Routes (Protected by AdminRouteGuard) */}
+        <Route
+          path="admin"
+          element={
+            <AdminRouteGuard>
+              <AdminLayout />
+            </AdminRouteGuard>
+          }
+        >
           <Route index element={<Navigate to="/admin/users" replace />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="overview" element={<AdminOverviewPage />} />
@@ -48,7 +55,7 @@ export function AppRouter() {
             path="management/financial-access"
             element={<FinancialAccessManagementPage />}
           />
-          <Route path="management/live" element={<LiveApiPage />} />
+          <Route path="management/live" element={<Navigate to="/" replace />} />
           <Route path="verify-email" element={<VerifyEmailPage />} />
           <Route path="reset-password" element={<ResetPasswordPage />} />
           <Route path="login" element={<LoginPage />} />
