@@ -53,7 +53,7 @@ export function StayVibeHomePage() {
   }
 
   return (
-    <div className="w-full flex flex-col gap-10 sm:gap-14">
+    <div className="w-full flex flex-col gap-8 sm:gap-12">
       {/* 1. Hero Banner + Thanh tìm kiếm thông minh */}
       <HeroSection
         onSearchSubmit={handleSearchSubmit}
@@ -79,38 +79,38 @@ export function StayVibeHomePage() {
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-6">
           <div>
-            <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#A67C37]">
-              BỘ SƯU TẬP TUYỂN CHỌN
+            <span className="text-xs font-bold tracking-wider uppercase text-[var(--md-sys-color-primary)]">
+              Bộ sưu tập chỗ nghỉ
             </span>
-            <h2 id="hotels-section-heading" className="font-editorial text-2xl sm:text-3xl font-semibold text-[#141413] mt-1">
+            <h2 id="hotels-section-heading" className="text-xl sm:text-2xl font-bold text-[var(--md-sys-color-on-surface)] mt-1">
               Khu nghỉ dưỡng &amp; Khách sạn tiêu biểu
             </h2>
-            <p className="text-xs sm:text-sm text-[#7A7468] mt-1">
-              Tuyển tập các khu Glamping thượng lưu, Boutique Di Sản và Biệt thự
-              biển có điểm đánh giá xuất sắc nhất.
+            <p className="text-xs sm:text-sm text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+              Khám phá danh sách chỗ nghỉ được tuyển chọn với đánh giá cao và tiện nghi đầy đủ.
             </p>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
             {hasActiveFilters && (
-              <Button
-                icon={<CloseCircleOutlined aria-hidden="true" />}
+              <button
+                type="button"
                 onClick={handleResetFilters}
-                className="!text-xs !rounded-md"
+                className="m3-btn-tonal !h-9 !px-3.5 !rounded-full !text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
               >
-                Xóa bộ lọc ({filteredHotels.length})
-              </Button>
+                <CloseCircleOutlined aria-hidden="true" />
+                <span>Xóa bộ lọc ({filteredHotels.length})</span>
+              </button>
             )}
 
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#524E46]">
-              <label htmlFor="stayvibe-sort-select" className="flex items-center gap-1 cursor-pointer">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--md-sys-color-on-surface-variant)]">
+              <label htmlFor="stayhub-sort-select" className="flex items-center gap-1 cursor-pointer">
                 <FilterOutlined aria-hidden="true" /> Sắp xếp:
               </label>
               <Select<SortOrder>
-                id="stayvibe-sort-select"
+                id="stayhub-sort-select"
                 value={sortOrder}
                 onChange={(val) => setSortOrder(val)}
-                className="w-44"
+                className="w-48"
                 options={[
                   { label: 'Phổ biến nhất', value: 'POPULAR' },
                   { label: 'Giá thấp đến cao', value: 'PRICE_ASC' },
@@ -130,15 +130,15 @@ export function StayVibeHomePage() {
 
         {hasActiveFilters && (
           <div
-            className="flex items-center gap-2 flex-wrap p-3 rounded-xl bg-white border border-[#E6E1D6] mb-6 text-xs text-[#524E46]"
+            className="flex items-center gap-2 flex-wrap p-3 rounded-2xl bg-white border border-[var(--md-sys-color-outline-subtle)] mb-6 text-xs text-[var(--md-sys-color-on-surface)]"
             role="status"
             aria-live="polite"
           >
-            <span className="text-[#7A7468] font-medium">Đang lọc theo:</span>
+            <span className="text-[var(--md-sys-color-on-surface-variant)] font-medium">Đang lọc theo:</span>
             {selectedVibe !== 'ALL' && (
               <Tag
                 closable
-                className="!bg-[#F9F5EB] !text-[#785718] !border-[#DECBA4] !font-medium !text-xs !rounded-md"
+                className="!bg-[var(--md-sys-color-secondary-container)] !text-[var(--md-sys-color-on-secondary-container)] !border-transparent !font-semibold !text-xs !rounded-full !px-3 !py-0.5"
                 onClose={() => setSelectedVibe('ALL')}
               >
                 Phong cách: {selectedVibeLabel}
@@ -147,7 +147,7 @@ export function StayVibeHomePage() {
             {selectedCityId !== 'ALL' && (
               <Tag
                 closable
-                className="!bg-[#F9F5EB] !text-[#785718] !border-[#DECBA4] !font-medium !text-xs !rounded-md"
+                className="!bg-[var(--md-sys-color-secondary-container)] !text-[var(--md-sys-color-on-secondary-container)] !border-transparent !font-semibold !text-xs !rounded-full !px-3 !py-0.5"
                 onClose={() => setSelectedCityId('ALL')}
               >
                 Điểm đến: {selectedCityName}
@@ -156,7 +156,7 @@ export function StayVibeHomePage() {
             {searchKeyword.trim() && (
               <Tag
                 closable
-                className="!bg-[#F9F5EB] !text-[#785718] !border-[#DECBA4] !font-medium !text-xs !rounded-md"
+                className="!bg-[var(--md-sys-color-secondary-container)] !text-[var(--md-sys-color-on-secondary-container)] !border-transparent !font-semibold !text-xs !rounded-full !px-3 !py-0.5"
                 onClose={() => setSearchKeyword('')}
               >
                 Từ khóa: &ldquo;{searchKeyword}&rdquo;
@@ -165,7 +165,7 @@ export function StayVibeHomePage() {
             {petFriendlyOnly && (
               <Tag
                 closable
-                className="!bg-[#F9F5EB] !text-[#785718] !border-[#DECBA4] !font-medium !text-xs !rounded-md"
+                className="!bg-[var(--md-sys-color-secondary-container)] !text-[var(--md-sys-color-on-secondary-container)] !border-transparent !font-semibold !text-xs !rounded-full !px-3 !py-0.5"
                 onClose={() => setPetFriendlyOnly(false)}
               >
                 Thân thiện thú cưng
@@ -175,7 +175,7 @@ export function StayVibeHomePage() {
         )}
 
         {filteredHotels.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-[#E6E1D6] p-10 text-center shadow-sm">
+          <div className="bg-white rounded-2xl border border-[var(--md-sys-color-outline-subtle)] p-10 text-center shadow-xs">
             <EmptyState
               title="Không tìm thấy chỗ nghỉ phù hợp"
               description="Thử chọn một phong cách khác, đổi địa điểm hoặc xóa bộ lọc để xem toàn bộ danh sách."
@@ -185,7 +185,7 @@ export function StayVibeHomePage() {
                     type="primary"
                     icon={<ReloadOutlined aria-hidden="true" />}
                     onClick={handleResetFilters}
-                    className="!bg-[#141413] hover:!bg-[#A67C37]"
+                    className="!rounded-full font-semibold"
                   >
                     Xem tất cả chỗ nghỉ
                   </Button>

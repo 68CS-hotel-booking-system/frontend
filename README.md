@@ -44,6 +44,8 @@ Chỉ copy env khi chưa có `.env.local`. Backend dev mặc định ở http://
 
 ## Xác thực
 
+`/admin/login` là màn hình đăng nhập riêng cho quản trị. Khách mở `/admin`, `/admin/overview` hoặc `/admin/users` được chuyển đến đây; sau login, FE gọi `/users/me` xác minh role `ADMIN` rồi quay về đường dẫn admin ban đầu (mặc định `/admin/overview`). Tài khoản thiếu quyền bị từ chối; lỗi xác minh cho phép thử lại hoặc đổi tài khoản. `/login` dành cho client vẫn giữ nguyên.
+
 Access/refresh token chỉ giữ trong memory; reload cần đăng nhập lại. Backend trả refresh token trong JSON, chưa có cookie HttpOnly. Refresh thủ công; không tự gửi lại mutation.
 Login/refresh không hiển thị token trong kết quả. Logout thành công, đổi/reset mật khẩu xóa phiên local và cache; logout lỗi giữ phiên.
 

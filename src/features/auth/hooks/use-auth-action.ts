@@ -15,6 +15,12 @@ function requireRefreshToken() {
   return token
 }
 
+/** Ends this browser's local session; server token revocation still uses the logout API. */
+export function clearAuthSession() {
+  setSession(null)
+  queryClient.clear()
+}
+
 /** One session transition path used by auth screens and API diagnostics. */
 export async function runAuthAction(id: AuthActionId, values: Record<string, string>, signal?: AbortSignal) {
   let result: unknown
@@ -54,8 +60,7 @@ export async function runAuthAction(id: AuthActionId, values: Record<string, str
     return { user: session.user, expiresAt: session.expiresAt }
   }
   if (id === 'logout' || id === 'password' || id === 'reset-password') {
-    setSession(null)
-    queryClient.clear()
+    clearAuthSession()
   }
   return result
 }

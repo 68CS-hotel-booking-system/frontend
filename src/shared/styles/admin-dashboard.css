@@ -1,61 +1,125 @@
-/* StayHub Admin Dashboard Design Tokens & Component Styles */
-/* Architecture: app-screens accent-ladder style */
+/* StayHub Admin Dashboard - Material Design 3 Design System */
+/* Architecture: Material 3 Foundations (Color Tokens, Typography, Elevation, Shapes) */
 
 :root {
-  /* Surfaces & Backgrounds */
-  --admin-ground: #F5F6F7;
-  --admin-surface: #FFFFFF;
-  --admin-raised: #F0F2F4;
-  --admin-border: #E3E6E9;
-  --admin-rule: #EAECEE;
-  --admin-control-border: #CBD5E1;
+  /* ==========================================================================
+     1. Material Design 3 Color Tokens (StayHub Teal Baseline)
+     ========================================================================== */
+  /* Primary */
+  --md-sys-color-primary: #006A6A;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #6FF7F6;
+  --md-sys-color-on-primary-container: #002020;
 
-  /* Typography */
-  --admin-font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --admin-text-primary: #17212B;
-  --admin-text-secondary: #5F6B76;
-  --admin-text-tertiary: #8C9BA8;
-  --admin-fs-title: 22px;
-  --admin-fs-section: 16px;
-  --admin-fs-body: 13px;
-  --admin-fs-small: 12px;
-  --admin-fs-xs: 11px;
+  /* Secondary */
+  --md-sys-color-secondary: #4A6363;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #CCE8E7;
+  --md-sys-color-on-secondary-container: #051F1F;
 
-  /* Accent: Brand Teal (accent-ladder) */
-  --admin-teal: #0E6B6F;
-  --admin-teal-hover: #0A5356;
-  --admin-teal-light: rgba(14, 107, 111, 0.08);
-  --admin-teal-soft: #E6F4F5;
-  --admin-teal-track: #B8E2E4;
-  --admin-teal-ink: #073B3D;
+  /* Tertiary */
+  --md-sys-color-tertiary: #4B607C;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #D3E4FF;
+  --md-sys-color-on-tertiary-container: #041C35;
 
-  /* Semantic Status */
-  --admin-status-active: #1F7A4D;
-  --admin-status-active-bg: #E6F4EC;
+  /* Error */
+  --md-sys-color-error: #BA1A1A;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: #FFDAD6;
+  --md-sys-color-on-error-container: #410002;
+
+  /* Surface & Background Palette */
+  --md-sys-color-surface: #FAFDFD;
+  --md-sys-color-on-surface: #191C1C;
+  --md-sys-color-surface-variant: #DAE5E4;
+  --md-sys-color-on-surface-variant: #3F4948;
+
+  --md-sys-color-surface-container-lowest: #FFFFFF;
+  --md-sys-color-surface-container-low: #F4FBFB;
+  --md-sys-color-surface-container: #EEF5F5;
+  --md-sys-color-surface-container-high: #E8EFEF;
+  --md-sys-color-surface-container-highest: #E2E9E9;
+
+  /* Outline */
+  --md-sys-color-outline: #6F7979;
+  --md-sys-color-outline-variant: #BEC9C8;
+  --md-sys-color-outline-subtle: #E2E8E8;
+
+  /* ==========================================================================
+     2. Elevation (Material 3 Shadows)
+     ========================================================================== */
+  --md-sys-elevation-0: none;
+  --md-sys-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px 0px rgba(0, 0, 0, 0.04);
+  --md-sys-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.08), 0px 1px 2px 0px rgba(0, 0, 0, 0.04);
+  --md-sys-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.08), 0px 1px 3px 0px rgba(0, 0, 0, 0.04);
+
+  /* ==========================================================================
+     3. Shape Tokens
+     ========================================================================== */
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-full: 9999px;
+
+  /* ==========================================================================
+     4. Backward Compatibility Aliases for StayHub Admin Tokens
+     ========================================================================== */
+  --admin-font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --admin-ground: var(--md-sys-color-surface-container-low);
+  --admin-surface: var(--md-sys-color-surface-container-lowest);
+  --admin-raised: var(--md-sys-color-surface-container);
+  --admin-border: var(--md-sys-color-outline-variant);
+  --admin-rule: var(--md-sys-color-outline-subtle);
+  --admin-control-border: var(--md-sys-color-outline-variant);
+
+  --admin-text-primary: var(--md-sys-color-on-surface);
+  --admin-text-secondary: var(--md-sys-color-on-surface-variant);
+  --admin-text-tertiary: var(--md-sys-color-outline);
+
+  --admin-teal: var(--md-sys-color-primary);
+  --admin-teal-hover: #005050;
+  --admin-teal-light: rgba(0, 106, 106, 0.08);
+  --admin-teal-soft: var(--md-sys-color-secondary-container);
+  --admin-teal-track: #80D4D3;
+  --admin-teal-ink: var(--md-sys-color-on-secondary-container);
+
+  /* Status Colors */
+  --admin-status-active: #0D6B40;
+  --admin-status-active-bg: #E6F6ED;
   --admin-status-pending: #8A5A00;
   --admin-status-pending-bg: #FFF3D6;
   --admin-status-inactive: #4B5560;
   --admin-status-inactive-bg: #EEF0F2;
-  --admin-status-locked: #B42318;
-  --admin-status-locked-bg: #FDECEA;
+  --admin-status-locked: var(--md-sys-color-error);
+  --admin-status-locked-bg: var(--md-sys-color-error-container);
 
-  /* Layout dimensions */
-  --admin-sidebar-width: 240px;
-  --admin-header-height: 56px;
-  --admin-radius-card: 10px;
-  --admin-radius-control: 6px;
-  --admin-gap: 20px;
+  /* Dimensions */
+  --admin-sidebar-width: 280px;
+  --admin-sidebar-rail-width: 80px;
+  --admin-header-height: 64px;
+  --admin-radius-card: var(--md-sys-shape-corner-large);
+  --admin-radius-control: var(--md-sys-shape-corner-small);
+  --admin-gap: 24px;
 }
 
+/* ==========================================================================
+   5. Global Admin Canvas Reset & Typography
+   ========================================================================== */
 body:has(.admin-body) {
-  background-color: var(--admin-ground) !important;
+  background-color: var(--md-sys-color-surface-container-low) !important;
 }
 
 .admin-body {
   font-family: var(--admin-font-family);
-  background-color: var(--admin-ground);
-  color: var(--admin-text-primary);
+  background-color: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface);
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
 }
 
 .admin-body h1,
@@ -65,358 +129,404 @@ body:has(.admin-body) {
 .admin-body h5,
 .admin-body h6 {
   font-family: var(--admin-font-family);
+  color: var(--md-sys-color-on-surface);
 }
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* Custom Scrollbar */
+/* Custom Slim Scrollbar */
 .admin-body ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 .admin-body ::-webkit-scrollbar-thumb {
-  background: #D0D5DD;
-  border-radius: 9999px;
+  background: var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-full);
 }
 .admin-body ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* Pulse beacon for active status */
-@keyframes pulse-ring {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.15); opacity: 0.3; }
-  100% { transform: scale(0.95); opacity: 0.8; }
-}
-
-.active-dot-pulse {
-  animation: pulse-ring 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Loading shimmer block */
-@keyframes skeleton-shimmer {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
-}
-
-.skeleton-shimmer {
-  background-color: #E3E6E9;
-  animation: skeleton-shimmer 1.6s ease-in-out infinite;
-}
-
-.skeleton-shimmer-subtle {
-  background-color: #EEF0F2;
-  animation: skeleton-shimmer 1.6s ease-in-out infinite;
-}
-
-/* Custom interactive checkbox styling (flat & clean) */
-.custom-checkbox {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 17px;
-  height: 17px;
-  border: 1.5px solid #CBD5E1;
-  border-radius: 4px;
-  outline: none;
-  cursor: pointer;
-  position: relative;
-  background-color: #FFFFFF;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-  display: inline-grid;
-  place-content: center;
-  margin: 0;
-  vertical-align: middle;
-}
-
-.custom-checkbox:hover {
-  border-color: #0E6B6F;
-}
-
-.custom-checkbox:focus-visible {
-  outline: 2px solid rgba(14, 107, 111, 0.35);
-  outline-offset: 1px;
-}
-
-.custom-checkbox:checked {
-  background-color: #0E6B6F;
-  border-color: #0E6B6F;
-}
-
-.custom-checkbox::before {
-  content: "";
-  width: 9px;
-  height: 5px;
-  border-left: 2px solid white;
-  border-bottom: 2px solid white;
-  transform: rotate(-45deg) translate(0.5px, -1px);
-  opacity: 0;
-  transition: opacity 0.12s ease;
-}
-
-.custom-checkbox:checked::before {
-  opacity: 1;
-}
-
-.custom-checkbox:indeterminate {
-  background-color: #0E6B6F;
-  border-color: #0E6B6F;
-}
-
-.custom-checkbox:indeterminate::before {
-  content: "";
-  width: 8px;
-  height: 2px;
-  background-color: white;
-  border: none;
-  transform: none;
-  opacity: 1;
-}
-
-/* Row selection state */
-.row-selected {
-  background-color: rgba(14, 107, 111, 0.04) !important;
-}
-
-/* Standardized Flat Buttons (app-screens compliant) */
-.admin-btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px 14px;
-  background-color: var(--admin-teal);
-  color: #FFFFFF;
-  font-size: var(--admin-fs-body);
-  font-weight: 500;
-  border-radius: var(--admin-radius-control);
-  border: 1px solid var(--admin-teal);
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-  line-height: 1.3;
-}
-
-.admin-btn-primary:hover {
-  background-color: var(--admin-teal-hover);
-  border-color: var(--admin-teal-hover);
-}
-
-.admin-btn-primary:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.admin-btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px 14px;
-  background-color: var(--admin-surface);
-  color: var(--admin-text-primary);
-  font-size: var(--admin-fs-body);
-  font-weight: 500;
-  border-radius: var(--admin-radius-control);
-  border: 1px solid var(--admin-border);
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-  line-height: 1.3;
-}
-
-.admin-btn-secondary:hover {
-  background-color: var(--admin-ground);
-  border-color: var(--admin-control-border);
-}
-
-.admin-btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 6px 10px;
-  background-color: transparent;
-  color: var(--admin-text-secondary);
-  font-size: var(--admin-fs-body);
-  font-weight: 500;
-  border-radius: var(--admin-radius-control);
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-  line-height: 1.3;
-}
-
-.admin-btn-ghost:hover {
-  background-color: var(--admin-raised);
-  color: var(--admin-text-primary);
-}
-
-.admin-btn-danger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px 14px;
-  background-color: var(--admin-status-locked-bg);
-  color: var(--admin-status-locked);
-  font-size: var(--admin-fs-body);
-  font-weight: 500;
-  border-radius: var(--admin-radius-control);
-  border: 1px solid rgba(180, 35, 24, 0.2);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-  line-height: 1.3;
-}
-
-.admin-btn-danger:hover {
-  background-color: #FBD7D3;
-}
-
-/* Standardized Form Input & Select */
-.admin-input,
-.admin-select {
-  height: 34px;
-  padding: 0 10px;
-  font-size: var(--admin-fs-body);
-  color: var(--admin-text-primary);
-  background-color: var(--admin-surface);
-  border: 1px solid var(--admin-control-border);
-  border-radius: var(--admin-radius-control);
-  outline: none;
-  transition: border-color 0.15s ease;
-  font-family: inherit;
-}
-
-.admin-input:focus,
-.admin-select:focus {
-  border-color: var(--admin-teal);
-  outline: 2px solid rgba(14, 107, 111, 0.2);
-  outline-offset: 0;
-}
-
-.admin-input::placeholder {
-  color: #94A3B8;
-}
-
-/* Standardized Table */
-.admin-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: var(--admin-fs-body);
-}
-
-.admin-table th {
-  padding: 10px 14px;
-  font-size: var(--admin-fs-small);
-  font-weight: 500;
-  color: var(--admin-text-secondary);
-  background-color: #F8FAFB;
-  border-bottom: 1px solid var(--admin-border);
-  text-align: left;
-  user-select: none;
-}
-
-.admin-table td {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--admin-rule);
-  color: var(--admin-text-primary);
-  vertical-align: middle;
-}
-
-.admin-table tbody tr {
-  background-color: var(--admin-surface);
-  transition: background-color 0.12s ease;
-}
-
-.admin-table tbody tr:hover {
-  background-color: #F8FAFB;
-}
-
-/* Status Pill */
-.admin-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-size: var(--admin-fs-small);
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-/* Layout Utilities for StayHub Admin */
-.admin-sidebar-fixed {
+/* ==========================================================================
+   6. Material Design 3 Navigation Drawer & Rail
+   ========================================================================== */
+/* Desktop Drawer (Fixed left, width 280px) */
+.m3-nav-drawer {
   width: var(--admin-sidebar-width);
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
   z-index: 50;
-  background-color: var(--admin-surface);
-  border-right: 1px solid var(--admin-border);
+  background-color: var(--md-sys-color-surface-container-low);
+  border-right: 1px solid var(--md-sys-color-outline-subtle);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  box-sizing: border-box;
+  transition: width 0.2s cubic-bezier(0.2, 0, 0, 1), transform 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
+/* Tablet Rail mode (width 80px) */
+.m3-nav-drawer.is-rail {
+  width: var(--admin-sidebar-rail-width);
+}
+
+/* Mobile Modal Drawer (Off-screen by default) */
 @media (max-width: 767.98px) {
-  .admin-sidebar-fixed {
+  .m3-nav-drawer {
+    width: 300px;
+    background-color: var(--md-sys-color-surface-container-low);
+    border-top-right-radius: var(--md-sys-shape-corner-large);
+    border-bottom-right-radius: var(--md-sys-shape-corner-large);
+    box-shadow: var(--md-sys-elevation-3);
     transform: translateX(-100%);
-    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.24s cubic-bezier(0.1, 0.9, 0.2, 1);
   }
-  .admin-sidebar-fixed.is-open {
+  .m3-nav-drawer.is-mobile-open {
     transform: translateX(0);
   }
 }
 
-@media (min-width: 768px) {
-  .admin-sidebar-fixed {
-    transform: none !important;
-  }
+/* Backdrop for Mobile Drawer */
+.m3-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(25, 28, 28, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 45;
+  transition: opacity 0.2s ease;
 }
 
-.admin-main-wrapper {
-  min-height: 100vh;
+/* Navigation Drawer Item (M3 Active Pill) */
+.m3-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: var(--md-sys-shape-corner-full);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: background-color 0.15s ease, color 0.15s ease;
+  position: relative;
+  outline: none;
+  cursor: pointer;
+}
+
+.m3-drawer-item:hover {
+  background-color: rgba(74, 99, 99, 0.08);
+  color: var(--md-sys-color-on-surface);
+}
+
+.m3-drawer-item:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.m3-drawer-item.is-active {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  font-weight: 600;
+}
+
+.m3-drawer-item.is-active .m3-drawer-icon {
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.m3-drawer-icon {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-shrink: 0;
+}
+
+/* Navigation Rail Item (Compact tablet view) */
+.m3-rail-item {
   display: flex;
   flex-direction: column;
-  background-color: var(--admin-ground);
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px;
+  text-decoration: none;
+  color: var(--md-sys-color-on-surface-variant);
+  outline: none;
+  border-radius: var(--md-sys-shape-corner-medium);
+  cursor: pointer;
+  transition: color 0.15s ease;
 }
 
-@media (min-width: 768px) {
-  .admin-main-wrapper {
-    padding-left: var(--admin-sidebar-width);
-  }
+.m3-rail-pill {
+  width: 56px;
+  height: 32px;
+  border-radius: var(--md-sys-shape-corner-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.admin-header-sticky {
+.m3-rail-item:hover .m3-rail-pill {
+  background-color: rgba(74, 99, 99, 0.08);
+}
+
+.m3-rail-item.is-active .m3-rail-pill {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.m3-rail-label {
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 72px;
+}
+
+.m3-rail-item.is-active .m3-rail-label {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   7. Material Design 3 Top App Bar
+   ========================================================================== */
+.m3-top-app-bar {
   position: sticky;
   top: 0;
   right: 0;
   left: 0;
   height: var(--admin-header-height);
-  background-color: var(--admin-surface);
-  border-bottom: 1px solid var(--admin-border);
+  background-color: var(--md-sys-color-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-subtle);
   z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  box-sizing: border-box;
 }
 
-/* Mobile backdrop */
-.admin-mobile-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(17, 24, 39, 0.4);
-  z-index: 45;
-  transition: opacity 0.2s ease;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .active-dot-pulse,
-  .skeleton-shimmer,
-  .skeleton-shimmer-subtle {
-    animation: none !important;
+@media (max-width: 640px) {
+  .m3-top-app-bar {
+    padding: 0 16px;
   }
-  .admin-sidebar-fixed {
-    transition: none !important;
+}
+
+/* Main Layout Wrapper */
+.m3-main-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--md-sys-color-surface-container-low);
+  transition: padding-left 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (min-width: 768px) {
+  .m3-main-wrapper.has-rail {
+    padding-left: var(--admin-sidebar-rail-width);
+  }
+  .m3-main-wrapper.has-drawer {
+    padding-left: var(--admin-sidebar-width);
+  }
+}
+
+/* ==========================================================================
+   8. Material Design 3 Components (Cards, Buttons, Badges)
+   ========================================================================== */
+/* M3 Elevated & Outlined Cards */
+.m3-card {
+  background-color: var(--md-sys-color-surface-container-lowest);
+  border: 1px solid var(--md-sys-color-outline-subtle);
+  border-radius: var(--md-sys-shape-corner-large);
+  padding: 24px;
+  box-sizing: border-box;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.m3-card:hover {
+  box-shadow: var(--md-sys-elevation-1);
+}
+
+.m3-card-elevated {
+  background-color: var(--md-sys-color-surface-container-lowest);
+  border-radius: var(--md-sys-shape-corner-large);
+  box-shadow: var(--md-sys-elevation-1);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+/* M3 Buttons */
+.m3-btn-filled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  min-width: 48px;
+  padding: 0 20px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
+  outline: none;
+}
+
+.m3-btn-filled:hover {
+  background-color: var(--admin-teal-hover);
+  box-shadow: var(--md-sys-elevation-1);
+}
+
+.m3-btn-filled:active {
+  transform: scale(0.98);
+}
+
+.m3-btn-tonal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  min-width: 48px;
+  padding: 0 16px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, transform 0.08s ease;
+  outline: none;
+}
+
+.m3-btn-tonal:hover {
+  background-color: #BBE1E0;
+}
+
+.m3-btn-tonal:active {
+  transform: scale(0.98);
+}
+
+.m3-btn-outlined {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  min-width: 48px;
+  padding: 0 16px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background-color: transparent;
+  color: var(--md-sys-color-primary);
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  outline: none;
+}
+
+.m3-btn-outlined:hover {
+  background-color: rgba(0, 106, 106, 0.06);
+  border-color: var(--md-sys-color-primary);
+}
+
+.m3-btn-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--md-sys-shape-corner-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  outline: none;
+}
+
+.m3-btn-icon:hover {
+  background-color: rgba(74, 99, 99, 0.08);
+  color: var(--md-sys-color-on-surface);
+}
+
+.m3-btn-icon:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+}
+
+/* Badges / Chips */
+.m3-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: 12px;
+  font-weight: 500;
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface-variant);
+  border: 1px solid var(--md-sys-color-outline-subtle);
+}
+
+.m3-chip-primary {
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border-color: transparent;
+}
+
+.m3-chip-error {
+  background-color: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  border-color: transparent;
+}
+
+/* Responsive visibility utilities with explicit high specificity */
+.m3-mobile-only {
+  display: inline-flex !important;
+}
+.m3-desktop-only {
+  display: inline-flex !important;
+}
+
+@media (max-width: 767.98px) {
+  .m3-desktop-only {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .m3-mobile-only {
+    display: none !important;
+  }
+}
+
+/* Accessibility & Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

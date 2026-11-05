@@ -28,7 +28,23 @@
   --color-border-subtle: #E6E1D6;
   --color-border-strong: #CFC7B8;
 
+  /* Warm Editorial theme tokens (from index.html prototype) */
+  --color-warm-bg: #fbf6ee;
+  --color-warm-surface: #fffdf8;
+  --color-warm-surface-warm: #f1e3cf;
+  --color-warm-fg: #201914;
+  --color-warm-fg-2: #4c4037;
+  --color-warm-muted: #6f6258;
+  --color-warm-accent: #9b5b32;
+  --color-warm-accent-hover: #7c4527;
+  --color-warm-accent-soft: #efdccb;
+  --color-warm-border: #ded2c3;
+  --color-warm-border-soft: #eee4d7;
+  --color-warm-border-strong: #9a8772;
+  --color-warm-danger: #b33a3a;
+
   --font-editorial: 'Cormorant Garamond', Georgia, serif;
+  --font-serif: Georgia, "Times New Roman", serif;
   --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
 

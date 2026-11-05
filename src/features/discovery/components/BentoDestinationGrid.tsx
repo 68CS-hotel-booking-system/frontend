@@ -20,21 +20,21 @@ export function BentoDestinationGrid({
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 mb-6">
         <div>
-          <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#A67C37]">
-            ĐIỂM ĐẾN NỔI BẬT
+          <span className="text-xs font-bold tracking-wider uppercase text-[var(--md-sys-color-primary)]">
+            Điểm đến nổi bật
           </span>
-          <h2 id="bento-section-heading" className="font-editorial text-2xl sm:text-3xl font-semibold text-[#141413] mt-1">
+          <h2 id="bento-section-heading" className="text-xl sm:text-2xl font-bold text-[var(--md-sys-color-on-surface)] mt-1">
             Khám phá điểm đến thịnh hành
           </h2>
-          <p className="text-xs sm:text-sm text-[#7A7468] mt-1">
-            Những tọa độ du lịch trải nghiệm được yêu thích nhất mùa này.
+          <p className="text-xs sm:text-sm text-[var(--md-sys-color-on-surface-variant)] mt-1">
+            Những tọa độ du lịch và nghỉ dưỡng được yêu thích nhất mùa này.
           </p>
         </div>
 
         {selectedCityId !== 'ALL' && (
           <button
             type="button"
-            className="text-xs font-semibold px-3.5 py-1.5 rounded-full border border-[#CFC7B8] text-[#524E46] hover:border-[#A67C37] hover:text-[#A67C37] transition cursor-pointer"
+            className="m3-btn-outlined !h-8 !px-3.5 !rounded-full !text-xs font-semibold cursor-pointer"
             onClick={() => onSelectCity('ALL')}
           >
             Xem tất cả điểm đến
@@ -51,57 +51,60 @@ export function BentoDestinationGrid({
             <article
               key={item.id}
               role="listitem"
-              className={`group relative overflow-hidden rounded-2xl bg-[#141413] text-white flex flex-col justify-between p-6 sm:p-8 min-h-[300px] sm:min-h-[350px] border border-[#DECBA4]/30 shadow-lg hover:shadow-xl transition-all duration-300 ${
-                isSingle ? 'col-span-full min-h-[340px] sm:min-h-[380px]' : ''
-              } ${isSelected ? 'ring-2 ring-[#A67C37]' : ''}`}
+              className={`group relative overflow-hidden rounded-2xl bg-neutral-900 text-white flex flex-col justify-between p-5 sm:p-6 min-h-[280px] sm:min-h-[320px] border border-[var(--md-sys-color-outline-subtle)] shadow-xs hover:shadow-md transition-all duration-300 ${
+                isSingle ? 'col-span-full min-h-[320px]' : ''
+              } ${isSelected ? 'ring-2 ring-[var(--md-sys-color-primary)] border-transparent' : ''}`}
             >
               <img
                 src={item.imageUrl}
                 alt={`Điểm đến ${item.cityName}`}
                 loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 pointer-events-none"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
               />
               <div
-                className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20 group-hover:from-black/95 transition-colors duration-300 pointer-events-none"
+                className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/30 group-hover:from-black/95 transition-colors duration-300 pointer-events-none"
                 aria-hidden="true"
               />
 
+              {/* Top Badges */}
               <div className="relative z-10 flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-xs font-medium">
-                  <EnvironmentFilled className="text-[#E5C98B]" aria-hidden="true" /> {item.badgeText}
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 !text-white text-xs font-medium">
+                  <EnvironmentFilled className="!text-[var(--md-sys-color-primary-container)]" aria-hidden="true" />
+                  <span>{item.badgeText}</span>
                 </span>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-sm bg-[#A67C37] text-white text-[10px] font-bold tracking-wider uppercase">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 !text-white text-[11px] font-semibold">
                   {item.highlightVibe}
                 </span>
               </div>
 
+              {/* Bottom Content */}
               <div className="relative z-10 flex flex-col items-start gap-1">
-                <h3 className="font-editorial text-2xl sm:text-3xl font-semibold !text-white">
+                <h3 className="text-2xl sm:text-3xl font-extrabold !text-white tracking-tight drop-shadow-sm m-0">
                   {item.cityName}
                 </h3>
-                <p className="text-xs sm:text-sm text-white/90">
+                <p className="text-xs sm:text-sm !text-white/95 font-medium m-0 mt-0.5">
                   {item.tagline}
                 </p>
                 {item.description && (
-                  <p className="text-xs text-white/80 line-clamp-2 max-w-xl my-1">
+                  <p className="text-xs !text-white/80 line-clamp-2 max-w-xl m-0 mt-0.5">
                     {item.description}
                   </p>
                 )}
 
                 <button
                   type="button"
-                  className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/25 text-xs font-bold !text-white hover:bg-[#A67C37] hover:border-[#E5C98B] transition-all duration-200 cursor-pointer"
+                  className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white hover:bg-neutral-100 transition-all cursor-pointer shadow-md"
                   aria-pressed={isSelected}
                   onClick={() =>
                     onSelectCity(isSelected ? 'ALL' : item.id, item.cityName)
                   }
                 >
-                  <span>
+                  <span className="!text-[#191C1C] text-xs font-bold">
                     {isSelected
                       ? `Đang chọn ${item.cityName}`
                       : `Khám phá ${item.accommodationCount}+ chỗ nghỉ`}
                   </span>
-                  <ArrowRightOutlined aria-hidden="true" />
+                  <ArrowRightOutlined className="!text-[#191C1C] text-xs" aria-hidden="true" />
                 </button>
               </div>
             </article>

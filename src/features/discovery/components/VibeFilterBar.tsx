@@ -34,21 +34,21 @@ export function VibeFilterBar({
       className="w-full my-6"
       aria-label="Lọc nhanh theo phong cách lưu trú"
     >
-      <div className="flex items-center justify-between gap-4 mb-4">
+      <div className="flex items-center justify-between gap-4 mb-3.5">
         <div>
-          <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#A67C37]">
-            PHONG CÁCH LƯU TRÚ
+          <h2 className="text-xs font-bold tracking-wider uppercase text-[var(--md-sys-color-primary)]">
+            Phong cách lưu trú
           </h2>
-          <p className="text-xs sm:text-sm text-[#7A7468] mt-0.5">
-            Chọn đúng chất kỳ nghỉ của bạn — đang có{' '}
-            <strong className="text-[#141413]">{totalMatchingCount}</strong> chỗ nghỉ phù hợp
+          <p className="text-xs sm:text-sm text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+            Lựa chọn phong cách phù hợp cho kỳ nghỉ — đang có{' '}
+            <strong className="text-[var(--md-sys-color-on-surface)]">{totalMatchingCount}</strong> chỗ nghỉ
           </p>
         </div>
 
         <div className="hidden sm:flex items-center gap-1.5">
           <button
             type="button"
-            className="w-8 h-8 rounded-lg border border-[#E6E1D6] bg-white text-[#524E46] flex items-center justify-center text-xs hover:border-[#A67C37] hover:text-[#A67C37] transition cursor-pointer"
+            className="w-8 h-8 rounded-full border border-[var(--md-sys-color-outline-subtle)] bg-white text-[var(--md-sys-color-on-surface-variant)] flex items-center justify-center text-xs hover:border-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-primary)] transition cursor-pointer"
             aria-label="Cuộn danh sách phong cách sang trái"
             onClick={() => handleScroll('left')}
           >
@@ -56,7 +56,7 @@ export function VibeFilterBar({
           </button>
           <button
             type="button"
-            className="w-8 h-8 rounded-lg border border-[#E6E1D6] bg-white text-[#524E46] flex items-center justify-center text-xs hover:border-[#A67C37] hover:text-[#A67C37] transition cursor-pointer"
+            className="w-8 h-8 rounded-full border border-[var(--md-sys-color-outline-subtle)] bg-white text-[var(--md-sys-color-on-surface-variant)] flex items-center justify-center text-xs hover:border-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-primary)] transition cursor-pointer"
             aria-label="Cuộn danh sách phong cách sang phải"
             onClick={() => handleScroll('right')}
           >
@@ -67,70 +67,60 @@ export function VibeFilterBar({
 
       <div
         ref={scrollContainerRef}
-        className="flex items-center gap-3 overflow-x-auto pb-2 scroll-smooth"
+        className="flex items-center gap-2.5 overflow-x-auto pb-2 scroll-smooth"
         role="group"
         aria-label="Chọn phong cách lưu trú"
       >
+        {/* 'All' Chip */}
         <button
           type="button"
-          className={`inline-flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all duration-200 shrink-0 cursor-pointer ${
+          className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full border transition-all shrink-0 cursor-pointer text-xs ${
             selectedVibe === 'ALL'
-              ? 'bg-[#F9F5EB] border-[#A67C37] ring-1 ring-[#A67C37] shadow-sm'
-              : 'bg-white border-[#E6E1D6] hover:border-[#A67C37]/50 hover:bg-[#F3EFE6]/50 hover:-translate-y-0.5'
+              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] border-[var(--md-sys-color-secondary-container)] font-bold shadow-xs'
+              : 'bg-white border-[var(--md-sys-color-outline-subtle)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)] hover:text-[var(--md-sys-color-on-surface)]'
           }`}
           aria-pressed={selectedVibe === 'ALL'}
           onClick={() => onSelectVibe('ALL')}
         >
           <span
-            className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 transition-colors ${
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 ${
               selectedVibe === 'ALL'
-                ? 'bg-[#141413] text-[#E5C98B] border border-[#A67C37]'
-                : 'bg-[#FAF8F5] text-[#524E46] border border-[#E6E1D6]'
+                ? 'bg-[var(--md-sys-color-primary)] text-white'
+                : 'bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]'
             }`}
             aria-hidden="true"
           >
             <AppstoreOutlined />
           </span>
-          <span className="flex flex-col text-left">
-            <span className="text-xs sm:text-sm font-bold text-[#141413]">Tất cả</span>
-            <span className="text-[11px] text-[#7A7468]">Mọi phong cách</span>
-          </span>
+          <span className="font-semibold whitespace-nowrap">Tất cả phong cách</span>
         </button>
 
+        {/* Category Chips */}
         {categories.map((category) => {
           const isSelected = selectedVibe === category.icon
           return (
             <button
               key={category.id}
               type="button"
-              className={`inline-flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all duration-200 shrink-0 cursor-pointer ${
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full border transition-all shrink-0 cursor-pointer text-xs ${
                 isSelected
-                  ? 'bg-[#F9F5EB] border-[#A67C37] ring-1 ring-[#A67C37] shadow-sm'
-                  : 'bg-white border-[#E6E1D6] hover:border-[#A67C37]/50 hover:bg-[#F3EFE6]/50 hover:-translate-y-0.5'
+                  ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] border-[var(--md-sys-color-secondary-container)] font-bold shadow-xs'
+                  : 'bg-white border-[var(--md-sys-color-outline-subtle)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)] hover:text-[var(--md-sys-color-on-surface)]'
               }`}
               aria-pressed={isSelected}
-              onClick={() =>
-                onSelectVibe(isSelected ? 'ALL' : category.icon)
-              }
+              onClick={() => onSelectVibe(isSelected ? 'ALL' : category.icon)}
             >
               <span
-                className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 transition-colors ${
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 ${
                   isSelected
-                    ? 'bg-[#141413] text-[#E5C98B] border border-[#A67C37]'
-                    : 'bg-[#FAF8F5] text-[#524E46] border border-[#E6E1D6]'
+                    ? 'bg-[var(--md-sys-color-primary)] text-white'
+                    : 'bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]'
                 }`}
                 aria-hidden="true"
               >
                 <VibeSvgIcon icon={category.icon} />
               </span>
-              <span className="flex flex-col text-left">
-                <span className="text-xs sm:text-sm font-bold text-[#141413]">
-                  {category.label}
-                </span>
-                <span className="text-[11px] text-[#7A7468]">
-                  {category.subLabel}
-                </span>
-              </span>
+              <span className="font-semibold whitespace-nowrap">{category.label}</span>
             </button>
           )
         })}

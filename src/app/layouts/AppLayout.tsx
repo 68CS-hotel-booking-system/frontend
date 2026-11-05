@@ -2,97 +2,175 @@ import { useState } from 'react'
 import {
   BankOutlined,
   CompassOutlined,
+  DashboardOutlined,
   DollarOutlined,
+  DownOutlined,
   EnvironmentOutlined,
   FileProtectOutlined,
+  LogoutOutlined,
   MenuOutlined,
   SafetyCertificateOutlined,
+  ShopOutlined,
   StarOutlined,
   ThunderboltOutlined,
   UserOutlined,
 } from '@ant-design/icons'
-import { Button, Drawer, Switch, Tooltip } from 'antd'
+import { Button, Drawer, Dropdown, Switch, type MenuProps } from 'antd'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { StayVibeFooter, STAYVIBE_FOOTER_GROUPS } from '@/features/discovery'
-import { useCurrentUser } from '@/features/auth'
+import { useCurrentUser, useSession } from '@/features/auth'
+import { setSession } from '@/shared/api/session'
 import { useDataMode } from '@/shared/lib/data-mode-context'
 
 export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
+  const queryClient = useQueryClient()
+  const session = useSession()
+  const { currentUser, isAdmin } = useCurrentUser()
   const { mode, setMode } = useDataMode()
-  const { isAdmin } = useCurrentUser()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const isManagementRoute = location.pathname.startsWith('/management')
   const closeMenu = () => setMobileMenuOpen(false)
 
+  const userFullName = currentUser?.fullName || (currentUser?.email ? currentUser.email.split('@')[0] : 'Tài khoản')
+  const userEmail = currentUser?.email || ''
+  const userInitials =
+    userFullName
+      .split(' ')
+      .filter(Boolean)
+      .map((n) => n[0])
+      .slice(-2)
+      .join('')
+      .toUpperCase() || 'SH'
+
+  const handleLogout = () => {
+    setSession(null)
+    queryClient.clear()
+    closeMenu()
+    navigate('/')
+  }
+
+  // Account dropdown menu items
+  const accountMenuItems: MenuProps['items'] = [
+    {
+      key: 'user-profile-header',
+      label: (
+        <div className="py-1 px-1">
+          <div className="text-sm font-semibold text-[var(--md-sys-color-on-surface)]">
+            {userFullName}
+          </div>
+          {userEmail && (
+            <div className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+              {userEmail}
+            </div>
+          )}
+          {currentUser?.roles && currentUser.roles.length > 0 && (
+            <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+              {currentUser.roles.map((role) => (
+                <span
+                  key={role}
+                  className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]"
+                >
+                  {role}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      ),
+      disabled: true,
+    },
+    { type: 'divider' },
+    // Only display Admin Portal link inside account menu when verified ADMIN
+    ...(isAdmin
+      ? [
+          {
+            key: 'admin-portal-link',
+            icon: <DashboardOutlined className="!text-[var(--md-sys-color-primary)]" />,
+            label: (
+              <NavLink to="/admin/users" className="font-semibold text-[var(--md-sys-color-primary)]">
+                StayHub Admin
+              </NavLink>
+            ),
+          },
+          { type: 'divider' as const },
+        ]
+      : []),
+    {
+      key: 'goto-home',
+      icon: <CompassOutlined />,
+      label: 'Trang chủ khám phá',
+      onClick: () => navigate('/'),
+    },
+    { type: 'divider' },
+    {
+      key: 'logout-action',
+      icon: <LogoutOutlined className="!text-[var(--md-sys-color-error)]" />,
+      label: <span className="text-[var(--md-sys-color-error)] font-medium">Đăng xuất tài khoản</span>,
+      onClick: handleLogout,
+    },
+  ]
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#141413]">
+    <div className="min-h-screen flex flex-col bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface)]">
       <a
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#141413] focus:text-white focus:rounded-md shadow-lg"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[var(--md-sys-color-on-surface)] focus:text-white focus:rounded-md shadow-lg"
         href="#main-content"
       >
         Đến nội dung chính
       </a>
 
-      {/* Sticky Luxury Navbar */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#E6E1D6] transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 xl:px-8 h-20 flex items-center justify-between gap-2 xl:gap-4">
+      {/* Sticky Material 3 Navbar */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[var(--md-sys-color-outline-subtle)] transition-all">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
           {/* Brand Logo */}
           <NavLink
             to="/"
-            className="flex items-center gap-2 xl:gap-3 no-underline group focus-visible:outline-2 focus-visible:outline-[#A67C37] rounded-md shrink-0"
-            aria-label="StayVibe Sovereign - Trang chủ đặt phòng nghỉ dưỡng"
+            className="flex items-center gap-2.5 sm:gap-3 no-underline group focus-visible:outline-2 focus-visible:outline-[var(--md-sys-color-primary)] rounded-md shrink-0"
+            aria-label="StayHub - Trang chủ đặt phòng nghỉ dưỡng"
             onClick={closeMenu}
           >
-            <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-md bg-[#141413] border border-[#A67C37]/50 text-[#E5C98B] flex items-center justify-center text-base xl:text-lg shadow-sm group-hover:scale-105 transition-transform duration-200 shrink-0">
-              <CompassOutlined aria-hidden="true" />
+            <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-primary)] text-white flex items-center justify-center text-lg shadow-sm group-hover:scale-105 transition-transform duration-200 shrink-0">
+              <ShopOutlined aria-hidden="true" />
             </div>
             <div className="flex flex-col leading-none shrink-0">
-              <span className="font-editorial text-xl xl:text-2xl font-bold tracking-tight text-[#141413] whitespace-nowrap">
-                Stay<span className="text-[#A67C37]">Vibe</span>
+              <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--md-sys-color-on-surface)]">
+                Stay<span className="text-[var(--md-sys-color-primary)]">Hub</span>
               </span>
-              <span className="text-[9px] xl:text-[10px] font-bold tracking-[0.15em] xl:tracking-[0.2em] uppercase text-[#7A7468] mt-0.5 xl:mt-1 font-display whitespace-nowrap">
-                Private Collection
+              <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+                Nền tảng đặt phòng
               </span>
             </div>
           </NavLink>
 
-          {/* Desktop Navigation Links */}
+          {/* Desktop Navigation Links (Focused on discovery without competing admin clutter) */}
           <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0" aria-label="Điều hướng chính">
-            {isAdmin && (
-              <>
-                <NavLink
-                  to="/admin/users"
-                  className="text-[11px] xl:text-xs font-semibold px-2.5 xl:px-3 py-1.5 rounded-md !bg-[#F9F5EB] !text-[#A67C37] border border-[#DECBA4]/50 hover:!bg-[#DECBA4]/30 transition whitespace-nowrap shrink-0"
-                >
-                  StayHub Admin
-                </NavLink>
-
-                <span className="w-px h-5 bg-[#E6E1D6] mx-0.5 xl:mx-1 shrink-0" aria-hidden="true" />
-              </>
-            )}
-
             {isManagementRoute ? (
               <>
                 <NavLink
                   to="/"
                   end
                   className={({ isActive }) =>
-                    `text-xs font-semibold px-3 py-1.5 rounded-md transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
-                      isActive ? '!bg-[#A67C37] !text-white' : '!text-[#524E46] hover:!text-[#141413] hover:!bg-[#F3EFE6]'
+                    `text-xs font-semibold px-3 py-2 rounded-full transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                      isActive
+                        ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                        : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]'
                     }`
                   }
                 >
                   <CompassOutlined aria-hidden="true" />
-                  <span>Trang chủ</span>
+                  <span>Khám phá</span>
                 </NavLink>
                 <NavLink
                   to="/management/hotels"
                   className={({ isActive }) =>
-                    `text-xs font-semibold px-3 py-1.5 rounded-md transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
-                      isActive ? '!bg-[#A67C37] !text-white' : '!text-[#524E46] hover:!text-[#141413] hover:!bg-[#F3EFE6]'
+                    `text-xs font-semibold px-3 py-2 rounded-full transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                      isActive
+                        ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                        : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]'
                     }`
                   }
                 >
@@ -102,8 +180,10 @@ export function AppLayout() {
                 <NavLink
                   to="/management/rates"
                   className={({ isActive }) =>
-                    `text-xs font-semibold px-3 py-1.5 rounded-md transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
-                      isActive ? '!bg-[#A67C37] !text-white' : '!text-[#524E46] hover:!text-[#141413] hover:!bg-[#F3EFE6]'
+                    `text-xs font-semibold px-3 py-2 rounded-full transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                      isActive
+                        ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                        : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]'
                     }`
                   }
                 >
@@ -113,8 +193,10 @@ export function AppLayout() {
                 <NavLink
                   to="/management/contracts"
                   className={({ isActive }) =>
-                    `text-xs font-semibold px-3 py-1.5 rounded-md transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
-                      isActive ? '!bg-[#A67C37] !text-white' : '!text-[#524E46] hover:!text-[#141413] hover:!bg-[#F3EFE6]'
+                    `text-xs font-semibold px-3 py-2 rounded-full transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                      isActive
+                        ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                        : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]'
                     }`
                   }
                 >
@@ -124,8 +206,10 @@ export function AppLayout() {
                 <NavLink
                   to="/management/financial-access"
                   className={({ isActive }) =>
-                    `text-xs font-semibold px-3 py-1.5 rounded-md transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
-                      isActive ? '!bg-[#A67C37] !text-white' : '!text-[#524E46] hover:!text-[#141413] hover:!bg-[#F3EFE6]'
+                    `text-xs font-semibold px-3 py-2 rounded-full transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                      isActive
+                        ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                        : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]'
                     }`
                   }
                 >
@@ -139,74 +223,94 @@ export function AppLayout() {
                   to="/"
                   end
                   className={({ isActive }) =>
-                    `text-[11px] xl:text-xs font-semibold px-2.5 xl:px-3.5 py-1.5 rounded-md transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
-                      isActive ? '!bg-[#141413] !text-[#FAF8F5]' : '!text-[#524E46] hover:!text-[#141413] hover:!bg-[#F3EFE6]'
+                    `text-xs font-semibold px-3.5 py-2 rounded-full transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                      isActive
+                        ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] font-bold'
+                        : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]'
                     }`
                   }
                 >
                   <CompassOutlined aria-hidden="true" />
                   <span>Khám phá</span>
                 </NavLink>
+
                 <a
                   href="#bento-section"
-                  className="text-[11px] xl:text-xs font-semibold px-2.5 xl:px-3.5 py-1.5 rounded-md !text-[#524E46] hover:!text-[#141413] hover:!bg-[#F3EFE6] transition flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                  className="text-xs font-semibold px-3.5 py-2 rounded-full text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)] transition flex items-center gap-1.5 whitespace-nowrap shrink-0"
                 >
                   <EnvironmentOutlined aria-hidden="true" />
-                  <span>Điểm đến độc bản</span>
+                  <span>Điểm đến</span>
                 </a>
+
                 <a
                   href="#vibe-section"
-                  className="text-[11px] xl:text-xs font-semibold px-2.5 xl:px-3.5 py-1.5 rounded-md !text-[#524E46] hover:!text-[#141413] hover:!bg-[#F3EFE6] transition flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                  className="text-xs font-semibold px-3.5 py-2 rounded-full text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)] transition flex items-center gap-1.5 whitespace-nowrap shrink-0"
                 >
                   <ThunderboltOutlined aria-hidden="true" />
                   <span>Phong cách lưu trú</span>
                 </a>
+
                 <a
                   href="#hotels-section"
-                  className="text-[11px] xl:text-xs font-semibold px-2.5 xl:px-3.5 py-1.5 rounded-md !text-[#524E46] hover:!text-[#141413] hover:!bg-[#F3EFE6] transition flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                  className="text-xs font-semibold px-3.5 py-2 rounded-full text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)] transition flex items-center gap-1.5 whitespace-nowrap shrink-0"
                 >
                   <StarOutlined aria-hidden="true" />
-                  <span>Bộ sưu tập tuyển chọn</span>
+                  <span>Bộ sưu tập chỗ nghỉ</span>
                 </a>
+
+                {isAdmin && (
+                  <NavLink
+                    to="/admin/users"
+                    className={({ isActive }) =>
+                      `text-xs font-semibold px-3.5 py-2 rounded-full transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                        isActive
+                          ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-bold'
+                          : 'text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary-container)]/30'
+                      }`
+                    }
+                  >
+                    <DashboardOutlined aria-hidden="true" />
+                    <span>StayHub Admin</span>
+                  </NavLink>
+                )}
               </>
             )}
           </nav>
 
-          {/* Action cluster */}
-          <div className="flex items-center gap-2 xl:gap-3 shrink-0">
-            {isManagementRoute && (
-              <Tooltip
-                title={
-                  mode === 'mock'
-                    ? 'Kết nối các API khách sạn đã triển khai'
-                    : 'Đang kết nối trực tiếp với máy chủ hệ thống'
-                }
+          {/* Right Header Actions: Account Menu & Mobile Toggle */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Account Action */}
+            {session ? (
+              <Dropdown menu={{ items: accountMenuItems }} trigger={['click']} placement="bottomRight">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-full hover:bg-[var(--md-sys-color-surface-container)] transition-colors border border-[var(--md-sys-color-outline-subtle)] bg-white cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-[var(--md-sys-color-primary)]"
+                  aria-label={`Menu tài khoản ${userFullName}`}
+                >
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--md-sys-color-primary)] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                    {userInitials}
+                  </div>
+                  <span className="hidden sm:inline text-xs font-semibold text-[var(--md-sys-color-on-surface)] max-w-[120px] truncate">
+                    {userFullName}
+                  </span>
+                  <DownOutlined className="text-[10px] text-[var(--md-sys-color-on-surface-variant)]" />
+                </button>
+              </Dropdown>
+            ) : (
+              <button
+                type="button"
+                className="m3-btn-filled !h-10 !px-4 sm:!px-5 !text-xs sm:!text-sm"
+                onClick={() => void navigate('/login')}
               >
-                <label className="hidden sm:inline-flex items-center gap-2 px-2.5 xl:px-3 py-1.5 rounded-md bg-white border border-[#E6E1D6] text-xs font-medium text-[#524E46] cursor-pointer hover:border-[#CFC7B8] transition whitespace-nowrap shrink-0">
-                  <Switch
-                    size="small"
-                    checked={mode === 'api'}
-                    onChange={(checked) => setMode(checked ? 'api' : 'mock')}
-                    aria-label="Chuyển đổi nguồn dữ liệu"
-                  />
-                  <span>{mode === 'mock' ? 'Dữ liệu mẫu' : 'Hệ thống thực'}</span>
-                </label>
-              </Tooltip>
+                <UserOutlined aria-hidden="true" />
+                <span>Đăng nhập</span>
+              </button>
             )}
 
+            {/* Mobile Menu Button */}
             <button
               type="button"
-              className="hidden lg:inline-flex items-center gap-1.5 xl:gap-2 px-3.5 xl:px-5 py-2 xl:py-2.5 rounded-md bg-[#141413] !text-[#FAF8F5] text-[11px] xl:text-xs font-bold uppercase tracking-wider hover:bg-[#A67C37] hover:!text-white transition-colors duration-200 shadow-sm cursor-pointer whitespace-nowrap shrink-0"
-              onClick={() => void navigate('/login')}
-            >
-              <UserOutlined aria-hidden="true" />
-              <span>Đăng nhập</span>
-            </button>
-
-            {/* Mobile / Tablet Menu Button */}
-            <button
-              type="button"
-              className="lg:hidden p-2.5 rounded-md border border-[#E6E1D6] bg-white text-[#141413] hover:border-[#A67C37] hover:text-[#A67C37] transition cursor-pointer flex items-center justify-center text-base"
+              className="lg:hidden m3-btn-icon"
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Mở menu điều hướng"
             >
@@ -220,14 +324,16 @@ export function AppLayout() {
       <Drawer
         title={
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md bg-[#141413] text-[#E5C98B] flex items-center justify-center text-sm">
-              <CompassOutlined aria-hidden="true" />
+            <div className="w-8 h-8 rounded-xl bg-[var(--md-sys-color-primary)] text-white flex items-center justify-center text-sm">
+              <ShopOutlined aria-hidden="true" />
             </div>
             <div className="flex flex-col">
-              <span className="font-editorial text-lg font-bold">
-                Stay<span className="text-[#A67C37]">Vibe</span>
+              <span className="text-lg font-bold text-[var(--md-sys-color-on-surface)]">
+                Stay<span className="text-[var(--md-sys-color-primary)]">Hub</span>
               </span>
-              <span className="text-[9px] tracking-widest text-[#7A7468] uppercase">Private Collection</span>
+              <span className="text-[9px] tracking-wider text-[var(--md-sys-color-on-surface-variant)] uppercase font-semibold">
+                Nền tảng đặt phòng
+              </span>
             </div>
           </div>
         }
@@ -241,38 +347,26 @@ export function AppLayout() {
             flexDirection: 'column',
             justifyContent: 'space-between',
             gap: '24px',
-            background: '#FAF8F5',
+            background: 'var(--md-sys-color-surface-container-low)',
           },
         }}
       >
         <div className="flex flex-col gap-2">
-          {isAdmin && (
-            <div className="pb-3 mb-2 border-b border-[#E6E1D6] flex flex-col gap-2">
-              <NavLink
-                to="/admin/users"
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-md bg-[#F9F5EB] text-[#A67C37] font-semibold text-sm"
-                onClick={closeMenu}
-              >
-                <span>StayHub Admin</span>
-                <span className="text-xs bg-[#A67C37]/15 px-2 py-0.5 rounded">Hệ thống</span>
-              </NavLink>
-            </div>
-          )}
-
+          {/* Navigation Links */}
           {isManagementRoute ? (
             <>
               <NavLink
                 to="/"
                 end
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold text-[#524E46] hover:bg-[#F3EFE6]"
+                className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
                 onClick={closeMenu}
               >
                 <CompassOutlined />
-                <span>Trang chủ</span>
+                <span>Khám phá</span>
               </NavLink>
               <NavLink
                 to="/management/hotels"
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold text-[#524E46] hover:bg-[#F3EFE6]"
+                className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
                 onClick={closeMenu}
               >
                 <BankOutlined />
@@ -280,7 +374,7 @@ export function AppLayout() {
               </NavLink>
               <NavLink
                 to="/management/rates"
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold text-[#524E46] hover:bg-[#F3EFE6]"
+                className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
                 onClick={closeMenu}
               >
                 <DollarOutlined />
@@ -288,7 +382,7 @@ export function AppLayout() {
               </NavLink>
               <NavLink
                 to="/management/contracts"
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold text-[#524E46] hover:bg-[#F3EFE6]"
+                className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
                 onClick={closeMenu}
               >
                 <FileProtectOutlined />
@@ -296,7 +390,7 @@ export function AppLayout() {
               </NavLink>
               <NavLink
                 to="/management/financial-access"
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold text-[#524E46] hover:bg-[#F3EFE6]"
+                className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
                 onClick={closeMenu}
               >
                 <SafetyCertificateOutlined />
@@ -308,7 +402,7 @@ export function AppLayout() {
               <NavLink
                 to="/"
                 end
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold text-[#524E46] hover:bg-[#F3EFE6]"
+                className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
                 onClick={closeMenu}
               >
                 <CompassOutlined />
@@ -316,15 +410,15 @@ export function AppLayout() {
               </NavLink>
               <a
                 href="#bento-section"
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold text-[#524E46] hover:bg-[#F3EFE6]"
+                className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
                 onClick={closeMenu}
               >
                 <EnvironmentOutlined />
-                <span>Điểm đến độc bản</span>
+                <span>Điểm đến</span>
               </a>
               <a
                 href="#vibe-section"
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold text-[#524E46] hover:bg-[#F3EFE6]"
+                className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
                 onClick={closeMenu}
               >
                 <ThunderboltOutlined />
@@ -332,20 +426,38 @@ export function AppLayout() {
               </a>
               <a
                 href="#hotels-section"
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold text-[#524E46] hover:bg-[#F3EFE6]"
+                className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
                 onClick={closeMenu}
               >
                 <StarOutlined />
-                <span>Bộ sưu tập tuyển chọn</span>
+                <span>Bộ sưu tập chỗ nghỉ</span>
               </a>
             </>
           )}
+
+          {/* Admin link inside account section of drawer if verified ADMIN */}
+          {isAdmin && (
+            <div className="pt-3 mt-2 border-t border-[var(--md-sys-color-outline-subtle)] flex flex-col gap-2">
+              <NavLink
+                to="/admin/users"
+                className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-semibold text-sm"
+                onClick={closeMenu}
+              >
+                <div className="flex items-center gap-2.5">
+                  <DashboardOutlined />
+                  <span>StayHub Admin</span>
+                </div>
+                <span className="text-xs bg-white/40 px-2 py-0.5 rounded font-bold">Quản trị</span>
+              </NavLink>
+            </div>
+          )}
         </div>
 
-        <div className="pt-4 border-t border-[#E6E1D6] flex flex-col gap-3">
+        {/* Drawer Footer */}
+        <div className="pt-4 border-t border-[var(--md-sys-color-outline-subtle)] flex flex-col gap-3">
           {isManagementRoute && (
-            <div className="flex items-center justify-between p-3 rounded-md bg-white border border-[#E6E1D6]">
-              <span className="text-xs font-semibold text-[#524E46]">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-[var(--md-sys-color-outline-subtle)]">
+              <span className="text-xs font-semibold text-[var(--md-sys-color-on-surface-variant)]">
                 {mode === 'mock' ? 'Dữ liệu mẫu' : 'Hệ thống thực'}
               </span>
               <Switch
@@ -356,19 +468,44 @@ export function AppLayout() {
             </div>
           )}
 
-          <Button
-            type="primary"
-            block
-            size="large"
-            icon={<UserOutlined />}
-            className="!bg-[#141413] hover:!bg-[#A67C37] !h-12 !font-semibold !rounded-md"
-            onClick={() => {
-              closeMenu()
-              void navigate('/login')
-            }}
-          >
-            Đăng nhập tài khoản
-          </Button>
+          {session ? (
+            <div className="flex flex-col gap-2">
+              <div className="p-3 rounded-xl bg-white border border-[var(--md-sys-color-outline-subtle)]">
+                <div className="text-xs font-bold text-[var(--md-sys-color-on-surface)] truncate">
+                  {userFullName}
+                </div>
+                {userEmail && (
+                  <div className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] truncate">
+                    {userEmail}
+                  </div>
+                )}
+              </div>
+              <Button
+                type="default"
+                danger
+                block
+                className="!rounded-full !h-11 font-semibold"
+                icon={<LogoutOutlined />}
+                onClick={handleLogout}
+              >
+                Đăng xuất
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="primary"
+              block
+              size="large"
+              icon={<UserOutlined />}
+              className="!h-12 !font-semibold !rounded-full"
+              onClick={() => {
+                closeMenu()
+                void navigate('/login')
+              }}
+            >
+              Đăng nhập tài khoản
+            </Button>
+          )}
         </div>
       </Drawer>
 

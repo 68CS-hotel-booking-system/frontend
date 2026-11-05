@@ -3,6 +3,7 @@ import { AppLayout } from '@/app/layouts/AppLayout'
 import { AdminLayout } from '@/app/layouts/AdminLayout'
 import { AdminRouteGuard } from '@/features/auth'
 import { LoginPage } from '@/pages/auth/LoginPage'
+import { AdminLoginPage } from '@/pages/auth/AdminLoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
@@ -22,6 +23,7 @@ export function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="admin/login" element={<AdminLoginPage />} />
         {/* Admin Portal Layout Routes (Protected by AdminRouteGuard) */}
         <Route
           path="admin"
@@ -31,7 +33,7 @@ export function AppRouter() {
             </AdminRouteGuard>
           }
         >
-          <Route index element={<Navigate to="/admin/users" replace />} />
+          <Route index element={<Navigate to="/admin/overview" replace />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="overview" element={<AdminOverviewPage />} />
         </Route>

@@ -8,6 +8,7 @@ import './shared/styles/tailwind.css'
 import './shared/styles/fonts.css'
 import './shared/styles/global.css'
 import './shared/styles/admin-dashboard.css'
+import './shared/styles/admin-login.css'
 
 document.title = env.appName
 const root = document.getElementById('root')

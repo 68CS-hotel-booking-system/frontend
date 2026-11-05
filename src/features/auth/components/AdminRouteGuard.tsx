@@ -12,13 +12,13 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
   const navigate = useNavigate()
   const { currentUser, isChecking, isError, error, isAdmin, refetch } = useCurrentUser()
 
-  // 1. Chưa đăng nhập: chuyển hướng đến /login bằng replace và lưu đường dẫn nội bộ
+  // 1. Chưa đăng nhập: mở cổng đăng nhập quản trị và giữ đường dẫn đang truy cập.
   if (!session) {
     return (
       <Navigate
-        to="/login"
+        to="/admin/login"
         replace
-        state={{ from: location.pathname + location.search }}
+        state={{ from: location.pathname + location.search + location.hash }}
       />
     )
   }
@@ -31,7 +31,7 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
   // 3. Lỗi mạng hoặc 5xx: hiển thị lỗi và nút thử lại, không cho vào admin và không xóa session
   if (isError) {
     return (
-      <div className="surface-card p-6 max-w-lg mx-auto my-12">
+      <div className="m3-card max-w-lg mx-auto my-12 shadow-sm">
         <ErrorState error={error} onRetry={() => void refetch()} />
       </div>
     )
@@ -40,7 +40,7 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
   // 4. Đã đăng nhập nhưng không có role ADMIN: từ chối truy cập
   if (!isAdmin) {
     return (
-      <div className="surface-card p-6 max-w-lg mx-auto my-12" role="alert">
+      <div className="m3-card max-w-lg mx-auto my-12 shadow-sm" role="alert">
         <Result
           status="403"
           title="Bạn không có quyền truy cập"
@@ -48,6 +48,7 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
           extra={
             <Button
               type="primary"
+              className="!rounded-full !h-10 !px-6 font-semibold"
               onClick={() => void navigate('/', { replace: true })}
             >
               Về trang chủ
