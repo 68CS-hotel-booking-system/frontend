@@ -55,10 +55,7 @@ export function OperationForm({
     <section aria-labelledby={id + '-title'}>
       <h2 id={id + '-title'}>{operation.title}</h2>
       {operation.id === 'login' && (
-        <Space wrap size="large" style={{ marginBottom: 8 }}>
-          <p>Chưa có tài khoản? <Link to="/register">Đăng ký</Link></p>
-          <Link to="/forgot-password">Quên mật khẩu?</Link>
-        </Space>
+        <p style={{ marginBottom: 0 }}>Chưa có tài khoản? <Link to="/register">Đăng ký</Link></p>
       )}
       {operation.id === 'register' && (
         <p>Đã có tài khoản? <Link to="/login">Đăng nhập</Link></p>
@@ -108,6 +105,11 @@ export function OperationForm({
             />
           </Form.Item>
         ))}
+        {operation.id === 'login' && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: -12, marginBottom: 24 }}>
+            <Link to="/forgot-password">Quên mật khẩu?</Link>
+          </div>
+        )}
         <Space wrap>
           <Button
             htmlType="submit"
