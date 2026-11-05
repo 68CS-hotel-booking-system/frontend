@@ -4,7 +4,7 @@ import {
   ThunderboltFilled,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
-import type { FooterLinkGroup } from '@/features/discovery/data/stayvibe-mock-data'
+import type { FooterLinkGroup } from '../model/discovery'
 
 interface StayVibeFooterProps {
   groups: FooterLinkGroup[]

@@ -3,10 +3,8 @@ import {
   SafetyCertificateFilled,
   ThunderboltFilled,
 } from '@ant-design/icons'
-import {
-  SmartSearchBar,
-  type SmartSearchFormValues,
-} from '@/features/discovery/components/SmartSearchBar'
+import { SmartSearchBar } from './SmartSearchBar'
+import type { SmartSearchFormValues } from '../model/search-form-schema'
 
 interface HeroSectionProps {
   onSearchSubmit: (values: SmartSearchFormValues) => void
@@ -72,4 +70,3 @@ export function HeroSection({
     </section>
   )
 }
-

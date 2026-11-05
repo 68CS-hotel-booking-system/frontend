@@ -9,8 +9,8 @@ import {
   StarFilled,
   ThunderboltFilled,
 } from '@ant-design/icons'
-import { HeartVectorIcon } from '@/features/discovery/components/StayVibeIcons'
-import type { StayVibeHotelItem } from '@/features/discovery/data/stayvibe-mock-data'
+import { HeartVectorIcon } from './StayVibeIcons'
+import type { StayVibeHotelItem } from '../model/discovery'
 import { formatCurrencyAmount } from '@/shared/lib/format'
 
 interface HotelCardProps {
@@ -212,4 +212,3 @@ export function HotelCard({
     </article>
   )
 }
-

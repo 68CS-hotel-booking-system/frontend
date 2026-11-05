@@ -8,12 +8,13 @@ import {
 } from '@ant-design/icons'
 import { Button, Select, Space, Tag } from 'antd'
 import { useNavigate, useSearchParams } from 'react-router'
-import { HotelStatusBadge } from '@/features/hotels/components/HotelStatusBadge'
-import { RoomTypeDailyRatesPanel } from '@/features/hotels/components/RoomTypeDailyRatesPanel'
 import {
+  HotelStatusBadge,
+  RoomTypeDailyRatesPanel,
   useManagementHotelDetailQuery,
   useManagementHotelsQuery,
-} from '@/features/hotels/hooks/use-hotel-management'
+} from '@/features/hotels'
+
 import { DataSourceBanner } from '@/shared/ui/DataSourceBanner'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
@@ -143,7 +144,9 @@ export function HotelRatesManagementPage() {
                     {hotelDetailQuery.data.cityName}
                   </Tag>
                   <Tag>
-                    {hotelDetailQuery.data.roomTypes.length} hạng phòng
+                    {hotelDetailQuery.data.roomTypes
+                      ? `${hotelDetailQuery.data.roomTypes.length} hạng phòng`
+                      : 'Chưa có dữ liệu hạng phòng'}
                   </Tag>
                 </Space>
               </div>

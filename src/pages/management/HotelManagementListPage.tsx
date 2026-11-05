@@ -12,20 +12,20 @@ import {
 } from '@ant-design/icons'
 import { Button, Input, Select, Space, Tag } from 'antd'
 import { useNavigate } from 'react-router'
-import { CreateAdminHotelDrawer } from '@/features/hotels/components/CreateAdminHotelDrawer'
-import { HotelStatusBadge } from '@/features/hotels/components/HotelStatusBadge'
 import {
+  CreateAdminHotelDrawer,
+  HotelStatusBadge,
   useCitiesQuery,
   useManagementHotelsQuery,
-} from '@/features/hotels/hooks/use-hotel-management'
-import {
   type HotelStatus,
   hotelStatusValues,
-} from '@/features/hotels/types/hotel-management'
+} from '@/features/hotels'
+
 import { DataSourceBanner } from '@/shared/ui/DataSourceBanner'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
+import { useDataMode } from '@/shared/lib/data-mode-context'
 
 const STATUS_FILTER_LABELS: Record<HotelStatus, string> = {
   ACTIVE: 'Đang hoạt động',
@@ -49,6 +49,8 @@ const VIBE_CHIPS = [
 
 export function HotelManagementListPage() {
   const navigate = useNavigate()
+  const { mode } = useDataMode()
+  const isApi = mode === 'api'
   const [page, setPage] = useState(0)
   const [cityId, setCityId] = useState<string | undefined>(undefined)
   const [status, setStatus] = useState<HotelStatus | 'ALL'>('ALL')
@@ -122,10 +124,12 @@ export function HotelManagementListPage() {
             <label htmlFor="hotel-search-input">Tìm theo tên, địa chỉ hoặc chủ sở hữu</label>
             <Input
               id="hotel-search-input"
+              disabled={isApi}
+              title={isApi ? 'Backend chưa hỗ trợ tìm kiếm khách sạn.' : undefined}
               allowClear
               prefix={<SearchOutlined aria-hidden="true" />}
               placeholder="Ví dụ: InterContinental, Đà Lạt, Glamping..."
-              value={keyword}
+              value={isApi ? '' : keyword}
               onChange={(e) => {
                 setKeyword(e.target.value)
                 setPage(0)
@@ -137,9 +141,11 @@ export function HotelManagementListPage() {
             <label htmlFor="hotel-city-filter">Thành phố</label>
             <Select
               id="hotel-city-filter"
+              disabled={isApi}
+              title={isApi ? 'Backend chưa hỗ trợ lọc theo thành phố.' : undefined}
               allowClear
               placeholder="Tất cả thành phố"
-              value={cityId}
+              value={isApi ? undefined : cityId}
               onChange={(value) => {
                 setCityId(value)
                 setPage(0)
@@ -156,7 +162,9 @@ export function HotelManagementListPage() {
             <label htmlFor="hotel-status-filter">Trạng thái hoạt động</label>
             <Select
               id="hotel-status-filter"
-              value={status}
+              disabled={isApi}
+              title={isApi ? 'Backend chưa hỗ trợ lọc trạng thái.' : undefined}
+              value={isApi ? 'ALL' : status}
               onChange={(value) => {
                 setStatus(value)
                 setPage(0)
@@ -175,11 +183,13 @@ export function HotelManagementListPage() {
 
         <div className="vibe-chips-bar" role="group" aria-label="Lọc nhanh theo phong cách">
           {VIBE_CHIPS.map((chip) => {
-            const isSelected = vibe === chip
+            const isSelected = (isApi ? 'ALL' : vibe) === chip
             return (
               <button
                 key={chip}
                 type="button"
+                disabled={isApi}
+                title={isApi ? 'Backend chưa hỗ trợ lọc phong cách.' : undefined}
                 className={`vibe-chip ${isSelected ? 'is-active' : ''}`}
                 aria-pressed={isSelected}
                 onClick={() => {
@@ -295,7 +305,7 @@ export function HotelManagementListPage() {
 
                   <div className="hotel-vibe-card__owner">
                     <span className="muted">Chủ sở hữu:</span>{' '}
-                    <strong>{hotel.ownerName ?? 'Chủ sở hữu chính'}</strong>
+                    <strong>{hotel.ownerName ?? hotel.ownerUserId}</strong>
                   </div>
 
                   <div className="hotel-vibe-card__actions">
@@ -358,6 +368,7 @@ export function HotelManagementListPage() {
       )}
 
       <CreateAdminHotelDrawer
+        key={mode}
         open={createDrawerOpen}
         onClose={() => setCreateDrawerOpen(false)}
         cities={cities}

@@ -29,7 +29,7 @@ export function DataSourceBanner() {
           <span className="data-source-banner__note">
             {isMock
               ? 'Giao diện đang hiển thị bằng bộ dữ liệu mẫu nội bộ để minh họa trải nghiệm.'
-              : 'Mọi thao tác tra cứu và cập nhật đang đồng bộ trực tiếp với máy chủ hệ thống.'}
+              : 'Đang dùng API thật để tạo, xem danh sách và chi tiết khách sạn. Các chức năng chưa được máy chủ hỗ trợ sẽ bị khóa.'}
           </span>
         </div>
 

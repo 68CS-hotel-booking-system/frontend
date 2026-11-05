@@ -1,5 +1,5 @@
 import { ArrowRightOutlined, EnvironmentFilled } from '@ant-design/icons'
-import type { BentoDestinationItem } from '@/features/discovery/data/stayvibe-mock-data'
+import type { BentoDestinationItem } from '../model/discovery'
 
 interface BentoDestinationGridProps {
   destinations: BentoDestinationItem[]

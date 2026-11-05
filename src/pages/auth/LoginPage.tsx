@@ -1,2 +1,5 @@
-import { LiveApiPage } from '@/pages/management/LiveApiPage'
-export function LoginPage() { return <LiveApiPage initialOperation="login" /> }
+import { AuthPanel } from '@/features/auth'
+
+export function LoginPage() {
+  return <AuthPanel initialAction="login" />
+}

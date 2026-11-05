@@ -13,14 +13,10 @@ import {
 import { Controller, useForm } from 'react-hook-form'
 import { errorMessage } from '@/shared/api/api-error'
 import { applyApiFieldErrors } from '@/shared/lib/form-errors'
-import { useUpdateManagementHotelMutation } from '../hooks/use-hotel-management'
-import {
-  type CityItem,
-  hotelStatusValues,
-  type ManagementHotelDetail,
-  updateManagementHotelFormSchema,
-  type UpdateManagementHotelFormValues,
-} from '../types/hotel-management'
+import { useDataMode } from '@/shared/lib/data-mode-context'
+import { useUpdateManagementHotelMutation } from '../hooks/use-update-hotel-mutation'
+import { type CityItem, hotelStatusValues, type ManagementHotelDetail } from '../model/hotel'
+import { updateManagementHotelFormSchema, type UpdateManagementHotelFormValues } from '../model/hotel-form-schemas'
 import { HotelStatusBadge } from './HotelStatusBadge'
 
 interface HotelGeneralEditFormProps {
@@ -41,6 +37,7 @@ export function HotelGeneralEditForm({
   cities,
 }: HotelGeneralEditFormProps) {
   const formId = useId()
+  const { mode } = useDataMode()
   const { message } = AntApp.useApp()
   const updateMutation = useUpdateManagementHotelMutation(hotel.id)
 
@@ -56,7 +53,7 @@ export function HotelGeneralEditForm({
       name: hotel.name,
       cityId: hotel.cityId,
       address: hotel.address,
-      starRating: hotel.starRating ?? 5,
+      starRating: hotel.starRating,
       checkInTime: hotel.checkInTime.slice(0, 5),
       checkOutTime: hotel.checkOutTime.slice(0, 5),
       description: hotel.description ?? '',
@@ -71,7 +68,7 @@ export function HotelGeneralEditForm({
       name: hotel.name,
       cityId: hotel.cityId,
       address: hotel.address,
-      starRating: hotel.starRating ?? 5,
+      starRating: hotel.starRating,
       checkInTime: hotel.checkInTime.slice(0, 5),
       checkOutTime: hotel.checkOutTime.slice(0, 5),
       description: hotel.description ?? '',
@@ -88,7 +85,7 @@ export function HotelGeneralEditForm({
         name: updated.name,
         cityId: updated.cityId,
         address: updated.address,
-        starRating: updated.starRating ?? 5,
+        starRating: updated.starRating,
         checkInTime: updated.checkInTime.slice(0, 5),
         checkOutTime: updated.checkOutTime.slice(0, 5),
         description: updated.description ?? '',
@@ -116,6 +113,10 @@ export function HotelGeneralEditForm({
           <HotelStatusBadge status={hotel.status} />
         </div>
 
+        {mode === 'api' && (
+          <Alert type="info" showIcon title="Backend hiện chỉ hỗ trợ xem hồ sơ; chưa hỗ trợ cập nhật khách sạn." />
+        )}
+
         {updateMutation.isError && (
           <Alert
             type="error"
@@ -127,6 +128,7 @@ export function HotelGeneralEditForm({
         )}
 
         <Form
+          disabled={mode === 'api'}
           layout="vertical"
           component="form"
           onSubmitCapture={handleSubmit(onSubmit)}
@@ -203,7 +205,7 @@ export function HotelGeneralEditForm({
                     min={1}
                     max={5}
                     value={field.value}
-                    onChange={(val) => field.onChange(val ?? 5)}
+                    onChange={(val) => field.onChange(val)}
                     className="full-width"
                   />
                 )}
@@ -331,7 +333,7 @@ export function HotelGeneralEditForm({
             <Button
               type="primary"
               htmlType="submit"
-              disabled={!isDirty}
+              disabled={mode === 'api' || !isDirty}
               loading={updateMutation.isPending}
             >
               Lưu thay đổi
@@ -362,16 +364,16 @@ export function HotelGeneralEditForm({
           <div>
             <dt>Chủ sở hữu</dt>
             <dd>
-              <strong>{hotel.ownerName ?? 'Chủ sở hữu chính'}</strong>
+              <strong>{hotel.ownerName ?? hotel.ownerUserId}</strong>
             </dd>
           </div>
           <div>
             <dt>Số hạng phòng đang quản lý</dt>
-            <dd>{hotel.roomTypes.length} hạng phòng</dd>
+            <dd>{hotel.roomTypes ? `${hotel.roomTypes.length} hạng phòng` : 'Chưa có dữ liệu từ máy chủ'}</dd>
           </div>
           <div>
             <dt>Số tiện ích đã gắn</dt>
-            <dd>{hotel.amenityIds.length} tiện ích</dd>
+            <dd>{hotel.amenityIds ? `${hotel.amenityIds.length} tiện ích` : 'Chưa có dữ liệu từ máy chủ'}</dd>
           </div>
           <div>
             <dt>Cập nhật gần nhất</dt>
@@ -382,4 +384,3 @@ export function HotelGeneralEditForm({
     </div>
   )
 }
-

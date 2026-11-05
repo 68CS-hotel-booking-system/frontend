@@ -1,0 +1,422 @@
+/* StayHub Admin Dashboard Design Tokens & Component Styles */
+/* Architecture: app-screens accent-ladder style */
+
+:root {
+  /* Surfaces & Backgrounds */
+  --admin-ground: #F5F6F7;
+  --admin-surface: #FFFFFF;
+  --admin-raised: #F0F2F4;
+  --admin-border: #E3E6E9;
+  --admin-rule: #EAECEE;
+  --admin-control-border: #CBD5E1;
+
+  /* Typography */
+  --admin-font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --admin-text-primary: #17212B;
+  --admin-text-secondary: #5F6B76;
+  --admin-text-tertiary: #8C9BA8;
+  --admin-fs-title: 22px;
+  --admin-fs-section: 16px;
+  --admin-fs-body: 13px;
+  --admin-fs-small: 12px;
+  --admin-fs-xs: 11px;
+
+  /* Accent: Brand Teal (accent-ladder) */
+  --admin-teal: #0E6B6F;
+  --admin-teal-hover: #0A5356;
+  --admin-teal-light: rgba(14, 107, 111, 0.08);
+  --admin-teal-soft: #E6F4F5;
+  --admin-teal-track: #B8E2E4;
+  --admin-teal-ink: #073B3D;
+
+  /* Semantic Status */
+  --admin-status-active: #1F7A4D;
+  --admin-status-active-bg: #E6F4EC;
+  --admin-status-pending: #8A5A00;
+  --admin-status-pending-bg: #FFF3D6;
+  --admin-status-inactive: #4B5560;
+  --admin-status-inactive-bg: #EEF0F2;
+  --admin-status-locked: #B42318;
+  --admin-status-locked-bg: #FDECEA;
+
+  /* Layout dimensions */
+  --admin-sidebar-width: 240px;
+  --admin-header-height: 56px;
+  --admin-radius-card: 10px;
+  --admin-radius-control: 6px;
+  --admin-gap: 20px;
+}
+
+body:has(.admin-body) {
+  background-color: var(--admin-ground) !important;
+}
+
+.admin-body {
+  font-family: var(--admin-font-family);
+  background-color: var(--admin-ground);
+  color: var(--admin-text-primary);
+  min-height: 100vh;
+}
+
+.admin-body h1,
+.admin-body h2,
+.admin-body h3,
+.admin-body h4,
+.admin-body h5,
+.admin-body h6 {
+  font-family: var(--admin-font-family);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom Scrollbar */
+.admin-body ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.admin-body ::-webkit-scrollbar-thumb {
+  background: #D0D5DD;
+  border-radius: 9999px;
+}
+.admin-body ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Pulse beacon for active status */
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 0.3; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.active-dot-pulse {
+  animation: pulse-ring 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Loading shimmer block */
+@keyframes skeleton-shimmer {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.skeleton-shimmer {
+  background-color: #E3E6E9;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+.skeleton-shimmer-subtle {
+  background-color: #EEF0F2;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+/* Custom interactive checkbox styling (flat & clean) */
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 17px;
+  height: 17px;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  background-color: #FFFFFF;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  display: inline-grid;
+  place-content: center;
+  margin: 0;
+  vertical-align: middle;
+}
+
+.custom-checkbox:hover {
+  border-color: #0E6B6F;
+}
+
+.custom-checkbox:focus-visible {
+  outline: 2px solid rgba(14, 107, 111, 0.35);
+  outline-offset: 1px;
+}
+
+.custom-checkbox:checked {
+  background-color: #0E6B6F;
+  border-color: #0E6B6F;
+}
+
+.custom-checkbox::before {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(-45deg) translate(0.5px, -1px);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.custom-checkbox:checked::before {
+  opacity: 1;
+}
+
+.custom-checkbox:indeterminate {
+  background-color: #0E6B6F;
+  border-color: #0E6B6F;
+}
+
+.custom-checkbox:indeterminate::before {
+  content: "";
+  width: 8px;
+  height: 2px;
+  background-color: white;
+  border: none;
+  transform: none;
+  opacity: 1;
+}
+
+/* Row selection state */
+.row-selected {
+  background-color: rgba(14, 107, 111, 0.04) !important;
+}
+
+/* Standardized Flat Buttons (app-screens compliant) */
+.admin-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background-color: var(--admin-teal);
+  color: #FFFFFF;
+  font-size: var(--admin-fs-body);
+  font-weight: 500;
+  border-radius: var(--admin-radius-control);
+  border: 1px solid var(--admin-teal);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  line-height: 1.3;
+}
+
+.admin-btn-primary:hover {
+  background-color: var(--admin-teal-hover);
+  border-color: var(--admin-teal-hover);
+}
+
+.admin-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.admin-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background-color: var(--admin-surface);
+  color: var(--admin-text-primary);
+  font-size: var(--admin-fs-body);
+  font-weight: 500;
+  border-radius: var(--admin-radius-control);
+  border: 1px solid var(--admin-border);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  line-height: 1.3;
+}
+
+.admin-btn-secondary:hover {
+  background-color: var(--admin-ground);
+  border-color: var(--admin-control-border);
+}
+
+.admin-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background-color: transparent;
+  color: var(--admin-text-secondary);
+  font-size: var(--admin-fs-body);
+  font-weight: 500;
+  border-radius: var(--admin-radius-control);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  line-height: 1.3;
+}
+
+.admin-btn-ghost:hover {
+  background-color: var(--admin-raised);
+  color: var(--admin-text-primary);
+}
+
+.admin-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background-color: var(--admin-status-locked-bg);
+  color: var(--admin-status-locked);
+  font-size: var(--admin-fs-body);
+  font-weight: 500;
+  border-radius: var(--admin-radius-control);
+  border: 1px solid rgba(180, 35, 24, 0.2);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  line-height: 1.3;
+}
+
+.admin-btn-danger:hover {
+  background-color: #FBD7D3;
+}
+
+/* Standardized Form Input & Select */
+.admin-input,
+.admin-select {
+  height: 34px;
+  padding: 0 10px;
+  font-size: var(--admin-fs-body);
+  color: var(--admin-text-primary);
+  background-color: var(--admin-surface);
+  border: 1px solid var(--admin-control-border);
+  border-radius: var(--admin-radius-control);
+  outline: none;
+  transition: border-color 0.15s ease;
+  font-family: inherit;
+}
+
+.admin-input:focus,
+.admin-select:focus {
+  border-color: var(--admin-teal);
+  outline: 2px solid rgba(14, 107, 111, 0.2);
+  outline-offset: 0;
+}
+
+.admin-input::placeholder {
+  color: #94A3B8;
+}
+
+/* Standardized Table */
+.admin-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--admin-fs-body);
+}
+
+.admin-table th {
+  padding: 10px 14px;
+  font-size: var(--admin-fs-small);
+  font-weight: 500;
+  color: var(--admin-text-secondary);
+  background-color: #F8FAFB;
+  border-bottom: 1px solid var(--admin-border);
+  text-align: left;
+  user-select: none;
+}
+
+.admin-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--admin-rule);
+  color: var(--admin-text-primary);
+  vertical-align: middle;
+}
+
+.admin-table tbody tr {
+  background-color: var(--admin-surface);
+  transition: background-color 0.12s ease;
+}
+
+.admin-table tbody tr:hover {
+  background-color: #F8FAFB;
+}
+
+/* Status Pill */
+.admin-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: var(--admin-fs-small);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Layout Utilities for StayHub Admin */
+.admin-sidebar-fixed {
+  width: var(--admin-sidebar-width);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  background-color: var(--admin-surface);
+  border-right: 1px solid var(--admin-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+@media (max-width: 767.98px) {
+  .admin-sidebar-fixed {
+    transform: translateX(-100%);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .admin-sidebar-fixed.is-open {
+    transform: translateX(0);
+  }
+}
+
+@media (min-width: 768px) {
+  .admin-sidebar-fixed {
+    transform: none !important;
+  }
+}
+
+.admin-main-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--admin-ground);
+}
+
+@media (min-width: 768px) {
+  .admin-main-wrapper {
+    padding-left: var(--admin-sidebar-width);
+  }
+}
+
+.admin-header-sticky {
+  position: sticky;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: var(--admin-header-height);
+  background-color: var(--admin-surface);
+  border-bottom: 1px solid var(--admin-border);
+  z-index: 30;
+}
+
+/* Mobile backdrop */
+.admin-mobile-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(17, 24, 39, 0.4);
+  z-index: 45;
+  transition: opacity 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .active-dot-pulse,
+  .skeleton-shimmer,
+  .skeleton-shimmer-subtle {
+    animation: none !important;
+  }
+  .admin-sidebar-fixed {
+    transition: none !important;
+  }
+}

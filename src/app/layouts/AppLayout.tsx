@@ -11,14 +11,14 @@ import {
 } from '@ant-design/icons'
 import { Button, Switch, Tooltip } from 'antd'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
-import { StayVibeFooter } from '@/features/discovery/components/StayVibeFooter'
-import { STAYVIBE_FOOTER_GROUPS } from '@/features/discovery/data/stayvibe-mock-data'
+import { StayVibeFooter, STAYVIBE_FOOTER_GROUPS } from '@/features/discovery'
+
 import { useDataMode } from '@/shared/lib/data-mode-context'
 
 export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { mode } = useDataMode()
+  const { mode, setMode } = useDataMode()
 
   const isManagementRoute = location.pathname.startsWith('/management')
 
@@ -48,6 +48,7 @@ export function AppLayout() {
           </NavLink>
 
           <nav className="stayvibe-navbar__nav" aria-label="Điều hướng chính">
+            <NavLink to="/admin/users" className="stayvibe-navbar__item" style={{ color: '#0E6B6F', fontWeight: 600 }}>StayHub Admin</NavLink>
             <NavLink to="/management/live" className="stayvibe-navbar__item">Kiểm thử API thật</NavLink>
             {isManagementRoute ? (
               <>
@@ -138,7 +139,7 @@ export function AppLayout() {
               <Tooltip
                 title={
                   mode === 'mock'
-                    ? 'Mở trang kiểm thử các API đã triển khai'
+                    ? 'Kết nối các API khách sạn đã triển khai'
                     : 'Đang kết nối trực tiếp với máy chủ hệ thống'
                 }
               >
@@ -146,7 +147,7 @@ export function AppLayout() {
                   <Switch
                     size="small"
                     checked={mode === 'api'}
-                    onChange={() => void navigate('/management/live')}
+                    onChange={(checked) => setMode(checked ? 'api' : 'mock')}
                     aria-label="Chuyển đổi nguồn dữ liệu"
                   />
                   <span>{mode === 'mock' ? 'Dữ liệu mẫu' : 'Hệ thống thực'}</span>

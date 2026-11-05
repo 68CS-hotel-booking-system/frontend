@@ -1,4 +1,14 @@
-import { useMemo, useState } from 'react'
+import {
+  useDiscoveryHotels,
+  type SortOrder,
+  BentoDestinationGrid,
+  HeroSection,
+  HotelCard,
+  VibeFilterBar,
+  BENTO_DESTINATIONS,
+  VIBE_CATEGORIES,
+  type StayVibeHotelItem,
+} from '@/features/discovery'
 import {
   CloseCircleOutlined,
   FilterOutlined,
@@ -6,66 +16,20 @@ import {
 } from '@ant-design/icons'
 import { Button, Select, Space, Tag } from 'antd'
 import { useNavigate } from 'react-router'
-import { BentoDestinationGrid } from '@/features/discovery/components/BentoDestinationGrid'
-import { HeroSection } from '@/features/discovery/components/HeroSection'
-import { HotelCard } from '@/features/discovery/components/HotelCard'
-import type { SmartSearchFormValues } from '@/features/discovery/components/SmartSearchBar'
-import { VibeFilterBar } from '@/features/discovery/components/VibeFilterBar'
-import {
-  BENTO_DESTINATIONS,
-  STAYVIBE_FEATURED_HOTELS,
-  VIBE_CATEGORIES,
-  type StayVibeHotelItem,
-  type VibeIconKey,
-} from '@/features/discovery/data/stayvibe-mock-data'
-import { EmptyState } from '@/shared/ui/EmptyState'
 
-type SortOrder = 'POPULAR' | 'PRICE_ASC' | 'RATING_DESC'
+import type { SmartSearchFormValues } from '@/features/discovery'
+
+import { EmptyState } from '@/shared/ui/EmptyState'
 
 export function StayVibeHomePage() {
   const navigate = useNavigate()
 
-  const [selectedVibe, setSelectedVibe] = useState<VibeIconKey | 'ALL'>('ALL')
-  const [selectedCityId, setSelectedCityId] = useState<string | 'ALL'>('ALL')
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [petFriendlyOnly, setPetFriendlyOnly] = useState(false)
-  const [sortOrder, setSortOrder] = useState<SortOrder>('POPULAR')
-  const [wishlistedIds, setWishlistedIds] = useState<string[]>([
-    '11111111-1111-4111-8111-111111111101',
-  ])
-
-  const filteredHotels = useMemo(() => {
-    const keyword = searchKeyword.trim().toLowerCase()
-
-    const matched = STAYVIBE_FEATURED_HOTELS.filter((hotel) => {
-      if (selectedVibe !== 'ALL' && !hotel.vibeIds.includes(selectedVibe)) {
-        return false
-      }
-      if (selectedCityId !== 'ALL' && hotel.cityId !== selectedCityId) {
-        return false
-      }
-      if (petFriendlyOnly && !hotel.vibeIds.includes('pet-friendly')) {
-        return false
-      }
-      if (keyword) {
-        const inName = hotel.name.toLowerCase().includes(keyword)
-        const inCity = hotel.cityName.toLowerCase().includes(keyword)
-        const inDistance = hotel.distanceLabel.toLowerCase().includes(keyword)
-        if (!inName && !inCity && !inDistance) {
-          return false
-        }
-      }
-      return true
-    })
-
-    if (sortOrder === 'PRICE_ASC') {
-      return [...matched].sort((a, b) => a.pricePerNight - b.pricePerNight)
-    }
-    if (sortOrder === 'RATING_DESC') {
-      return [...matched].sort((a, b) => b.rating - a.rating)
-    }
-    return matched
-  }, [petFriendlyOnly, searchKeyword, selectedCityId, selectedVibe, sortOrder])
+  const {
+    selectedVibe, setSelectedVibe, selectedCityId, setSelectedCityId,
+    searchKeyword, setSearchKeyword, petFriendlyOnly, setPetFriendlyOnly,
+    sortOrder, setSortOrder, wishlistedIds, filteredHotels, selectedVibeLabel,
+    selectedCityName, hasActiveFilters, handleResetFilters, handleToggleWishlist,
+  } = useDiscoveryHotels()
 
   function handleSearchSubmit(values: SmartSearchFormValues) {
     setSearchKeyword(values.destination)
@@ -74,22 +38,6 @@ export function StayVibeHomePage() {
 
     const hotelsEl = document.getElementById('hotels-section')
     hotelsEl?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
-  function handleResetFilters() {
-    setSelectedVibe('ALL')
-    setSelectedCityId('ALL')
-    setSearchKeyword('')
-    setPetFriendlyOnly(false)
-    setSortOrder('POPULAR')
-  }
-
-  function handleToggleWishlist(hotelId: string) {
-    setWishlistedIds((prev) =>
-      prev.includes(hotelId)
-        ? prev.filter((id) => id !== hotelId)
-        : [...prev, hotelId],
-    )
   }
 
   function handleInspectHotel(hotel: StayVibeHotelItem) {
@@ -105,23 +53,6 @@ export function StayVibeHomePage() {
       void navigate('/management/rates')
     }
   }
-
-  const selectedVibeLabel =
-    selectedVibe === 'ALL'
-      ? ''
-      : (VIBE_CATEGORIES.find((c) => c.icon === selectedVibe)?.label ??
-        selectedVibe)
-  const selectedCityName =
-    selectedCityId === 'ALL'
-      ? ''
-      : (BENTO_DESTINATIONS.find((d) => d.id === selectedCityId)?.cityName ??
-        selectedCityId)
-
-  const hasActiveFilters =
-    selectedVibe !== 'ALL' ||
-    selectedCityId !== 'ALL' ||
-    searchKeyword.trim().length > 0 ||
-    petFriendlyOnly
 
   return (
     <div className="stayvibe-discovery-page">

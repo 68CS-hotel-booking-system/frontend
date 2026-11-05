@@ -4,11 +4,8 @@ import {
   LeftOutlined,
   RightOutlined,
 } from '@ant-design/icons'
-import { VibeSvgIcon } from '@/features/discovery/components/StayVibeIcons'
-import type {
-  VibeCategoryItem,
-  VibeIconKey,
-} from '@/features/discovery/data/stayvibe-mock-data'
+import { VibeSvgIcon } from './StayVibeIcons'
+import type { VibeCategoryItem, VibeIconKey } from '../model/discovery'
 
 interface VibeFilterBarProps {
   categories: VibeCategoryItem[]

@@ -14,14 +14,11 @@ import {
 import { Controller, useForm } from 'react-hook-form'
 import { errorMessage } from '@/shared/api/api-error'
 import { applyApiFieldErrors } from '@/shared/lib/form-errors'
+import { useDataMode } from '@/shared/lib/data-mode-context'
 import { slugifyHotelName } from '@/shared/lib/format'
-import { useCreateAdminHotelMutation } from '../hooks/use-hotel-management'
-import {
-  type CityItem,
-  createAdminHotelFormSchema,
-  type CreateAdminHotelFormValues,
-  type ManagementHotelDetail,
-} from '../types/hotel-management'
+import { useCreateAdminHotelMutation } from '../hooks/use-create-hotel-mutation'
+import { type CityItem, type ManagementHotelDetail } from '../model/hotel'
+import { createAdminHotelFormSchema, createAdminHotelApiFormSchema, type CreateAdminHotelFormValues } from '../model/hotel-form-schemas'
 
 interface CreateAdminHotelDrawerProps {
   open: boolean
@@ -52,6 +49,8 @@ export function CreateAdminHotelDrawer({
   onCreated,
 }: CreateAdminHotelDrawerProps) {
   const formId = useId()
+  const { mode } = useDataMode()
+  const isApi = mode === 'api'
   const { message } = AntApp.useApp()
   const createMutation = useCreateAdminHotelMutation()
 
@@ -64,19 +63,19 @@ export function CreateAdminHotelDrawer({
     reset,
     formState: { errors },
   } = useForm<CreateAdminHotelFormValues>({
-    resolver: zodResolver(createAdminHotelFormSchema),
+    resolver: zodResolver(isApi ? createAdminHotelApiFormSchema : createAdminHotelFormSchema),
     defaultValues: {
       name: '',
       slug: '',
-      cityId: cities[0]?.id ?? '11111111-1111-4111-8111-111111111101',
-      ownerUserId: '99999999-9999-4999-8999-999999999901',
+      cityId: isApi ? '' : (cities[0]?.id ?? '11111111-1111-4111-8111-111111111101'),
+      ownerUserId: isApi ? '' : '99999999-9999-4999-8999-999999999901',
       address: '',
       starRating: 5,
       checkInTime: '14:00',
       checkOutTime: '12:00',
       description: '',
-      latitude: 21.0583,
-      longitude: 105.8306,
+      latitude: isApi ? null : 21.0583,
+      longitude: isApi ? null : 105.8306,
     },
   })
 
@@ -156,7 +155,8 @@ export function CreateAdminHotelDrawer({
           htmlFor={`${formId}-slug`}
           validateStatus={errors.slug ? 'error' : undefined}
           help={errors.slug?.message}
-          required
+          extra={isApi ? 'Đường dẫn sẽ được máy chủ tự sinh khi tạo khách sạn.' : undefined}
+          required={!isApi}
         >
           <Controller
             name="slug"
@@ -167,9 +167,11 @@ export function CreateAdminHotelDrawer({
                   {...field}
                   id={`${formId}-slug`}
                   placeholder="stayvibe-skylodge-da-lat"
+                  readOnly={isApi}
                 />
                 <Button
                   htmlType="button"
+                  disabled={isApi}
                   onClick={() =>
                     setValue('slug', slugifyHotelName(getValues('name')), {
                       shouldValidate: true,
@@ -185,16 +187,18 @@ export function CreateAdminHotelDrawer({
 
         <div className="form-grid-2">
           <Form.Item
-            label="Thành phố"
+            label={isApi ? 'City ID' : 'Thành phố'}
             htmlFor={`${formId}-cityId`}
             validateStatus={errors.cityId ? 'error' : undefined}
-            help={errors.cityId?.message}
+            help={errors.cityId?.message ?? (isApi ? 'Nhập UUID thành phố có thật trong cơ sở dữ liệu.' : undefined)}
             required
           >
             <Controller
               name="cityId"
               control={control}
-              render={({ field }) => (
+              render={({ field }) => isApi ? (
+                <Input {...field} id={`${formId}-cityId`} placeholder="UUID thành phố" />
+              ) : (
                 <Select
                   id={`${formId}-cityId`}
                   value={field.value}
@@ -238,7 +242,7 @@ export function CreateAdminHotelDrawer({
           validateStatus={errors.ownerUserId ? 'error' : undefined}
           help={
             errors.ownerUserId?.message ??
-            'Chọn nhanh tài khoản chủ sở hữu mẫu hoặc nhập mã tài khoản.'
+            (isApi ? 'Nhập UUID tài khoản HOTEL_OWNER có thật trong cơ sở dữ liệu.' : 'Chọn nhanh tài khoản chủ sở hữu mẫu hoặc nhập mã tài khoản.')
           }
           required
         >
@@ -252,7 +256,7 @@ export function CreateAdminHotelDrawer({
                   id={`${formId}-ownerUserId`}
                   placeholder="Nhập mã định danh tài khoản chủ sở hữu..."
                 />
-                <Select
+                {!isApi && <Select
                   aria-label="Chọn nhanh chủ sở hữu mẫu"
                   value={
                     SAMPLE_OWNERS.some((item) => item.value === field.value)
@@ -262,7 +266,7 @@ export function CreateAdminHotelDrawer({
                   placeholder="Chọn nhanh chủ sở hữu mẫu..."
                   onChange={(value) => field.onChange(value)}
                   options={SAMPLE_OWNERS}
-                />
+                />}
               </div>
             )}
           />
@@ -406,4 +410,3 @@ export function CreateAdminHotelDrawer({
     </Drawer>
   )
 }
-

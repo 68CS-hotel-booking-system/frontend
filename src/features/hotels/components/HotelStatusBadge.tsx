@@ -1,5 +1,5 @@
 import { Tag } from 'antd'
-import type { HotelStatus } from '../types/hotel-management'
+import type { HotelStatus } from '../model/hotel'
 
 const STATUS_META: Record<
   HotelStatus,

@@ -10,17 +10,18 @@ import {
 } from '@ant-design/icons'
 import { Button, Space, Tabs, Tag } from 'antd'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
-import { HotelContractsSection } from '@/features/contracts/components/HotelContractsSection'
-import { useHotelContractsQuery } from '@/features/contracts/hooks/use-hotel-contracts'
-import { FinancialAccessSection } from '@/features/finance/components/FinancialAccessSection'
-import { HotelAmenitiesManager } from '@/features/hotels/components/HotelAmenitiesManager'
-import { HotelGeneralEditForm } from '@/features/hotels/components/HotelGeneralEditForm'
-import { HotelStatusBadge } from '@/features/hotels/components/HotelStatusBadge'
-import { RoomTypeDailyRatesPanel } from '@/features/hotels/components/RoomTypeDailyRatesPanel'
+import { HotelContractsSection, useHotelContractsQuery } from '@/features/contracts'
+
+import { FinancialAccessSection } from '@/features/finance'
 import {
+  HotelAmenitiesManager,
+  HotelGeneralEditForm,
+  HotelStatusBadge,
+  RoomTypeDailyRatesPanel,
   useCitiesQuery,
   useManagementHotelDetailQuery,
-} from '@/features/hotels/hooks/use-hotel-management'
+} from '@/features/hotels'
+
 import { DataSourceBanner } from '@/shared/ui/DataSourceBanner'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
@@ -183,4 +184,3 @@ export function HotelManagementDetailPage() {
     </div>
   )
 }
-

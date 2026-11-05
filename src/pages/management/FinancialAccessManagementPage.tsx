@@ -9,13 +9,10 @@ import {
 } from '@ant-design/icons'
 import { Button, Select, Space, Tag } from 'antd'
 import { useNavigate, useSearchParams } from 'react-router'
-import { useHotelContractsQuery } from '@/features/contracts/hooks/use-hotel-contracts'
-import { FinancialAccessSection } from '@/features/finance/components/FinancialAccessSection'
-import { HotelStatusBadge } from '@/features/hotels/components/HotelStatusBadge'
-import {
-  useManagementHotelDetailQuery,
-  useManagementHotelsQuery,
-} from '@/features/hotels/hooks/use-hotel-management'
+import { useHotelContractsQuery } from '@/features/contracts'
+import { FinancialAccessSection } from '@/features/finance'
+import { HotelStatusBadge, useManagementHotelDetailQuery, useManagementHotelsQuery } from '@/features/hotels'
+
 import { DataSourceBanner } from '@/shared/ui/DataSourceBanner'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
