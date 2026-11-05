@@ -18,27 +18,6 @@ export const MOCK_REPRESENTATIVE_CANDIDATES: MockRepresentativeCandidate[] = [
     roleLabel: 'Chủ sở hữu khách sạn (Owner)',
     memberRole: 'OWNER',
   },
-  {
-    userId: '77777777-7777-4777-8777-777777777701',
-    fullName: 'Đỗ Thu Trang',
-    email: 'trang.do.finance@ihg-westlake.vn',
-    roleLabel: 'Kế toán trưởng / Đại diện tài chính (MANAGER)',
-    memberRole: 'MANAGER',
-  },
-  {
-    userId: '77777777-7777-4777-8777-777777777702',
-    fullName: 'Phạm Tuấn Kiệt',
-    email: 'kiet.pham.fo@ihg-westlake.vn',
-    roleLabel: 'Trưởng bộ phận Lễ tân (RECEPTIONIST)',
-    memberRole: 'RECEPTIONIST',
-  },
-  {
-    userId: '99999999-9999-4999-8999-999999999902',
-    fullName: 'Lê Hoàng Thảo Vy',
-    email: 'vy.le@cloudpine-dalat.vn',
-    roleLabel: 'Chủ sở hữu CloudPine (Owner)',
-    memberRole: 'OWNER',
-  },
 ]
 
 const mockGrantsMap = new Map<string, FinancialAccessGrant>([
@@ -61,46 +40,6 @@ const mockGrantsMap = new Map<string, FinancialAccessGrant>([
       updatedAt: '2026-10-20T15:00:00Z',
       reason:
         'Phân quyền đầy đủ cho đại diện chủ sở hữu theo phụ lục hợp đồng Q4/2026.',
-    },
-  ],
-  [
-    '33333333-3333-4333-8333-333333333301:77777777-7777-4777-8777-777777777701',
-    {
-      hotelId: '33333333-3333-4333-8333-333333333301',
-      userId: '77777777-7777-4777-8777-777777777701',
-      userFullName: 'Đỗ Thu Trang',
-      userEmail: 'trang.do.finance@ihg-westlake.vn',
-      contractId: '55555555-5555-4555-8555-555555555501',
-      contractCode: 'CTR-2026-IHG-01',
-      status: 'GRANTED',
-      canReadContracts: true,
-      canReadSettlements: true,
-      canExportReports: false,
-      version: 1,
-      previousVersionSummary: 'v0: Chưa cấp quyền tài chính',
-      updatedAt: '2026-09-01T10:00:00Z',
-      reason:
-        'Cấp quyền tra cứu hợp đồng và kỳ đối soát cho kế toán trưởng khách sạn.',
-    },
-  ],
-  [
-    '33333333-3333-4333-8333-333333333302:99999999-9999-4999-8999-999999999902',
-    {
-      hotelId: '33333333-3333-4333-8333-333333333302',
-      userId: '99999999-9999-4999-8999-999999999902',
-      userFullName: 'Lê Hoàng Thảo Vy',
-      userEmail: 'vy.le@cloudpine-dalat.vn',
-      contractId: '55555555-5555-4555-8555-555555555503',
-      contractCode: 'CTR-2026-GLAMP-01',
-      status: 'GRANTED',
-      canReadContracts: true,
-      canReadSettlements: true,
-      canExportReports: true,
-      version: 2,
-      previousVersionSummary:
-        'v1 (2026-06-01): GRANTED · Đọc hợp đồng cơ bản khi ký thỏa thuận mới',
-      updatedAt: '2026-10-10T09:30:00Z',
-      reason: 'Mở toàn quyền đối soát và xuất báo cáo cho chủ sở hữu CloudPine.',
     },
   ],
 ])

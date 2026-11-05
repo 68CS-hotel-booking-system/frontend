@@ -4,6 +4,7 @@ import { CreateUserModal, UserActionMenu, UserDetailModal, ChangeRoleModal, useA
 
 export function AdminUsersPage() {
   const {
+    users,
     selectedIds,
     activeTab,
     setActiveTab,
@@ -781,7 +782,7 @@ export function AdminUsersPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span>
               Hiển thị <span style={{ color: '#17212B', fontWeight: 500 }} className="tabular-nums">1–{filteredUsers.length}</span> trong{' '}
-              <span style={{ color: '#17212B', fontWeight: 500 }} className="tabular-nums">1.248</span> tài khoản
+              <span style={{ color: '#17212B', fontWeight: 500 }} className="tabular-nums">{users.length}</span> tài khoản
             </span>
             <div style={{ position: 'relative' }}>
               <select

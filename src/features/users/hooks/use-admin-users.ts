@@ -7,7 +7,7 @@ import type { CreateUserFormValues } from '../model/create-user-form-schema'
 /** Existing admin preview behavior; these actions do not call backend user APIs. */
 export function useAdminUsers() {
   const [users, setUsers] = useState<AdminUser[]>(INITIAL_MOCK_USERS)
-  const [selectedIds, setSelectedIds] = useState<string[]>(['1', '2', '3'])
+  const [selectedIds, setSelectedIds] = useState<string[]>(['1'])
   const [activeTab, setActiveTab] = useState<UserFilterTab>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('ALL')
@@ -23,13 +23,13 @@ export function useAdminUsers() {
   // Tính số lượng cho từng tab
   const tabCounts = useMemo(() => {
     return {
-      all: 1248,
-      active: 1102,
-      pending: 86,
-      inactive: 42,
-      locked: 18,
+      all: users.length,
+      active: users.filter((u) => u.status === 'ACTIVE').length,
+      pending: users.filter((u) => u.status === 'PENDING').length,
+      inactive: users.filter((u) => u.status === 'INACTIVE').length,
+      locked: users.filter((u) => u.status === 'LOCKED').length,
     }
-  }, [])
+  }, [users])
 
   // Lọc danh sách hiển thị
   const filteredUsers = useMemo(() => {
@@ -156,6 +156,7 @@ export function useAdminUsers() {
   }
 
     return {
+    users,
     selectedIds,
     activeTab,
     setActiveTab,
