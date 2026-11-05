@@ -1,5 +1,7 @@
 # Tích hợp staging (backend develop 9a3d74b)
 
+Giao diện trang chủ, theme, layout và các màn quản lý được khôi phục theo commit `e29d9da`. Giữ trang QA API thật và các route đăng ký/xác minh/reset mật khẩu. Các module API mới từ PR #12 vẫn được giữ trong source; dashboard và theme Atelier không được kích hoạt trong giao diện khôi phục.
+
 Mở `/register` để đăng ký tài khoản; trang `/login` có liên kết Đăng ký và Quên mật khẩu hiển thị trực tiếp. Trang `/forgot-password` gửi yêu cầu đặt lại mật khẩu.
 
 Trang `/management/live` và `/login` kết nối 18 API thật, qua HTTP client cùng origin. Chọn chức năng để đăng ký, xác minh, login, refresh/logout, reset/đổi mật khẩu, đọc user; liệt kê/cấp/thu hồi role; tạo/xem khách sạn, tạo loại phòng/phòng. Các trang danh mục cũ vẫn là demo mock; nút chuyển API dẫn đến trang kiểm thử này.

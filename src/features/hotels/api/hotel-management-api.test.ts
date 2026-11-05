@@ -16,6 +16,8 @@ import { http } from '@/shared/api/http'
 import { getAmenities, getCities } from './catalog-api'
 import {
   createAdminHotel,
+  createManagementRoom,
+  createManagementRoomType,
   getManagementHotelDetail,
   getManagementHotels,
   getRoomTypeDailyRates,
@@ -125,6 +127,46 @@ describe('TV4 Hotel Management, Pricing & Finance API contracts', () => {
     expect(spy).toHaveBeenCalledWith(
       '/management/hotels/hotel-123/room-types/rt-456/rates?startDate=2026-11-01&endDate=2026-11-07',
       expect.any(Object),
+    )
+
+    await createManagementRoomType('hotel-123', {
+      name: 'Grand Penthouse Suite',
+      description: 'Private Terrace & Butler',
+      maxAdults: 4,
+      maxChildren: 1,
+    })
+    expect(spy).toHaveBeenCalledWith(
+      '/management/hotels/hotel-123/room-types',
+      expect.objectContaining({
+        method: 'POST',
+        body: {
+          name: 'Grand Penthouse Suite',
+          description: 'Private Terrace & Butler',
+          maxAdults: 4,
+          maxChildren: 1,
+        },
+      }),
+    )
+
+    await createManagementRoom('hotel-123', {
+      roomTypeId: '44444444-4444-4444-8444-444444444401',
+      roomNumber: '402',
+      floor: 'Floor 4',
+      operationalFrom: '2026-11-04T00:00:00Z',
+      operationalUntil: null,
+    })
+    expect(spy).toHaveBeenCalledWith(
+      '/management/hotels/hotel-123/rooms',
+      expect.objectContaining({
+        method: 'POST',
+        body: {
+          roomTypeId: '44444444-4444-4444-8444-444444444401',
+          roomNumber: '402',
+          floor: 'Floor 4',
+          operationalFrom: '2026-11-04T00:00:00Z',
+          operationalUntil: null,
+        },
+      }),
     )
 
     spy.mockRestore()
