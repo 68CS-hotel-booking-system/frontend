@@ -4,7 +4,6 @@ import { CreateUserModal, UserActionMenu, UserDetailModal, ChangeRoleModal, useA
 
 export function AdminUsersPage() {
   const {
-    users,
     selectedIds,
     activeTab,
     setActiveTab,
@@ -14,8 +13,8 @@ export function AdminUsersPage() {
     setRoleFilter,
     dateFilter,
     setDateFilter,
-    previewState,
-    setPreviewState,
+    viewState,
+    errorText,
     isRetrying,
     isCreateModalOpen,
     setIsCreateModalOpen,
@@ -35,8 +34,27 @@ export function AdminUsersPage() {
     handleBulkResendEmail,
     handleBulkLock,
     handleCreateUser,
-    handleExportCSV,
     handleRetryConnection,
+    page,
+    pageSize,
+    setPage,
+    setPageSize,
+    pageNumbers,
+    totalElements,
+    totalPages,
+    rangeStart,
+    rangeEnd,
+    hasPrevious,
+    hasNext,
+    sort,
+    toggleSort,
+    isBusy,
+    isMutating,
+    currentUserId,
+    roleOptions,
+    roleFilterOptions,
+    rolesLoading,
+    rolesError,
   } = useAdminUsers()
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -79,6 +97,8 @@ export function AdminUsersPage() {
         <button
           type="button"
           onClick={() => setIsCreateModalOpen(true)}
+          disabled
+          title="Chức năng thêm người dùng chưa được hỗ trợ."
           className="admin-btn-primary"
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
@@ -155,7 +175,7 @@ export function AdminUsersPage() {
                       fontWeight: isActive ? 500 : 400,
                     }}
                   >
-                    {tab.count.toLocaleString('vi-VN')}
+                    {tab.count?.toLocaleString('vi-VN') ?? '—'}
                   </span>
                 </button>
               )
@@ -253,9 +273,9 @@ export function AdminUsersPage() {
                 }}
               >
                 <option value="ALL">Tất cả vai trò</option>
-                <option value="CUSTOMER">Khách hàng</option>
-                <option value="HOTEL_OWNER">Chủ khách sạn</option>
-                <option value="ADMIN">Quản trị viên</option>
+                {roleFilterOptions.map((role) => (
+                  <option key={role.value} value={role.value}>{role.label}</option>
+                ))}
               </select>
               <span
                 className="material-symbols-outlined"
@@ -319,6 +339,8 @@ export function AdminUsersPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
               type="button"
+              onClick={toggleSort}
+              disabled={isBusy}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -343,38 +365,10 @@ export function AdminUsersPage() {
               <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#5F6B76' }}>
                 swap_vert
               </span>
-              <span>Sắp xếp: Mới nhất</span>
+              <span>Sắp xếp: {sort === 'createdAt,desc' ? 'Mới nhất' : 'Cũ nhất'}</span>
             </button>
 
-            <button
-              type="button"
-              onClick={handleExportCSV}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 12px',
-                fontSize: '13px',
-                fontWeight: 500,
-                color: '#17212B',
-                backgroundColor: '#ffffff',
-                border: '1px solid #E3E6E9',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#F5F6F7'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#ffffff'
-              }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#5F6B76' }}>
-                download
-              </span>
-              <span>Xuất CSV</span>
-            </button>
+
           </div>
         </div>
 
@@ -423,6 +417,7 @@ export function AdminUsersPage() {
               <button
                 type="button"
                 onClick={handleBulkResendEmail}
+                disabled={isBusy}
                 style={{
                   padding: '6px 12px',
                   fontSize: '12px',
@@ -439,6 +434,7 @@ export function AdminUsersPage() {
               <button
                 type="button"
                 onClick={handleBulkLock}
+                disabled={isBusy}
                 style={{
                   padding: '6px 12px',
                   fontSize: '12px',
@@ -479,6 +475,7 @@ export function AdminUsersPage() {
                       if (el) el.indeterminate = isIndeterminate
                     }}
                     onChange={handleToggleSelectAll}
+                    disabled={isBusy}
                   />
                 </th>
                 <th style={{ padding: '14px 12px', fontWeight: 500 }}>Người dùng</th>
@@ -510,7 +507,7 @@ export function AdminUsersPage() {
               {filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ padding: '36px', textAlign: 'center', color: '#5F6B76' }}>
-                    Không có người dùng nào phù hợp với bộ lọc hiện tại.
+                    {viewState === 'loading' ? 'Đang tải dữ liệu...' : viewState === 'error' ? 'Không tải được danh sách người dùng.' : 'Không có người dùng trên trang này.'}
                   </td>
                 </tr>
               ) : (
@@ -539,6 +536,7 @@ export function AdminUsersPage() {
                           className="custom-checkbox"
                           checked={isSelected}
                           onChange={() => handleToggleSelectRow(user.id)}
+                          disabled={isBusy}
                         />
                       </td>
 
@@ -629,6 +627,7 @@ export function AdminUsersPage() {
                           </span>
                         )}
                         {user.role === 'CUSTOMER' && <span>Khách hàng</span>}
+                        {user.role === null && <span>{user.roles.join(', ') || '—'}</span>}
                       </td>
 
                       <td style={{ padding: '0 12px' }}>
@@ -748,6 +747,8 @@ export function AdminUsersPage() {
                       <td style={{ padding: '0 12px', textAlign: 'right' }}>
                         <UserActionMenu
                           user={user}
+                          disabled={isBusy}
+                          currentUserId={currentUserId}
                           onToggleLock={handleToggleLockUser}
                           onResendEmail={handleResendEmail}
                           onChangeRole={(u) => setSelectedUserForRole(u)}
@@ -781,12 +782,14 @@ export function AdminUsersPage() {
           {/* Left Info & Page size selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span>
-              Hiển thị <span style={{ color: '#17212B', fontWeight: 500 }} className="tabular-nums">1–{filteredUsers.length}</span> trong{' '}
-              <span style={{ color: '#17212B', fontWeight: 500 }} className="tabular-nums">{users.length}</span> tài khoản
+              Hiển thị <span style={{ color: '#17212B', fontWeight: 500 }} className="tabular-nums">{rangeStart}–{rangeEnd}</span> trong{' '}
+              <span style={{ color: '#17212B', fontWeight: 500 }} className="tabular-nums">{totalElements ?? '—'}</span> tài khoản
             </span>
             <div style={{ position: 'relative' }}>
               <select
-                defaultValue="20"
+                value={pageSize}
+                onChange={(event) => setPageSize(Number(event.target.value))}
+                disabled={isBusy}
                 style={{
                   appearance: 'none',
                   paddingLeft: '10px',
@@ -827,146 +830,80 @@ export function AdminUsersPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <button
               type="button"
-              disabled
+              disabled={!hasPrevious}
+              onClick={() => setPage(page - 1)}
               style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                border: '1px solid #E3E6E9',
-                color: '#5F6B76',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: 0.4,
-                cursor: 'not-allowed',
-                background: 'transparent',
+                width: '32px', height: '32px', borderRadius: '8px',
+                border: '1px solid #E3E6E9', color: '#5F6B76', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                opacity: hasPrevious ? 1 : 0.4,
+                cursor: hasPrevious ? 'pointer' : 'not-allowed', background: 'transparent',
               }}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                chevron_left
-              </span>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>chevron_left</span>
             </button>
+
+            {pageNumbers.map((number) => (
+              <button
+                key={number}
+                type="button"
+                onClick={() => setPage(number)}
+                disabled={isBusy}
+                style={{
+                  width: '32px', height: '32px', borderRadius: '8px',
+                  backgroundColor: number === page ? 'rgba(14, 107, 111, 0.1)' : 'transparent',
+                  color: number === page ? '#0E6B6F' : '#17212B',
+                  fontWeight: number === page ? 600 : 500, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', fontSize: '13px',
+                  border: 'none', cursor: 'pointer',
+                }}
+                className="tabular-nums"
+              >
+                {number + 1}
+              </button>
+            ))}
+
+            {pageNumbers.length > 0 && pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
+              <>
+                {pageNumbers[pageNumbers.length - 1] < totalPages - 2 && (
+                  <span style={{ width: '24px', textAlign: 'center', color: '#5F6B76', userSelect: 'none' }} className="tabular-nums">...</span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setPage(totalPages - 1)}
+                  disabled={isBusy}
+                  style={{
+                    width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'transparent',
+                    color: '#17212B', fontWeight: 500, display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', fontSize: '13px', border: 'none', cursor: 'pointer',
+                  }}
+                  className="tabular-nums"
+                >
+                  {totalPages}
+                </button>
+              </>
+            )}
 
             <button
               type="button"
+              disabled={!hasNext}
+              onClick={() => setPage(page + 1)}
               style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(14, 107, 111, 0.1)',
-                color: '#0E6B6F',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '13px',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-              className="tabular-nums"
-            >
-              1
-            </button>
-
-            <button
-              type="button"
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                backgroundColor: 'transparent',
-                color: '#17212B',
-                fontWeight: 500,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '13px',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-              className="tabular-nums"
-            >
-              2
-            </button>
-
-            <button
-              type="button"
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                backgroundColor: 'transparent',
-                color: '#17212B',
-                fontWeight: 500,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '13px',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-              className="tabular-nums"
-            >
-              3
-            </button>
-
-            <span
-              style={{
-                width: '24px',
-                textAlign: 'center',
-                color: '#5F6B76',
-                userSelect: 'none',
-              }}
-              className="tabular-nums"
-            >
-              ...
-            </span>
-
-            <button
-              type="button"
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                backgroundColor: 'transparent',
-                color: '#17212B',
-                fontWeight: 500,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '13px',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-              className="tabular-nums"
-            >
-              63
-            </button>
-
-            <button
-              type="button"
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                border: '1px solid #E3E6E9',
-                color: '#17212B',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                background: 'transparent',
+                width: '32px', height: '32px', borderRadius: '8px',
+                border: '1px solid #E3E6E9', color: '#17212B', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                cursor: hasNext ? 'pointer' : 'not-allowed', background: 'transparent',
+                opacity: hasNext ? 1 : 0.4,
               }}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                chevron_right
-              </span>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>chevron_right</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* SYSTEM STATES PREVIEW SECTION */}
+      {/* API REQUEST STATES */}
+      {viewState !== null && (
       <div
         style={{
           backgroundColor: '#ffffff',
@@ -975,71 +912,8 @@ export function AdminUsersPage() {
           overflow: 'hidden',
         }}
       >
-        <div
-          style={{
-            padding: '12px 20px',
-            borderBottom: '1px solid #E3E6E9',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px',
-            backgroundColor: '#FAFBFB',
-            flexWrap: 'wrap',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#5F6B76' }}>
-              preview
-            </span>
-            <span style={{ fontSize: '13px', fontWeight: 500, color: '#17212B' }}>
-              Xem trước các trạng thái hệ thống
-            </span>
-          </div>
-
-          <div
-            style={{
-              display: 'inline-flex',
-              padding: '4px',
-              backgroundColor: '#EEF0F2',
-              borderRadius: '8px',
-              gap: '2px',
-            }}
-          >
-            {(['loading', 'empty', 'error'] as const).map((type) => {
-              const isActive = previewState === type
-              const label =
-                type === 'loading'
-                  ? 'Đang tải dữ liệu'
-                  : type === 'empty'
-                    ? 'Dữ liệu trống'
-                    : 'Lỗi kết nối'
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setPreviewState(type)}
-                  style={{
-                    padding: '4px 12px',
-                    fontSize: '12px',
-                    fontWeight: 500,
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    backgroundColor: isActive ? '#ffffff' : 'transparent',
-                    color: isActive ? '#0E6B6F' : '#5F6B76',
-                    border: isActive ? '1px solid #E3E6E9' : '1px solid transparent',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
         {/* 1. LOADING SKELETON */}
-        {previewState === 'loading' && (
+        {viewState === 'loading' && (
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {[1, 2].map((i) => (
               <div
@@ -1091,7 +965,7 @@ export function AdminUsersPage() {
         )}
 
         {/* 2. EMPTY STATE */}
-        {previewState === 'empty' && (
+        {viewState === 'empty' && (
           <div
             style={{
               padding: '32px',
@@ -1166,7 +1040,7 @@ export function AdminUsersPage() {
         )}
 
         {/* 3. CONNECTION ERROR */}
-        {previewState === 'error' && (
+        {viewState === 'error' && (
           <div
             style={{
               padding: '32px',
@@ -1214,7 +1088,7 @@ export function AdminUsersPage() {
                 lineHeight: 1.5,
               }}
             >
-              Đã xảy ra sự cố khi kết nối với máy chủ dữ liệu StayHub. Vui lòng thử lại sau.
+              {errorText ?? 'Không thể tải dữ liệu. Vui lòng thử lại.'}
             </p>
             <button
               type="button"
@@ -1237,6 +1111,7 @@ export function AdminUsersPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* MODALS */}
       <CreateUserModal
@@ -1256,6 +1131,11 @@ export function AdminUsersPage() {
         open={Boolean(selectedUserForRole)}
         onClose={() => setSelectedUserForRole(null)}
         onSaveRole={handleSaveRole}
+        roleOptions={roleOptions}
+        loading={rolesLoading}
+        busy={isMutating}
+        disabled={isMutating || Boolean(rolesError)}
+        errorText={rolesError ? 'Không tải được danh mục vai trò. Vui lòng tải lại dữ liệu.' : undefined}
       />
     </div>
   )

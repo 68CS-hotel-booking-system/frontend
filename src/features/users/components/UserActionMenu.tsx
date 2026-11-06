@@ -3,6 +3,8 @@ import type { AdminUser } from '../model/user'
 
 interface UserActionMenuProps {
   user: AdminUser
+  disabled?: boolean
+  currentUserId?: string
   onToggleLock: (user: AdminUser) => void
   onResendEmail: (user: AdminUser) => void
   onChangeRole: (user: AdminUser) => void
@@ -11,12 +13,14 @@ interface UserActionMenuProps {
 
 export function UserActionMenu({
   user,
+  disabled = false,
+  currentUserId,
   onToggleLock,
   onResendEmail,
   onChangeRole,
   onViewDetail,
 }: UserActionMenuProps) {
-  const isLocked = user.status === 'LOCKED'
+  const isLocked = user.status === 'LOCKED' || user.status === 'INACTIVE'
 
   const items: MenuProps['items'] = [
     {
@@ -45,6 +49,7 @@ export function UserActionMenu({
     },
     {
       key: 'resend-email',
+      disabled: user.emailVerified || user.status !== 'PENDING',
       label: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#5F6B76' }}>
@@ -60,6 +65,7 @@ export function UserActionMenu({
     },
     {
       key: 'toggle-lock',
+      disabled: user.id === currentUserId,
       danger: !isLocked,
       label: (
         <span
@@ -85,9 +91,10 @@ export function UserActionMenu({
   ]
 
   return (
-    <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
+    <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight" disabled={disabled}>
       <button
         type="button"
+        disabled={disabled}
         aria-label="Thao tác"
         style={{
           width: '32px',

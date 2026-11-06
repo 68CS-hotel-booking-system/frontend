@@ -10,14 +10,16 @@ interface UserDetailModalProps {
 export function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
   if (!user) return null
 
-  const getRoleLabel = (role: AdminUser['role']) => {
+  const getRoleLabel = (role: string) => {
     switch (role) {
       case 'ADMIN':
         return 'Quản trị viên'
       case 'HOTEL_OWNER':
         return 'Chủ khách sạn'
-      default:
+      case 'CUSTOMER':
         return 'Khách hàng'
+      default:
+        return role
     }
   }
 
@@ -54,7 +56,7 @@ export function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
           <Descriptions.Item label="Họ và tên">{user.fullName}</Descriptions.Item>
           <Descriptions.Item label="Email">{user.email}</Descriptions.Item>
           <Descriptions.Item label="Số điện thoại">{user.phone}</Descriptions.Item>
-          <Descriptions.Item label="Vai trò">{getRoleLabel(user.role)}</Descriptions.Item>
+          <Descriptions.Item label="Vai trò">{user.roles.map(getRoleLabel).join(', ') || '—'}</Descriptions.Item>
           <Descriptions.Item label="Trạng thái">{getStatusLabel(user.status)}</Descriptions.Item>
           <Descriptions.Item label="Ngày tham gia">{user.joinedDate}</Descriptions.Item>
         </Descriptions>

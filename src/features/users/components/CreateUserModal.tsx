@@ -6,7 +6,7 @@ import { type CreateUserFormValues, createUserSchema } from '../model/create-use
 interface CreateUserModalProps {
   open: boolean
   onClose: () => void
-  onSubmit: (values: CreateUserFormValues) => void
+  onSubmit: (values: CreateUserFormValues) => Promise<boolean>
 }
 
 function CreateUserForm({
@@ -14,7 +14,7 @@ function CreateUserForm({
   onSubmit,
 }: {
   onClose: () => void
-  onSubmit: (values: CreateUserFormValues) => void
+  onSubmit: (values: CreateUserFormValues) => Promise<boolean>
 }) {
   const {
     control,
@@ -30,9 +30,8 @@ function CreateUserForm({
     },
   })
 
-  const handleFormSubmit = (data: CreateUserFormValues) => {
-    onSubmit(data)
-    onClose()
+  const handleFormSubmit = async (data: CreateUserFormValues) => {
+    if (await onSubmit(data)) onClose()
   }
 
   return (

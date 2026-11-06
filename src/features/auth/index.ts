@@ -1,5 +1,8 @@
 export { AuthPanel } from './components/AuthPanel'
 export { AdminLoginForm } from './components/AdminLoginForm'
+export { AuthModal, type AuthModalProps, type AuthModalMode } from './components/AuthModal'
+export { ClientLoginForm, type ClientLoginFormProps } from './components/ClientLoginForm'
+export { ClientRegisterForm, type ClientRegisterFormProps } from './components/ClientRegisterForm'
 export { AuthActionLinks } from './components/AuthActionLinks'
 export { AdminRouteGuard } from './components/AdminRouteGuard'
 export { authActions, isAuthActionId } from './model/auth-actions'

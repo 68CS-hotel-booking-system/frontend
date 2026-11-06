@@ -12,16 +12,80 @@ import {
   SafetyCertificateOutlined,
   ShopOutlined,
   StarOutlined,
-  ThunderboltOutlined,
   UserOutlined,
 } from '@ant-design/icons'
 import { Button, Drawer, Dropdown, Switch, type MenuProps } from 'antd'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { StayVibeFooter, STAYVIBE_FOOTER_GROUPS } from '@/features/discovery'
-import { useCurrentUser, useSession } from '@/features/auth'
+import {
+  StayVibeFooter,
+  STAYVIBE_FOOTER_GROUPS,
+  ClientHomeProvider,
+  useClientHomeContext,
+  ClientSvgSprite,
+  ClientSiteHeader,
+  ClientMobileMenu,
+  ClientSiteFooter,
+  ClientToast,
+} from '@/features/discovery'
+import { AuthModal, useCurrentUser, useSession } from '@/features/auth'
 import { setSession } from '@/shared/api/session'
 import { useDataMode } from '@/shared/lib/data-mode-context'
+
+function ClientHomeLayout() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const {
+    savedIds,
+    filterState,
+    pulseSaved,
+    toggleSavedOnly,
+    toastMessage,
+    showToast,
+    authModalState,
+    openAuthModal,
+    closeAuthModal,
+  } = useClientHomeContext()
+
+  return (
+    <div className="client-theme min-h-screen flex flex-col bg-[var(--paper)] text-[var(--ink)]">
+      <ClientSvgSprite />
+      <a className="skip-link" href="#main">
+        Đến nội dung chính
+      </a>
+
+      <ClientSiteHeader
+        savedCount={savedIds.size}
+        isSavedActive={filterState.savedOnly}
+        pulseSaved={pulseSaved}
+        onToggleSaved={toggleSavedOnly}
+        onOpenMobileMenu={() => setMobileMenuOpen(true)}
+        onOpenAuthModal={(mode) => openAuthModal(mode)}
+      />
+
+      <ClientMobileMenu
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        onOpenAuthModal={(mode) => openAuthModal(mode)}
+      />
+
+      <main id="main" tabIndex={-1} className="flex-1 w-full">
+        <Outlet />
+      </main>
+
+      <ClientSiteFooter onToast={showToast} />
+      <ClientToast message={toastMessage} />
+
+      <AuthModal
+        isOpen={authModalState.isOpen}
+        initialMode={authModalState.mode}
+        onClose={closeAuthModal}
+        onSuccess={() => {
+          showToast('Đăng nhập thành công! Chào mừng bạn trở lại.')
+        }}
+      />
+    </div>
+  )
+}
 
 export function AppLayout() {
   const navigate = useNavigate()
@@ -32,10 +96,22 @@ export function AppLayout() {
   const { mode, setMode } = useDataMode()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+  const isHomeRoute = location.pathname === '/' || location.pathname === '/explore'
+
+  if (isHomeRoute) {
+    return (
+      <ClientHomeProvider>
+        <ClientHomeLayout />
+      </ClientHomeProvider>
+    )
+  }
+
   const isManagementRoute = location.pathname.startsWith('/management')
   const closeMenu = () => setMobileMenuOpen(false)
 
-  const userFullName = currentUser?.fullName || (currentUser?.email ? currentUser.email.split('@')[0] : 'Tài khoản')
+  const userFullName =
+    currentUser?.fullName ||
+    (currentUser?.email ? currentUser.email.split('@')[0] : 'Tài khoản')
   const userEmail = currentUser?.email || ''
   const userInitials =
     userFullName
@@ -84,14 +160,16 @@ export function AppLayout() {
       disabled: true,
     },
     { type: 'divider' },
-    // Only display Admin Portal link inside account menu when verified ADMIN
     ...(isAdmin
       ? [
           {
             key: 'admin-portal-link',
             icon: <DashboardOutlined className="!text-[var(--md-sys-color-primary)]" />,
             label: (
-              <NavLink to="/admin/users" className="font-semibold text-[var(--md-sys-color-primary)]">
+              <NavLink
+                to="/admin/users"
+                className="font-semibold text-[var(--md-sys-color-primary)]"
+              >
                 StayHub Admin
               </NavLink>
             ),
@@ -123,7 +201,7 @@ export function AppLayout() {
         Đến nội dung chính
       </a>
 
-      {/* Sticky Material 3 Navbar */}
+      {/* Sticky Material 3 Navbar for Management / System pages */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[var(--md-sys-color-outline-subtle)] transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
           {/* Brand Logo */}
@@ -146,7 +224,7 @@ export function AppLayout() {
             </div>
           </NavLink>
 
-          {/* Desktop Navigation Links (Focused on discovery without competing admin clutter) */}
+          {/* Desktop Navigation Links */}
           <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0" aria-label="Điều hướng chính">
             {isManagementRoute ? (
               <>
@@ -233,31 +311,20 @@ export function AppLayout() {
                   <CompassOutlined aria-hidden="true" />
                   <span>Khám phá</span>
                 </NavLink>
-
                 <a
-                  href="#bento-section"
+                  href="#destinations"
                   className="text-xs font-semibold px-3.5 py-2 rounded-full text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)] transition flex items-center gap-1.5 whitespace-nowrap shrink-0"
                 >
                   <EnvironmentOutlined aria-hidden="true" />
                   <span>Điểm đến</span>
                 </a>
-
                 <a
-                  href="#vibe-section"
-                  className="text-xs font-semibold px-3.5 py-2 rounded-full text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)] transition flex items-center gap-1.5 whitespace-nowrap shrink-0"
-                >
-                  <ThunderboltOutlined aria-hidden="true" />
-                  <span>Phong cách lưu trú</span>
-                </a>
-
-                <a
-                  href="#hotels-section"
+                  href="#stays"
                   className="text-xs font-semibold px-3.5 py-2 rounded-full text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)] transition flex items-center gap-1.5 whitespace-nowrap shrink-0"
                 >
                   <StarOutlined aria-hidden="true" />
                   <span>Bộ sưu tập chỗ nghỉ</span>
                 </a>
-
                 {isAdmin && (
                   <NavLink
                     to="/admin/users"
@@ -277,9 +344,8 @@ export function AppLayout() {
             )}
           </nav>
 
-          {/* Right Header Actions: Account Menu & Mobile Toggle */}
+          {/* Right Header Actions */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Account Action */}
             {session ? (
               <Dropdown menu={{ items: accountMenuItems }} trigger={['click']} placement="bottomRight">
                 <button
@@ -307,7 +373,6 @@ export function AppLayout() {
               </button>
             )}
 
-            {/* Mobile Menu Button */}
             <button
               type="button"
               className="lg:hidden m3-btn-icon"
@@ -352,7 +417,6 @@ export function AppLayout() {
         }}
       >
         <div className="flex flex-col gap-2">
-          {/* Navigation Links */}
           {isManagementRoute ? (
             <>
               <NavLink
@@ -409,7 +473,7 @@ export function AppLayout() {
                 <span>Khám phá</span>
               </NavLink>
               <a
-                href="#bento-section"
+                href="#destinations"
                 className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
                 onClick={closeMenu}
               >
@@ -417,15 +481,7 @@ export function AppLayout() {
                 <span>Điểm đến</span>
               </a>
               <a
-                href="#vibe-section"
-                className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
-                onClick={closeMenu}
-              >
-                <ThunderboltOutlined />
-                <span>Phong cách lưu trú</span>
-              </a>
-              <a
-                href="#hotels-section"
+                href="#stays"
                 className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
                 onClick={closeMenu}
               >
@@ -435,7 +491,6 @@ export function AppLayout() {
             </>
           )}
 
-          {/* Admin link inside account section of drawer if verified ADMIN */}
           {isAdmin && (
             <div className="pt-3 mt-2 border-t border-[var(--md-sys-color-outline-subtle)] flex flex-col gap-2">
               <NavLink
@@ -453,7 +508,6 @@ export function AppLayout() {
           )}
         </div>
 
-        {/* Drawer Footer */}
         <div className="pt-4 border-t border-[var(--md-sys-color-outline-subtle)] flex flex-col gap-3">
           {isManagementRoute && (
             <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-[var(--md-sys-color-outline-subtle)]">
@@ -509,7 +563,11 @@ export function AppLayout() {
         </div>
       </Drawer>
 
-      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8" tabIndex={-1}>
+      <main
+        id="main-content"
+        className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8"
+        tabIndex={-1}
+      >
         <Outlet />
       </main>
 

@@ -6,23 +6,42 @@ interface ChangeRoleModalProps {
   user: AdminUser | null
   open: boolean
   onClose: () => void
-  onSaveRole: (userId: string, newRole: UserRole) => void
+  onSaveRole: (userId: string, newRole: UserRole) => Promise<boolean>
+  roleOptions: { value: UserRole; label: string }[]
+  loading?: boolean
+  disabled?: boolean
+  busy?: boolean
+  errorText?: string
 }
 
 function RoleSelectForm({
   user,
   onSaveRole,
   onClose,
+  roleOptions,
+  loading,
+  disabled,
+  errorText,
 }: {
   user: AdminUser
-  onSaveRole: (userId: string, newRole: UserRole) => void
+  onSaveRole: (userId: string, newRole: UserRole) => Promise<boolean>
   onClose: () => void
+  roleOptions: { value: UserRole; label: string }[]
+  loading?: boolean
+  disabled?: boolean
+  errorText?: string
 }) {
-  const [selectedRole, setSelectedRole] = useState<UserRole>(user.role)
+  const [selectedRole, setSelectedRole] = useState<UserRole>(user.role ?? 'CUSTOMER')
+  const [isSaving, setIsSaving] = useState(false)
 
-  const handleSave = () => {
-    onSaveRole(user.id, selectedRole)
-    onClose()
+  const handleSave = async () => {
+    if (isSaving || disabled || loading) return
+    setIsSaving(true)
+    try {
+      if (await onSaveRole(user.id, selectedRole)) onClose()
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -33,13 +52,12 @@ function RoleSelectForm({
         </p>
         <Select
           value={selectedRole}
+          loading={loading || isSaving}
+          disabled={disabled || loading || isSaving}
+          notFoundContent={errorText}
           onChange={(val) => setSelectedRole(val as UserRole)}
           style={{ width: '100%', height: '38px' }}
-          options={[
-            { value: 'CUSTOMER', label: 'Khách hàng' },
-            { value: 'HOTEL_OWNER', label: 'Chủ khách sạn' },
-            { value: 'ADMIN', label: 'Quản trị viên' },
-          ]}
+          options={roleOptions}
         />
       </div>
 
@@ -54,6 +72,7 @@ function RoleSelectForm({
         <button
           type="button"
           onClick={onClose}
+          disabled={isSaving}
           style={{
             padding: '6px 14px',
             fontSize: '13px',
@@ -68,6 +87,8 @@ function RoleSelectForm({
         <button
           type="button"
           onClick={handleSave}
+          title={errorText}
+          disabled={disabled || loading || isSaving || !roleOptions.some((role) => role.value === selectedRole)}
           style={{
             padding: '6px 16px',
             fontSize: '13px',
@@ -91,6 +112,11 @@ export function ChangeRoleModal({
   open,
   onClose,
   onSaveRole,
+  roleOptions,
+  loading,
+  disabled,
+  busy,
+  errorText,
 }: ChangeRoleModalProps) {
   if (!user) return null
 
@@ -105,7 +131,7 @@ export function ChangeRoleModal({
         </div>
       }
       open={open}
-      onCancel={onClose}
+      onCancel={busy ? undefined : onClose}
       footer={null}
       destroyOnClose
     >
@@ -114,6 +140,10 @@ export function ChangeRoleModal({
         user={user}
         onSaveRole={onSaveRole}
         onClose={onClose}
+        roleOptions={roleOptions}
+        loading={loading}
+        disabled={disabled}
+        errorText={errorText}
       />
     </Modal>
   )

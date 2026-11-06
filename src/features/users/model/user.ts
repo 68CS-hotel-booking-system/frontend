@@ -8,7 +8,12 @@ export interface AdminUser {
   fullName: string
   email: string
   phone: string
-  role: UserRole
+  role: UserRole | null
+  roles: string[]
+  emailVerified: boolean
+  createdAt: string
+  updatedAt: string
+  version: number
   status: UserStatus
   joinedDate: string
   avatarInitials: string
