@@ -40,24 +40,27 @@ describe('AdminOverviewPage component', () => {
 
     // Heading
     expect(markup).toContain('Tổng quan')
-    expect(markup).toContain('Bảng điều khiển tác vụ quản trị vận hành')
+    expect(markup).toContain('Theo dõi nhu cầu, doanh thu và vận hành StayHub trong một màn hình.')
 
     // Live verified user data
     expect(markup).toContain('Vũ Quản Trị Hệ Thống')
     expect(markup).toContain('lead.admin@stayhub.vn')
 
     // Operational shortcuts
-    expect(markup).toContain('Quản lý người dùng')
-    expect(markup).toContain('Cơ sở lưu trú &amp; Phòng')
+    expect(markup).toContain('Quản lý tài khoản')
+    expect(markup).toContain('Khách sạn')
     expect(markup).toContain('Trạng thái máy chủ')
 
-    // Explicit mock labels vs real API badges
-    expect(markup).toContain('API Thật')
+    // Explicit truthful mock labels per design.md
+    expect(markup).toContain('Phiên demo')
     expect(markup).toContain('Dữ liệu minh họa')
+    expect(markup).toContain('Chưa kết nối')
 
-    // Empty state for missing backend analytics - NO fake revenue / booking counts
-    expect(markup).toContain('Chưa kết nối API báo cáo phân tích')
-    expect(markup).toContain('Dữ liệu thống kê doanh thu')
+    // Work queue and analytics visualizations from design.md
+    expect(markup).toContain('Công việc cần xử lý')
+    expect(markup).toContain('Hiệu suất kinh doanh')
+    expect(markup).toContain('Lượng đặt phòng theo thời gian')
+    expect(markup).toContain('Doanh thu nền tảng theo thời gian')
   })
 })
 

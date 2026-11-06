@@ -1,532 +1,233 @@
-/* StayHub Admin Dashboard - Material Design 3 Design System */
-/* Architecture: Material 3 Foundations (Color Tokens, Typography, Elevation, Shapes) */
+/* ==========================================================================
+   StayHub Admin Dashboard — Teal Admin Console (design.md)
+   ========================================================================== */
 
 :root {
-  /* ==========================================================================
-     1. Material Design 3 Color Tokens (StayHub Teal Baseline)
-     ========================================================================== */
-  /* Primary */
-  --md-sys-color-primary: #006A6A;
-  --md-sys-color-on-primary: #FFFFFF;
-  --md-sys-color-primary-container: #6FF7F6;
-  --md-sys-color-on-primary-container: #002020;
+  /* 3.1 Color Tokens */
+  --bg: #f4f8f7;
+  --surface: #ffffff;
+  --surface-soft: #f7fbfa;
+  --teal: #0b5f53;
+  --teal-dark: #08473e;
+  --teal-soft: #d9f0ea;
+  --teal-tint: #eef8f5;
+  --ink: #12211d;
+  --ink-2: #344a44;
+  --muted: #5f736e;
+  --border: #dce7e3;
+  --border-strong: #bfd3cd;
+  --success: #0f7a5f;
+  --danger: #9b2c22;
+  --chart-pending: #946412;
+  --chart-confirmed: #4e9b86;
+  --chart-completed: #0b5f53;
+  --chart-cancel: #b45143;
 
-  /* Secondary */
-  --md-sys-color-secondary: #4A6363;
-  --md-sys-color-on-secondary: #FFFFFF;
-  --md-sys-color-secondary-container: #CCE8E7;
-  --md-sys-color-on-secondary-container: #051F1F;
+  /* 3.3 Radii and Shadows */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(8, 36, 31, 0.04), 0 8px 24px rgba(8, 36, 31, 0.035);
+  --shadow-md: 0 18px 50px rgba(8, 36, 31, 0.14);
 
-  /* Tertiary */
-  --md-sys-color-tertiary: #4B607C;
-  --md-sys-color-on-tertiary: #FFFFFF;
-  --md-sys-color-tertiary-container: #D3E4FF;
-  --md-sys-color-on-tertiary-container: #041C35;
-
-  /* Error */
-  --md-sys-color-error: #BA1A1A;
-  --md-sys-color-on-error: #FFFFFF;
-  --md-sys-color-error-container: #FFDAD6;
-  --md-sys-color-on-error-container: #410002;
-
-  /* Surface & Background Palette */
-  --md-sys-color-surface: #FAFDFD;
-  --md-sys-color-on-surface: #191C1C;
-  --md-sys-color-surface-variant: #DAE5E4;
-  --md-sys-color-on-surface-variant: #3F4948;
-
-  --md-sys-color-surface-container-lowest: #FFFFFF;
-  --md-sys-color-surface-container-low: #F4FBFB;
-  --md-sys-color-surface-container: #EEF5F5;
-  --md-sys-color-surface-container-high: #E8EFEF;
-  --md-sys-color-surface-container-highest: #E2E9E9;
-
-  /* Outline */
-  --md-sys-color-outline: #6F7979;
-  --md-sys-color-outline-variant: #BEC9C8;
-  --md-sys-color-outline-subtle: #E2E8E8;
-
-  /* ==========================================================================
-     2. Elevation (Material 3 Shadows)
-     ========================================================================== */
-  --md-sys-elevation-0: none;
-  --md-sys-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px 0px rgba(0, 0, 0, 0.04);
-  --md-sys-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.08), 0px 1px 2px 0px rgba(0, 0, 0, 0.04);
-  --md-sys-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.08), 0px 1px 3px 0px rgba(0, 0, 0, 0.04);
-
-  /* ==========================================================================
-     3. Shape Tokens
-     ========================================================================== */
-  --md-sys-shape-corner-extra-small: 4px;
-  --md-sys-shape-corner-small: 8px;
-  --md-sys-shape-corner-medium: 12px;
-  --md-sys-shape-corner-large: 16px;
-  --md-sys-shape-corner-extra-large: 28px;
-  --md-sys-shape-corner-full: 9999px;
-
-  /* ==========================================================================
-     4. Backward Compatibility Aliases for StayHub Admin Tokens
-     ========================================================================== */
-  --admin-font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --admin-ground: var(--md-sys-color-surface-container-low);
-  --admin-surface: var(--md-sys-color-surface-container-lowest);
-  --admin-raised: var(--md-sys-color-surface-container);
-  --admin-border: var(--md-sys-color-outline-variant);
-  --admin-rule: var(--md-sys-color-outline-subtle);
-  --admin-control-border: var(--md-sys-color-outline-variant);
-
-  --admin-text-primary: var(--md-sys-color-on-surface);
-  --admin-text-secondary: var(--md-sys-color-on-surface-variant);
-  --admin-text-tertiary: var(--md-sys-color-outline);
-
-  --admin-teal: var(--md-sys-color-primary);
-  --admin-teal-hover: #005050;
-  --admin-teal-light: rgba(0, 106, 106, 0.08);
-  --admin-teal-soft: var(--md-sys-color-secondary-container);
-  --admin-teal-track: #80D4D3;
-  --admin-teal-ink: var(--md-sys-color-on-secondary-container);
-
-  /* Status Colors */
-  --admin-status-active: #0D6B40;
-  --admin-status-active-bg: #E6F6ED;
-  --admin-status-pending: #8A5A00;
-  --admin-status-pending-bg: #FFF3D6;
-  --admin-status-inactive: #4B5560;
-  --admin-status-inactive-bg: #EEF0F2;
-  --admin-status-locked: var(--md-sys-color-error);
-  --admin-status-locked-bg: var(--md-sys-color-error-container);
-
-  /* Dimensions */
-  --admin-sidebar-width: 280px;
-  --admin-sidebar-rail-width: 80px;
-  --admin-header-height: 64px;
-  --admin-radius-card: var(--md-sys-shape-corner-large);
-  --admin-radius-control: var(--md-sys-shape-corner-small);
-  --admin-gap: 24px;
+  /* Material token backward compatibility aliases */
+  --md-sys-color-primary: #0b5f53;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #d9f0ea;
+  --md-sys-color-on-primary-container: #08473e;
+  --md-sys-color-secondary: #344a44;
+  --md-sys-color-surface: #ffffff;
+  --md-sys-color-on-surface: #12211d;
+  --md-sys-color-on-surface-variant: #5f736e;
+  --md-sys-color-outline: #5f736e;
+  --md-sys-color-outline-subtle: #dce7e3;
+  --md-sys-color-error: #9b2c22;
 }
 
-/* ==========================================================================
-   5. Global Admin Canvas Reset & Typography
-   ========================================================================== */
-body:has(.admin-body) {
-  background-color: var(--md-sys-color-surface-container-low) !important;
-}
-
-.admin-body {
-  font-family: var(--admin-font-family);
-  background-color: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface);
+.admin-console-shell {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--ink);
+  background-color: var(--bg);
   min-height: 100vh;
-  margin: 0;
-  padding: 0;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.admin-body h1,
-.admin-body h2,
-.admin-body h3,
-.admin-body h4,
-.admin-body h5,
-.admin-body h6 {
-  font-family: var(--admin-font-family);
-  color: var(--md-sys-color-on-surface);
+.admin-console-shell a {
+  color: inherit;
 }
 
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Custom Slim Scrollbar */
-.admin-body ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.admin-body ::-webkit-scrollbar-thumb {
-  background: var(--md-sys-color-outline-variant);
-  border-radius: var(--md-sys-shape-corner-full);
-}
-.admin-body ::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* ==========================================================================
-   6. Material Design 3 Navigation Drawer & Rail
-   ========================================================================== */
-/* Desktop Drawer (Fixed left, width 280px) */
-.m3-nav-drawer {
-  width: var(--admin-sidebar-width);
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 50;
-  background-color: var(--md-sys-color-surface-container-low);
-  border-right: 1px solid var(--md-sys-color-outline-subtle);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  box-sizing: border-box;
-  transition: width 0.2s cubic-bezier(0.2, 0, 0, 1), transform 0.2s cubic-bezier(0.2, 0, 0, 1);
-}
-
-/* Tablet Rail mode (width 80px) */
-.m3-nav-drawer.is-rail {
-  width: var(--admin-sidebar-rail-width);
-}
-
-/* Mobile Modal Drawer (Off-screen by default) */
-@media (max-width: 767.98px) {
-  .m3-nav-drawer {
-    width: 300px;
-    background-color: var(--md-sys-color-surface-container-low);
-    border-top-right-radius: var(--md-sys-shape-corner-large);
-    border-bottom-right-radius: var(--md-sys-shape-corner-large);
-    box-shadow: var(--md-sys-elevation-3);
-    transform: translateX(-100%);
-    transition: transform 0.24s cubic-bezier(0.1, 0.9, 0.2, 1);
-  }
-  .m3-nav-drawer.is-mobile-open {
-    transform: translateX(0);
-  }
-}
-
-/* Backdrop for Mobile Drawer */
-.m3-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(25, 28, 28, 0.4);
-  backdrop-filter: blur(2px);
-  z-index: 45;
-  transition: opacity 0.2s ease;
-}
-
-/* Navigation Drawer Item (M3 Active Pill) */
-.m3-drawer-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 48px;
-  padding: 0 16px;
-  border-radius: var(--md-sys-shape-corner-full);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface-variant);
-  transition: background-color 0.15s ease, color 0.15s ease;
-  position: relative;
-  outline: none;
-  cursor: pointer;
-}
-
-.m3-drawer-item:hover {
-  background-color: rgba(74, 99, 99, 0.08);
-  color: var(--md-sys-color-on-surface);
-}
-
-.m3-drawer-item:focus-visible {
-  outline: 2px solid var(--md-sys-color-primary);
-  outline-offset: 2px;
-}
-
-.m3-drawer-item.is-active {
-  background-color: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
+/* Primary CTA button for Admin Console */
+.console-primary-btn {
+  background-color: var(--teal) !important;
+  color: #ffffff !important;
+  border-radius: 10px;
+  min-height: 44px;
+  padding: 8px 16px;
+  font-size: 13px;
   font-weight: 600;
-}
-
-.m3-drawer-item.is-active .m3-drawer-icon {
-  color: var(--md-sys-color-on-secondary-container);
-}
-
-.m3-drawer-icon {
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--md-sys-color-on-surface-variant);
-  flex-shrink: 0;
-}
-
-/* Navigation Rail Item (Compact tablet view) */
-.m3-rail-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 4px;
-  text-decoration: none;
-  color: var(--md-sys-color-on-surface-variant);
-  outline: none;
-  border-radius: var(--md-sys-shape-corner-medium);
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-
-.m3-rail-pill {
-  width: 56px;
-  height: 32px;
-  border-radius: var(--md-sys-shape-corner-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.m3-rail-item:hover .m3-rail-pill {
-  background-color: rgba(74, 99, 99, 0.08);
-}
-
-.m3-rail-item.is-active .m3-rail-pill {
-  background-color: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
-}
-
-.m3-rail-label {
-  font-size: 11px;
-  font-weight: 500;
-  text-align: center;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 72px;
-}
-
-.m3-rail-item.is-active .m3-rail-label {
-  color: var(--md-sys-color-on-surface);
-  font-weight: 600;
-}
-
-/* ==========================================================================
-   7. Material Design 3 Top App Bar
-   ========================================================================== */
-.m3-top-app-bar {
-  position: sticky;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: var(--admin-header-height);
-  background-color: var(--md-sys-color-surface);
-  border-bottom: 1px solid var(--md-sys-color-outline-subtle);
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  box-sizing: border-box;
-}
-
-@media (max-width: 640px) {
-  .m3-top-app-bar {
-    padding: 0 16px;
-  }
-}
-
-/* Main Layout Wrapper */
-.m3-main-wrapper {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--md-sys-color-surface-container-low);
-  transition: padding-left 0.2s cubic-bezier(0.2, 0, 0, 1);
-}
-
-@media (min-width: 768px) {
-  .m3-main-wrapper.has-rail {
-    padding-left: var(--admin-sidebar-rail-width);
-  }
-  .m3-main-wrapper.has-drawer {
-    padding-left: var(--admin-sidebar-width);
-  }
-}
-
-/* ==========================================================================
-   8. Material Design 3 Components (Cards, Buttons, Badges)
-   ========================================================================== */
-/* M3 Elevated & Outlined Cards */
-.m3-card {
-  background-color: var(--md-sys-color-surface-container-lowest);
-  border: 1px solid var(--md-sys-color-outline-subtle);
-  border-radius: var(--md-sys-shape-corner-large);
-  padding: 24px;
-  box-sizing: border-box;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.m3-card:hover {
-  box-shadow: var(--md-sys-elevation-1);
-}
-
-.m3-card-elevated {
-  background-color: var(--md-sys-color-surface-container-lowest);
-  border-radius: var(--md-sys-shape-corner-large);
-  box-shadow: var(--md-sys-elevation-1);
-  padding: 24px;
-  box-sizing: border-box;
-}
-
-/* M3 Buttons */
-.m3-btn-filled {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  height: 40px;
-  min-width: 48px;
-  padding: 0 20px;
-  border-radius: var(--md-sys-shape-corner-full);
-  background-color: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  font-size: 14px;
+  border: none !important;
+  box-shadow: 0 1px 2px rgba(8, 36, 31, 0.08);
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms ease;
+  text-decoration: none !important;
+}
+
+.console-primary-btn:hover {
+  background-color: var(--teal-dark) !important;
+  color: #ffffff !important;
+}
+
+.console-primary-btn:active {
+  transform: translateY(1px);
+}
+
+.console-primary-btn span,
+.console-primary-btn .anticon,
+.console-primary-btn svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Guest navigation button in Topbar */
+.admin-guest-btn {
+  color: var(--ink-2) !important;
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: 9999px;
+  min-height: 40px;
+  padding: 6px 14px;
+  font-size: 12.5px;
   font-weight: 600;
-  border: none;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
-  outline: none;
-}
-
-.m3-btn-filled:hover {
-  background-color: var(--admin-teal-hover);
-  box-shadow: var(--md-sys-elevation-1);
-}
-
-.m3-btn-filled:active {
-  transform: scale(0.98);
-}
-
-.m3-btn-tonal {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 40px;
-  min-width: 48px;
-  padding: 0 16px;
-  border-radius: var(--md-sys-shape-corner-full);
-  background-color: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
-  font-size: 14px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background-color 0.15s ease, transform 0.08s ease;
-  outline: none;
-}
-
-.m3-btn-tonal:hover {
-  background-color: #BBE1E0;
-}
-
-.m3-btn-tonal:active {
-  transform: scale(0.98);
-}
-
-.m3-btn-outlined {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 40px;
-  min-width: 48px;
-  padding: 0 16px;
-  border-radius: var(--md-sys-shape-corner-full);
-  background-color: transparent;
-  color: var(--md-sys-color-primary);
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  cursor: pointer;
-  text-decoration: none;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-  outline: none;
-}
-
-.m3-btn-outlined:hover {
-  background-color: rgba(0, 106, 106, 0.06);
-  border-color: var(--md-sys-color-primary);
-}
-
-.m3-btn-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--md-sys-shape-corner-full);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: transparent;
-  color: var(--md-sys-color-on-surface-variant);
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  transition: background-color 0.15s ease, color 0.15s ease;
-  outline: none;
-}
-
-.m3-btn-icon:hover {
-  background-color: rgba(74, 99, 99, 0.08);
-  color: var(--md-sys-color-on-surface);
-}
-
-.m3-btn-icon:focus-visible {
-  outline: 2px solid var(--md-sys-color-primary);
-}
-
-/* Badges / Chips */
-.m3-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
-  padding: 0 10px;
-  border-radius: var(--md-sys-shape-corner-small);
-  font-size: 12px;
+  text-decoration: none !important;
+  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+.admin-guest-btn:hover {
+  border-color: var(--teal) !important;
+  color: var(--teal) !important;
+}
+
+.admin-guest-btn:hover span,
+.admin-guest-btn:hover .anticon,
+.admin-guest-btn:hover svg {
+  color: var(--teal) !important;
+  fill: var(--teal) !important;
+}
+
+.admin-guest-btn span,
+.admin-guest-btn .anticon,
+.admin-guest-btn svg {
+  color: var(--ink-2) !important;
+  fill: var(--ink-2) !important;
+}
+
+/* Card lift animation */
+.console-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.console-card:hover {
+  border-color: #b9d9d0;
+  box-shadow: 0 4px 12px rgba(8, 36, 31, 0.07);
+}
+
+/* Hoverable queue card */
+.queue-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.queue-card:hover {
+  transform: translateY(-1px);
+  border-color: #b9d9d0;
+  box-shadow: 0 4px 12px rgba(8, 36, 31, 0.07);
+}
+
+.queue-card:hover .queue-arrow {
+  transform: translateX(3px);
+}
+
+/* Navigation Link styles */
+.admin-nav-link {
+  min-height: 44px;
+  border-radius: 9px;
+  font-size: 13.5px;
   font-weight: 500;
-  background-color: var(--md-sys-color-surface-container-high);
-  color: var(--md-sys-color-on-surface-variant);
-  border: 1px solid var(--md-sys-color-outline-subtle);
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 
-.m3-chip-primary {
-  background-color: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
-  border-color: transparent;
+.admin-nav-link:hover {
+  background-color: var(--surface-soft);
+  color: var(--ink);
 }
 
-.m3-chip-error {
-  background-color: var(--md-sys-color-error-container);
-  color: var(--md-sys-color-on-error-container);
-  border-color: transparent;
+.admin-nav-link.is-active {
+  background-color: var(--teal-soft);
+  color: var(--teal-dark);
+  font-weight: 600;
 }
 
-/* Responsive visibility utilities with explicit high specificity */
-.m3-mobile-only {
-  display: inline-flex !important;
-}
-.m3-desktop-only {
-  display: inline-flex !important;
+.admin-nav-link.is-active svg {
+  color: var(--teal);
 }
 
-@media (max-width: 767.98px) {
-  .m3-desktop-only {
-    display: none !important;
-  }
+/* Module card interactive effect */
+.module-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  min-height: 238px;
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
 }
 
-@media (min-width: 768px) {
-  .m3-mobile-only {
-    display: none !important;
-  }
+.module-card:hover {
+  transform: translateY(-1px);
+  border-color: #b9d9d0;
+  box-shadow: 0 6px 16px rgba(8, 36, 31, 0.08);
 }
 
-/* Accessibility & Reduced Motion */
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+.module-card:hover .module-cta-arrow {
+  transform: translateX(3px);
+}
+
+/* Chart visual helpers */
+.chart-bar-fill {
+  background-color: var(--teal);
+  transition: height 300ms ease;
+}
+
+.chart-bar-fill.is-peak {
+  background-color: var(--teal-dark);
+}
+
+/* Tabular numerals for data scans */
+.tabular-data {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dialog scrim */
+.dialog-scrim {
+  background-color: rgba(7, 28, 24, 0.48);
+  backdrop-filter: blur(2px);
 }

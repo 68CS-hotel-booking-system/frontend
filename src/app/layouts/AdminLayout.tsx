@@ -1,66 +1,35 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import {
+  AppstoreOutlined,
+  ArrowLeftOutlined,
+  BarChartOutlined,
+  CalendarOutlined,
+  CheckCircleOutlined,
+  CloseOutlined,
   CloudServerOutlined,
   CompassOutlined,
-  DashboardOutlined,
-  DollarOutlined,
+  CreditCardOutlined,
   DownOutlined,
-  FileTextOutlined,
+  HomeOutlined,
   LogoutOutlined,
-  MenuFoldOutlined,
   MenuOutlined,
-  MenuUnfoldOutlined,
-  SafetyCertificateOutlined,
+  MessageOutlined,
+  SettingOutlined,
   ShopOutlined,
+  TagOutlined,
   TeamOutlined,
+  UserOutlined,
 } from '@ant-design/icons'
-import { Dropdown, ConfigProvider, type MenuProps } from 'antd'
+import { Dropdown, type MenuProps } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
 import { setSession } from '@/shared/api/session'
 import { useCurrentUser } from '@/features/auth'
 
-const ADMIN_M3_THEME = {
-  token: {
-    colorPrimary: '#006A6A',
-    colorInfo: '#4B607C',
-    colorSuccess: '#0D6B40',
-    colorWarning: '#8A5A00',
-    colorError: '#BA1A1A',
-    colorText: '#191C1C',
-    colorTextSecondary: '#3F4948',
-    colorBgLayout: '#F4FBFB',
-    colorBgContainer: '#FFFFFF',
-    colorBorder: '#BEC9C8',
-    borderRadius: 8,
-    borderRadiusLG: 16,
-    controlHeight: 40,
-    fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-  },
-  components: {
-    Button: {
-      fontWeight: 600,
-      borderRadius: 9999,
-      controlHeight: 40,
-    },
-    Card: {
-      borderRadiusLG: 16,
-      colorBorderSecondary: '#E2E9E9',
-    },
-    Dropdown: {
-      borderRadiusLG: 16,
-    },
-    Result: {
-      titleFontSize: 20,
-      subtitleFontSize: 14,
-    },
-  },
-}
-
 interface NavItemDef {
   to: string
   label: string
-  icon: typeof DashboardOutlined
+  icon: typeof AppstoreOutlined
   end?: boolean
 }
 
@@ -71,19 +40,26 @@ interface NavGroupDef {
 
 const NAV_GROUPS: NavGroupDef[] = [
   {
-    title: 'Quản trị vận hành',
+    title: 'Bảng điều khiển',
     items: [
-      { to: '/admin/overview', label: 'Tổng quan', icon: DashboardOutlined },
-      { to: '/admin/users', label: 'Người dùng', icon: TeamOutlined },
+      { to: '/admin/overview', label: 'Tổng quan', icon: AppstoreOutlined },
     ],
   },
   {
-    title: 'Vận hành khách sạn',
+    title: 'Vận hành',
     items: [
-      { to: '/management/hotels', label: 'Khách sạn & Phòng', icon: ShopOutlined },
-      { to: '/management/rates', label: 'Bảng giá phòng', icon: DollarOutlined },
-      { to: '/management/contracts', label: 'Hợp đồng đối tác', icon: FileTextOutlined },
-      { to: '/management/financial-access', label: 'Phân quyền tài chính', icon: SafetyCertificateOutlined },
+      { to: '/admin/users', label: 'Người dùng & Phân quyền', icon: TeamOutlined },
+      { to: '/management/hotels', label: 'Khách sạn', icon: ShopOutlined },
+      { to: '/management/bookings', label: 'Đặt phòng', icon: CalendarOutlined },
+      { to: '/management/vouchers', label: 'Voucher', icon: TagOutlined },
+      { to: '/management/complaints', label: 'Khiếu nại', icon: MessageOutlined },
+    ],
+  },
+  {
+    title: 'Tài chính & báo cáo',
+    items: [
+      { to: '/management/finance', label: 'Tài chính', icon: CreditCardOutlined },
+      { to: '/management/reports', label: 'Báo cáo', icon: BarChartOutlined },
     ],
   },
   {
@@ -96,26 +72,12 @@ const NAV_GROUPS: NavGroupDef[] = [
 
 export function AdminLayout() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
-  const [isRailMode, setIsRailMode] = useState(false)
+  const [profileModalOpen, setProfileModalOpen] = useState(false)
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { currentUser } = useCurrentUser()
-
-  // Auto-collapse to rail on tablet viewports (768px - 1023px)
-  useEffect(() => {
-    function handleResize() {
-      const width = window.innerWidth
-      if (width >= 768 && width < 1024) {
-        setIsRailMode(true)
-      } else if (width >= 1024) {
-        setIsRailMode(false)
-      }
-    }
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   // Close mobile drawer on Escape key
   useEffect(() => {
@@ -129,27 +91,31 @@ export function AdminLayout() {
   }, [mobileDrawerOpen])
 
   // Determine current page title
-  let currentPageTitle = 'Quản trị'
+  let currentPageTitle = 'Tổng quan'
   if (location.pathname.includes('/admin/users')) {
-    currentPageTitle = 'Người dùng'
+    currentPageTitle = 'Người dùng & Phân quyền'
   } else if (location.pathname.includes('/admin/overview')) {
     currentPageTitle = 'Tổng quan'
   } else if (location.pathname.includes('/management/hotels')) {
-    currentPageTitle = 'Khách sạn & Phòng'
-  } else if (location.pathname.includes('/management/rates')) {
-    currentPageTitle = 'Bảng giá phòng'
-  } else if (location.pathname.includes('/management/contracts')) {
-    currentPageTitle = 'Hợp đồng đối tác'
-  } else if (location.pathname.includes('/management/financial-access')) {
-    currentPageTitle = 'Phân quyền tài chính'
+    currentPageTitle = 'Khách sạn'
+  } else if (location.pathname.includes('/management/bookings')) {
+    currentPageTitle = 'Đặt phòng'
+  } else if (location.pathname.includes('/management/vouchers')) {
+    currentPageTitle = 'Voucher'
+  } else if (location.pathname.includes('/management/complaints')) {
+    currentPageTitle = 'Khiếu nại'
+  } else if (location.pathname.includes('/management/finance')) {
+    currentPageTitle = 'Tài chính'
+  } else if (location.pathname.includes('/management/reports')) {
+    currentPageTitle = 'Báo cáo'
   } else if (location.pathname.includes('/system-status')) {
     currentPageTitle = 'Trạng thái máy chủ'
   }
 
-  // Real user display values
-  const userFullName = currentUser?.fullName || (currentUser?.email ? currentUser.email.split('@')[0] : 'Quản trị viên')
-  const userEmail = currentUser?.email || 'admin@stayhub.internal'
-  const userRoles = currentUser?.roles && currentUser.roles.length > 0 ? currentUser.roles : ['ADMIN']
+  // Real user display values (defaults match design.md sample)
+  const userFullName = currentUser?.fullName || (currentUser?.email ? currentUser.email.split('@')[0] : 'Nguyễn Văn C')
+  const userEmail = currentUser?.email || 'an.demo06@example.test'
+  const userRoles = currentUser?.roles && currentUser.roles.length > 0 ? currentUser.roles : ['ADMIN', 'HOTEL_OWNER']
   const userInitials =
     userFullName
       .split(' ')
@@ -157,31 +123,31 @@ export function AdminLayout() {
       .map((part) => part[0])
       .slice(-2)
       .join('')
-      .toUpperCase() || 'AD'
+      .toUpperCase() || 'VC'
 
   const handleLogout = () => {
     setSession(null)
     queryClient.clear()
-    navigate('/login', { replace: true })
+    navigate('/admin/login', { replace: true })
   }
 
-  // Account dropdown menu
+  // Account dropdown menu items
   const accountMenuItems: MenuProps['items'] = [
     {
       key: 'user-profile-header',
       label: (
         <div className="py-1 px-1">
-          <div className="text-sm font-semibold text-[var(--md-sys-color-on-surface)]">
+          <div className="text-sm font-semibold text-[#12211d]">
             {userFullName}
           </div>
-          <div className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+          <div className="text-xs text-[#5f736e] mt-0.5">
             {userEmail}
           </div>
           <div className="mt-2 flex items-center gap-1.5 flex-wrap">
             {userRoles.map((role) => (
               <span
                 key={role}
-                className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]"
+                className="inline-flex items-center px-2 py-0.5 rounded text-[10.5px] font-semibold bg-[#d9f0ea] text-[#08473e]"
               >
                 {role}
               </span>
@@ -193,6 +159,19 @@ export function AdminLayout() {
     },
     { type: 'divider' },
     {
+      key: 'profile-action',
+      icon: <UserOutlined />,
+      label: 'Hồ sơ quản trị',
+      onClick: () => setProfileModalOpen(true),
+    },
+    {
+      key: 'settings-action',
+      icon: <SettingOutlined />,
+      label: 'Cài đặt cổng quản trị',
+      onClick: () => setSettingsModalOpen(true),
+    },
+    { type: 'divider' },
+    {
       key: 'goto-home',
       icon: <CompassOutlined />,
       label: 'Về trang chủ StayHub',
@@ -201,8 +180,8 @@ export function AdminLayout() {
     { type: 'divider' },
     {
       key: 'logout-action',
-      icon: <LogoutOutlined className="!text-[var(--md-sys-color-error)]" />,
-      label: <span className="text-[var(--md-sys-color-error)] font-medium">Đăng xuất tài khoản</span>,
+      icon: <LogoutOutlined className="!text-[#9b2c22]" />,
+      label: <span className="text-[#9b2c22] font-semibold">Đăng xuất tài khoản</span>,
       onClick: handleLogout,
     },
   ]
@@ -210,235 +189,302 @@ export function AdminLayout() {
   const closeMobileDrawer = () => setMobileDrawerOpen(false)
 
   return (
-    <ConfigProvider theme={ADMIN_M3_THEME}>
-      <div className="admin-body">
-        {/* Mobile Modal Backdrop */}
-        {mobileDrawerOpen && (
-          <div
-            className="m3-modal-backdrop md:hidden"
-            onClick={closeMobileDrawer}
-            aria-hidden="true"
-          />
-        )}
+    <div className="admin-console-shell bg-[#f4f8f7] text-[#12211d] min-h-screen flex">
+      {/* Mobile Backdrop Scrim */}
+      {mobileDrawerOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-[#071c18]/48 backdrop-blur-xs min-[981px]:hidden"
+          onClick={closeMobileDrawer}
+          aria-hidden="true"
+        />
+      )}
 
-        {/* Material Design 3 Navigation Drawer / Rail */}
-        <aside
-          id="admin-sidebar"
-          className={`m3-nav-drawer ${isRailMode ? 'is-rail' : ''} ${mobileDrawerOpen ? 'is-mobile-open' : ''
-            }`}
-          aria-label="Thanh điều hướng quản trị"
-        >
-          <div className="flex flex-col flex-1 min-h-0">
-            {/* Brand Header */}
-            <div
-              className={`h-16 flex items-center ${isRailMode ? 'justify-center px-0' : 'justify-between px-4'
-                } border-b border-[var(--md-sys-color-outline-subtle)] bg-[var(--md-sys-color-surface-container-low)]`}
+      {/* Sidebar Navigation */}
+      <aside
+        id="admin-sidebar"
+        className={`fixed min-[981px]:sticky top-0 bottom-0 left-0 z-50 w-[264px] h-screen bg-white border-r border-[#dce7e3] flex flex-col justify-between shrink-0 transition-transform duration-200 ease-out p-3 pt-[18px] pb-3 ${
+          mobileDrawerOpen
+            ? 'translate-x-0 shadow-2xl'
+            : '-translate-x-full min-[981px]:translate-x-0 shadow-none'
+        }`}
+        aria-label="Thanh điều hướng quản trị"
+      >
+        <div className="flex flex-col flex-1 min-h-0">
+          {/* Brand Row */}
+          <div className="flex items-center justify-between px-2 pb-4 mb-2 border-b border-[#dce7e3]">
+            <NavLink
+              to="/admin/overview"
+              className="flex items-center gap-3 no-underline select-none group"
+              onClick={closeMobileDrawer}
+              aria-label="StayHub Admin Portal - Về trang tổng quan"
             >
-              <NavLink
-                to="/admin/overview"
-                className={`flex items-center ${isRailMode ? 'justify-center' : 'gap-3'
-                  } cursor-pointer no-underline select-none`}
-                onClick={closeMobileDrawer}
-                aria-label="Về trang tổng quan quản trị StayHub"
-              >
-                <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center text-lg shadow-sm shrink-0">
-                  <ShopOutlined aria-hidden="true" />
-                </div>
-                {!isRailMode && (
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-base font-bold text-[var(--md-sys-color-on-surface)] leading-tight tracking-tight">
-                      StayHub
-                    </span>
-                    <span className="text-[11px] font-semibold text-[var(--md-sys-color-primary)] tracking-wider uppercase">
-                      Admin Portal
-                    </span>
-                  </div>
-                )}
-              </NavLink>
+              <div className="w-[38px] h-[38px] rounded-[11px] bg-[#0b5f53] text-white flex items-center justify-center text-lg shadow-sm shrink-0 group-hover:bg-[#08473e] transition-colors">
+                <HomeOutlined aria-hidden="true" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[17.5px] font-bold text-[#12211d] leading-[1.1] tracking-tight">
+                  StayHub
+                </span>
+                <span className="text-[9.5px] uppercase font-bold tracking-[.13em] text-[#5f736e]">
+                  Admin Portal
+                </span>
+              </div>
+            </NavLink>
 
-              {/* Mobile close button */}
-              {!isRailMode && (
-                <button
-                  type="button"
-                  className="m3-mobile-only m3-btn-icon"
-                  onClick={closeMobileDrawer}
-                  aria-label="Đóng thanh điều hướng"
-                >
-                  <span className="text-lg">✕</span>
-                </button>
-              )}
-            </div>
-
-            {/* Navigation Items (Drawer vs Rail) */}
-            <div className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-5">
-              {NAV_GROUPS.map((group) => (
-                <div key={group.title} className="flex flex-col">
-                  {!isRailMode && (
-                    <div className="px-3 mb-1.5 text-[11px] font-bold text-[var(--md-sys-color-outline)] uppercase tracking-wider">
-                      {group.title}
-                    </div>
-                  )}
-                  <nav className="flex flex-col gap-1" aria-label={group.title}>
-                    {group.items.map((item) => {
-                      const IconComponent = item.icon
-                      if (isRailMode) {
-                        return (
-                          <NavLink
-                            key={item.to}
-                            to={item.to}
-                            end={item.end}
-                            className={({ isActive }) =>
-                              `m3-rail-item ${isActive ? 'is-active' : ''}`
-                            }
-                            title={item.label}
-                            onClick={closeMobileDrawer}
-                          >
-                            <div className="m3-rail-pill">
-                              <IconComponent aria-hidden="true" />
-                            </div>
-                            <span className="m3-rail-label">{item.label}</span>
-                          </NavLink>
-                        )
-                      }
-
-                      return (
-                        <NavLink
-                          key={item.to}
-                          to={item.to}
-                          end={item.end}
-                          className={({ isActive }) =>
-                            `m3-drawer-item ${isActive ? 'is-active' : ''}`
-                          }
-                          onClick={closeMobileDrawer}
-                        >
-                          <span className="m3-drawer-icon">
-                            <IconComponent aria-hidden="true" />
-                          </span>
-                          <span className="truncate">{item.label}</span>
-                        </NavLink>
-                      )
-                    })}
-                  </nav>
-                </div>
-              ))}
-            </div>
+            {/* Mobile Close Button */}
+            <button
+              type="button"
+              className="min-[981px]:hidden w-8 h-8 rounded-md flex items-center justify-center text-[#5f736e] hover:text-[#12211d] hover:bg-[#f7fbfa] transition-colors border-0 bg-transparent cursor-pointer"
+              onClick={closeMobileDrawer}
+              aria-label="Đóng thanh điều hướng"
+            >
+              <CloseOutlined className="text-sm" />
+            </button>
           </div>
 
-          {/* Sidebar Footer: Current User Profile Chip */}
-          <div className="p-3 border-t border-[var(--md-sys-color-outline-subtle)] bg-[var(--md-sys-color-surface-container-low)]">
-            <Dropdown menu={{ items: accountMenuItems }} trigger={['click']} placement="topRight">
+          {/* Navigation Links Scroll Container */}
+          <div className="flex-1 overflow-y-auto px-1 py-1 flex flex-col gap-5">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.title} className="flex flex-col">
+                <div className="px-3 mb-1 text-[10.5px] font-bold uppercase tracking-[.12em] text-[#5f736e]">
+                  {group.title}
+                </div>
+                <nav className="flex flex-col gap-[2px]" aria-label={group.title}>
+                  {group.items.map((item) => {
+                    const IconComponent = item.icon
+                    return (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        end={item.end}
+                        className={({ isActive }) =>
+                          `admin-nav-link ${isActive ? 'is-active' : ''}`
+                        }
+                        onClick={closeMobileDrawer}
+                      >
+                        <span className="text-base shrink-0 flex items-center">
+                          <IconComponent aria-hidden="true" />
+                        </span>
+                        <span className="truncate">{item.label}</span>
+                      </NavLink>
+                    )
+                  })}
+                </nav>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sidebar Footer User Button */}
+        <div className="pt-3 border-t border-[#dce7e3]">
+          <Dropdown menu={{ items: accountMenuItems }} trigger={['click']} placement="topRight">
+            <button
+              type="button"
+              className="w-full min-h-[60px] px-3 py-2 rounded-[10px] hover:bg-[#f7fbfa] transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-between gap-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#0b5f53]"
+              aria-label={`Tài khoản quản trị viên ${userFullName}`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-[#0b5f53] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                  {userInitials}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-semibold text-[#12211d] truncate">
+                    {userFullName}
+                  </span>
+                  <span className="text-[11px] text-[#5f736e] truncate">
+                    {userEmail}
+                  </span>
+                </div>
+              </div>
+              <DownOutlined className="text-[10px] text-[#5f736e] shrink-0" />
+            </button>
+          </Dropdown>
+        </div>
+      </aside>
+
+      {/* Main Column Wrapper */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+        {/* Top App Bar */}
+        <header
+          className="sticky top-0 z-40 min-h-[64px] bg-white border-b border-[#dce7e3] px-4 sm:px-7 flex items-center justify-between gap-3 shadow-xs"
+          role="banner"
+        >
+          {/* Left: Mobile hamburger & Breadcrumb */}
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Mobile Hamburger Toggle */}
+            <button
+              type="button"
+              className="min-[981px]:hidden w-9 h-9 rounded-lg border border-[#bfd3cd] hover:border-[#0b5f53] hover:text-[#0b5f53] text-[#344a44] bg-white flex items-center justify-center cursor-pointer transition-colors"
+              onClick={() => setMobileDrawerOpen(true)}
+              aria-label="Mở thanh điều hướng"
+            >
+              <MenuOutlined />
+            </button>
+
+            {/* Breadcrumb */}
+            <nav aria-label="Điều hướng phân cấp" className="flex items-center gap-1.5 text-[12.5px] min-w-0">
+              <NavLink
+                to="/admin/overview"
+                className="text-[#5f736e] hover:text-[#0b5f53] transition-colors no-underline hidden sm:inline"
+              >
+                Quản trị
+              </NavLink>
+              <span className="text-[#bfd3cd] hidden sm:inline">/</span>
+              <span className="font-semibold text-[#12211d] truncate">
+                {currentPageTitle}
+              </span>
+            </nav>
+          </div>
+
+          {/* Right: Quick actions & User menu */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            {/* Back to guest/customer homepage button */}
+            <NavLink
+              to="/"
+              className="admin-guest-btn"
+              style={{ color: '#344a44', textDecoration: 'none' }}
+              title="Về trang khách"
+            >
+              <ArrowLeftOutlined aria-hidden="true" className="text-xs" />
+              <span className="hidden sm:inline">Về trang khách</span>
+            </NavLink>
+
+            {/* User Dropdown Button */}
+            <Dropdown menu={{ items: accountMenuItems }} trigger={['click']} placement="bottomRight">
               <button
                 type="button"
-                className={`w-full flex items-center ${isRailMode ? 'justify-center p-2' : 'justify-between px-3 py-2'
-                  } rounded-full hover:bg-[var(--md-sys-color-surface-container)] transition-colors cursor-pointer border-none bg-transparent outline-none focus-visible:outline-2 focus-visible:outline-[var(--md-sys-color-primary)]`}
-                aria-label={`Tài khoản quản trị viên ${userFullName}`}
+                className="min-h-[44px] px-3 py-1.5 rounded-full border border-[#bfd3cd] hover:border-[#0b5f53] bg-white transition-colors flex items-center gap-2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#0b5f53]"
+                aria-label={`Menu tài khoản ${userFullName}`}
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center text-xs font-bold shrink-0">
-                    {userInitials}
-                  </div>
-                  {!isRailMode && (
-                    <div className="flex flex-col text-left min-w-0">
-                      <span className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] truncate">
-                        {userFullName}
-                      </span>
-                      <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] truncate">
-                        {userEmail}
-                      </span>
-                    </div>
-                  )}
+                <div className="w-7 h-7 rounded-full bg-[#0b5f53] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                  {userInitials}
                 </div>
-                {!isRailMode && (
-                  <DownOutlined className="text-[10px] text-[var(--md-sys-color-on-surface-variant)] shrink-0 ml-1" />
-                )}
+                <span className="hidden sm:inline text-xs font-semibold text-[#12211d] max-w-[130px] truncate">
+                  {userFullName}
+                </span>
+                <DownOutlined className="text-[10px] text-[#5f736e]" />
               </button>
             </Dropdown>
           </div>
-        </aside>
+        </header>
 
-        {/* Main Content Area */}
-        <div
-          className={`m3-main-wrapper ${isRailMode ? 'has-rail' : 'has-drawer'
-            }`}
+        {/* Main Content Body */}
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 w-full max-w-[1360px] mx-auto p-4 sm:p-6 lg:p-8 box-border outline-none"
         >
-          {/* Material Design 3 Top App Bar */}
-          <header className="m3-top-app-bar" role="banner">
-            {/* Left: Mobile hamburger & Rail collapse toggle & Breadcrumb */}
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              {/* Mobile Hamburger Toggle */}
-              <button
-                type="button"
-                className="m3-mobile-only m3-btn-icon"
-                onClick={() => setMobileDrawerOpen(true)}
-                aria-label="Mở menu quản trị"
-              >
-                <MenuOutlined />
-              </button>
-
-              {/* Desktop / Tablet Rail Toggle */}
-              <button
-                type="button"
-                className="m3-desktop-only m3-btn-icon"
-                onClick={() => setIsRailMode((prev) => !prev)}
-                aria-label={isRailMode ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
-                title={isRailMode ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
-              >
-                {isRailMode ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              </button>
-
-              {/* Semantic Header Title & Breadcrumb */}
-              <nav aria-label="Điều hướng phân cấp" className="flex items-center gap-1.5 min-w-0">
-                <NavLink
-                  to="/admin/overview"
-                  className="hidden lg:inline text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-primary)] transition-colors no-underline"
-                >
-                  Quản trị
-                </NavLink>
-                <span className="hidden lg:inline text-[var(--md-sys-color-outline)] text-xs">/</span>
-                <span className="text-base sm:text-lg font-bold text-[var(--md-sys-color-on-surface)] truncate">
-                  {currentPageTitle}
-                </span>
-              </nav>
-            </div>
-
-            {/* Right: Quick action & Account Menu */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              <NavLink
-                to="/"
-                className="m3-btn-outlined !h-9 !px-3 !text-xs sm:!h-10 sm:!px-4 sm:!text-sm"
-              >
-                <CompassOutlined aria-hidden="true" />
-                <span className="hidden sm:inline">Về trang chủ</span>
-              </NavLink>
-
-              <Dropdown menu={{ items: accountMenuItems }} trigger={['click']} placement="bottomRight">
-                <button
-                  type="button"
-                  className="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-full hover:bg-[var(--md-sys-color-surface-container)] transition-colors border border-[var(--md-sys-color-outline-subtle)] bg-white cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-[var(--md-sys-color-primary)]"
-                  aria-label={`Menu tài khoản ${userFullName}`}
-                >
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--md-sys-color-primary)] text-white flex items-center justify-center text-xs font-bold shrink-0">
-                    {userInitials}
-                  </div>
-                  <span className="hidden sm:inline text-xs font-semibold text-[var(--md-sys-color-on-surface)] max-w-[120px] truncate">
-                    {userFullName}
-                  </span>
-                  <DownOutlined className="text-[10px] text-[var(--md-sys-color-on-surface-variant)]" />
-                </button>
-              </Dropdown>
-            </div>
-          </header>
-
-          {/* Content Canvas */}
-          <main
-            id="main-content"
-            tabIndex={-1}
-            className="flex-1 w-full max-w-[1360px] mx-auto p-4 sm:p-6 lg:p-8 box-border outline-none"
-          >
-            <Outlet />
-          </main>
-        </div>
+          <Outlet />
+        </main>
       </div>
-    </ConfigProvider>
+
+      {/* Profile Dialog */}
+      {profileModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071c18]/48 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="profileDialogTitle"
+        >
+          <div className="w-full max-w-[500px] p-6 sm:p-7 border border-[#dce7e3] rounded-[16px] bg-white text-[#12211d] shadow-2xl flex flex-col gap-4 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-[#dce7e3]">
+              <h2 id="profileDialogTitle" className="text-xl font-bold text-[#12211d] m-0">
+                Hồ sơ quản trị
+              </h2>
+              <button
+                type="button"
+                onClick={() => setProfileModalOpen(false)}
+                className="w-8 h-8 rounded-md flex items-center justify-center text-[#5f736e] hover:text-[#12211d] hover:bg-[#f7fbfa] transition-colors border-0 bg-transparent cursor-pointer"
+                aria-label="Đóng hộp thoại"
+              >
+                <CloseOutlined />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-4 py-2">
+              <div className="w-14 h-14 rounded-full bg-[#0b5f53] text-white flex items-center justify-center text-xl font-bold shrink-0">
+                {userInitials}
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-base font-bold text-[#12211d] truncate">
+                  {userFullName}
+                </span>
+                <span className="text-sm text-[#5f736e] truncate">
+                  {userEmail}
+                </span>
+                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                  {userRoles.map((role) => (
+                    <span
+                      key={role}
+                      className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#d9f0ea] text-[#08473e]"
+                    >
+                      {role}
+                    </span>
+                  ))}
+                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#eef8f5] text-[#0b5f53] border border-[#d6ebe5]">
+                    Phiên demo
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#5f736e] leading-relaxed m-0 p-3 rounded-lg bg-[#f7fbfa] border border-[#dce7e3]">
+              Dữ liệu tài khoản quản trị vận hành phục vụ giám sát và phân quyền trên StayHub. Phiên đăng nhập hiện tại được bảo mật trong bộ nhớ máy khách.
+            </p>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setProfileModalOpen(false)}
+                className="min-h-[40px] px-5 border border-[#bfd3cd] hover:border-[#0b5f53] rounded-[9px] text-sm font-semibold text-[#12211d] bg-transparent transition-colors cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Dialog */}
+      {settingsModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071c18]/48 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="settingsDialogTitle"
+        >
+          <div className="w-full max-w-[500px] p-6 sm:p-7 border border-[#dce7e3] rounded-[16px] bg-white text-[#12211d] shadow-2xl flex flex-col gap-4 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-[#dce7e3]">
+              <h2 id="settingsDialogTitle" className="text-xl font-bold text-[#12211d] m-0">
+                Cài đặt cổng quản trị
+              </h2>
+              <button
+                type="button"
+                onClick={() => setSettingsModalOpen(false)}
+                className="w-8 h-8 rounded-md flex items-center justify-center text-[#5f736e] hover:text-[#12211d] hover:bg-[#f7fbfa] transition-colors border-0 bg-transparent cursor-pointer"
+                aria-label="Đóng hộp thoại"
+              >
+                <CloseOutlined />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#eef8f5] border border-[#d6ebe5] flex items-center gap-3 text-sm text-[#08473e]">
+              <CheckCircleOutlined className="text-base text-[#0b5f53] shrink-0" />
+              <span>Bản xem trước hiện tại không hỗ trợ thay đổi cấu hình tài khoản trực tiếp. Vui lòng liên hệ quản trị viên cấp cao.</span>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setSettingsModalOpen(false)}
+                className="min-h-[40px] px-5 border border-[#bfd3cd] hover:border-[#0b5f53] rounded-[9px] text-sm font-semibold text-[#12211d] bg-transparent transition-colors cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

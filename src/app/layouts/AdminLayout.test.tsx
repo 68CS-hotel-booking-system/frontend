@@ -41,8 +41,8 @@ describe('AdminLayout component', () => {
     // Structural elements
     expect(markup).toContain('StayHub')
     expect(markup).toContain('Admin Portal')
-    expect(markup).toContain('Quản trị vận hành')
-    expect(markup).toContain('Vận hành khách sạn')
+    expect(markup).toContain('Bảng điều khiển')
+    expect(markup).toContain('Vận hành')
     expect(markup).toContain('Hệ thống')
 
     // Navigation links
@@ -96,7 +96,7 @@ describe('AdminLayout component', () => {
       </MemoryRouter>,
     )
 
-    expect(markup).toContain('Về trang chủ')
+    expect(markup).toContain('Về trang khách')
     expect(markup).toContain('href="/"')
   })
 })

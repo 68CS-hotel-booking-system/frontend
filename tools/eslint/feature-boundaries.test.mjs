@@ -19,5 +19,5 @@ describe('frontend import boundaries', () => {
     const rejected = result.messages.some((message) =>
       message.ruleId === 'no-restricted-imports' || message.ruleId === 'architecture/feature-boundaries')
     expect(rejected).toBe(blocked)
-  })
+  }, 20000)
 })

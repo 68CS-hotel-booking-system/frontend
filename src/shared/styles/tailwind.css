@@ -43,6 +43,26 @@
   --color-warm-border-strong: #9a8772;
   --color-warm-danger: #b33a3a;
 
+  /* Teal Admin Console tokens (design.md) */
+  --color-admin-bg: #f4f8f7;
+  --color-admin-surface: #ffffff;
+  --color-admin-surface-soft: #f7fbfa;
+  --color-admin-teal: #0b5f53;
+  --color-admin-teal-dark: #08473e;
+  --color-admin-teal-soft: #d9f0ea;
+  --color-admin-teal-tint: #eef8f5;
+  --color-admin-ink: #12211d;
+  --color-admin-ink-2: #344a44;
+  --color-admin-muted: #5f736e;
+  --color-admin-border: #dce7e3;
+  --color-admin-border-strong: #bfd3cd;
+  --color-admin-success: #0f7a5f;
+  --color-admin-danger: #9b2c22;
+  --color-admin-chart-pending: #946412;
+  --color-admin-chart-confirmed: #4e9b86;
+  --color-admin-chart-completed: #0b5f53;
+  --color-admin-chart-cancel: #b45143;
+
   --font-editorial: 'Cormorant Garamond', Georgia, serif;
   --font-serif: Georgia, "Times New Roman", serif;
   --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;

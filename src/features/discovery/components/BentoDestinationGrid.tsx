@@ -20,13 +20,13 @@ export function BentoDestinationGrid({
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 mb-6">
         <div>
-          <span className="text-xs font-bold tracking-wider uppercase text-[var(--md-sys-color-primary)]">
+          <span className="text-xs font-bold tracking-wider uppercase text-[var(--md-sys-color-primary)] font-sans">
             Điểm đến nổi bật
           </span>
-          <h2 id="bento-section-heading" className="text-xl sm:text-2xl font-bold text-[var(--md-sys-color-on-surface)] mt-1">
+          <h2 id="bento-section-heading" className="text-xl sm:text-2xl font-bold text-[var(--md-sys-color-on-surface)] mt-1 font-sans">
             Khám phá điểm đến thịnh hành
           </h2>
-          <p className="text-xs sm:text-sm text-[var(--md-sys-color-on-surface-variant)] mt-1">
+          <p className="text-xs sm:text-sm text-[var(--md-sys-color-on-surface-variant)] mt-1 font-sans">
             Những tọa độ du lịch và nghỉ dưỡng được yêu thích nhất mùa này.
           </p>
         </div>
@@ -62,31 +62,46 @@ export function BentoDestinationGrid({
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
               />
               <div
-                className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/30 group-hover:from-black/95 transition-colors duration-300 pointer-events-none"
+                className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/30 group-hover:from-black transition-colors duration-300 pointer-events-none"
                 aria-hidden="true"
               />
 
               {/* Top Badges */}
               <div className="relative z-10 flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 !text-white text-xs font-medium">
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-xs font-medium"
+                  style={{ color: '#ffffff' }}
+                >
                   <EnvironmentFilled className="!text-[var(--md-sys-color-primary-container)]" aria-hidden="true" />
                   <span>{item.badgeText}</span>
                 </span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 !text-white text-[11px] font-semibold">
+                <span
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-[11px] font-semibold"
+                  style={{ color: '#ffffff' }}
+                >
                   {item.highlightVibe}
                 </span>
               </div>
 
               {/* Bottom Content */}
               <div className="relative z-10 flex flex-col items-start gap-1">
-                <h3 className="text-2xl sm:text-3xl font-extrabold !text-white tracking-tight drop-shadow-sm m-0">
+                <h3
+                  className="text-2xl sm:text-3xl font-extrabold tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] m-0 font-sans"
+                  style={{ color: '#ffffff' }}
+                >
                   {item.cityName}
                 </h3>
-                <p className="text-xs sm:text-sm !text-white/95 font-medium m-0 mt-0.5">
+                <p
+                  className="text-xs sm:text-sm font-medium m-0 mt-0.5 font-sans drop-shadow-sm"
+                  style={{ color: 'rgba(255, 255, 255, 0.95)' }}
+                >
                   {item.tagline}
                 </p>
                 {item.description && (
-                  <p className="text-xs !text-white/80 line-clamp-2 max-w-xl m-0 mt-0.5">
+                  <p
+                    className="text-xs line-clamp-2 max-w-xl m-0 mt-0.5 font-sans"
+                    style={{ color: 'rgba(255, 255, 255, 0.85)' }}
+                  >
                     {item.description}
                   </p>
                 )}
