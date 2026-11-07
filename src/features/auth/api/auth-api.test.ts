@@ -1,225 +1,134 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { http } from '@/shared/api/http'
-import {
-  clearAuthSession,
-  getAccessToken,
-  getRefreshToken,
-  setTokens,
-} from '../lib/token-storage'
-import {
-  loginApi,
-  logoutApi,
-  registerApi,
-  getCurrentUserApi,
-  refreshTokenApi,
-  verifyEmailApi,
-  forgotPasswordApi,
-  resetPasswordApi,
-  changePasswordApi,
-} from './auth-api'
 
-class MemoryStorage implements Storage {
-  private store = new Map<string, string>()
-  get length() {
-    return this.store.size
-  }
-  clear() {
-    this.store.clear()
-  }
-  getItem(key: string) {
-    return this.store.get(key) ?? null
-  }
-  key(index: number) {
-    return Array.from(this.store.keys())[index] ?? null
-  }
-  removeItem(key: string) {
-    this.store.delete(key)
-  }
-  setItem(key: string, value: string) {
-    this.store.set(key, String(value))
-  }
+const fetcher = vi.fn<typeof fetch>()
+const tokens = {
+  accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer',
+  expiresAt: '2026-11-05T10:00:00Z', user: null,
 }
+function respond(data: unknown, status = 200) {
+  fetcher.mockResolvedValue(new Response(JSON.stringify({ message: 'ok', data }), { status }))
+}
+beforeEach(() => {
+  vi.resetModules()
+  fetcher.mockReset()
+  vi.stubGlobal('fetch', fetcher)
+})
+afterEach(() => vi.unstubAllGlobals())
 
-describe('Auth API and Token Storage', () => {
-  beforeEach(() => {
-    globalThis.localStorage = new MemoryStorage()
+describe('independent authentication feature', () => {
+  it('logs in through real HTTP handling, clears private cache and redacts displayed tokens', async () => {
+    respond(tokens)
+    const { runAuthAction } = await import('../hooks/use-auth-action')
+    const { getSession } = await import('@/shared/api/session')
+    const { queryClient } = await import('@/shared/lib/query-client')
+    queryClient.setQueryData(['private-before-login'], { private: true })
+    const result = await runAuthAction('login', { email: 'a@b.com', password: 'password' })
+    expect(fetcher.mock.calls[0][0]).toBe('/api/v1/auth/login')
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({ email: 'a@b.com', password: 'password' })
+    expect(getSession()).toMatchObject({ accessToken: 'access', refreshToken: 'refresh' })
+    expect(queryClient.getQueryData(['private-before-login'])).toBeUndefined()
+    expect(result).toEqual({ user: null, expiresAt: tokens.expiresAt })
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
-    globalThis.localStorage?.clear?.()
+  it('rotates the in-memory refresh token and sends no stale access token to refresh', async () => {
+    respond({ ...tokens, accessToken: 'next', refreshToken: 'rotated' })
+    const { runAuthAction } = await import('../hooks/use-auth-action')
+    const { getSession, setSession } = await import('@/shared/api/session')
+    setSession(tokens)
+    await runAuthAction('refresh', {})
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({ refreshToken: 'refresh' })
+    expect(new Headers(fetcher.mock.calls[0][1]?.headers).has('Authorization')).toBe(false)
+    expect(getSession()?.refreshToken).toBe('rotated')
   })
 
-  it('stores and retrieves access and refresh tokens', () => {
-    expect(getAccessToken()).toBeNull()
-    expect(getRefreshToken()).toBeNull()
-
-    setTokens('sample-access-token', 'sample-refresh-token')
-    expect(getAccessToken()).toBe('sample-access-token')
-    expect(getRefreshToken()).toBe('sample-refresh-token')
-
-    clearAuthSession()
-    expect(getAccessToken()).toBeNull()
-    expect(getRefreshToken()).toBeNull()
+  it('retains session and cache when logout is rejected', async () => {
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ detail: 'Forbidden', code: 'ACCESS_DENIED' }), { status: 403 }))
+    const { runAuthAction } = await import('../hooks/use-auth-action')
+    const { getSession, setSession } = await import('@/shared/api/session')
+    const { queryClient } = await import('@/shared/lib/query-client')
+    setSession(tokens)
+    queryClient.setQueryData(['private'], 'retained')
+    await expect(runAuthAction('logout', {})).rejects.toMatchObject({ status: 403 })
+    expect(getSession()?.refreshToken).toBe('refresh')
+    expect(queryClient.getQueryData(['private'])).toBe('retained')
+    expect(new Headers(fetcher.mock.calls[0][1]?.headers).get('Authorization')).toBe('Bearer access')
+    queryClient.clear()
   })
 
-  it('calls POST /auth/login with credentials and schema', async () => {
-    const spy = vi.spyOn(http, 'request').mockResolvedValueOnce({
-      accessToken: 'jwt.token.here',
-      refreshToken: 'refresh.token.here',
-      tokenType: 'Bearer',
-      expiresAt: '2026-11-04T22:00:00Z',
-      user: {
-        id: '99999999-9999-4999-8999-999999999901',
-        email: 'admin@hotelbooking.com',
-        fullName: 'Admin User',
-        phone: '0901234567',
-        status: 'active',
-        emailVerified: true,
-        version: 1,
-      },
+  it.each([
+    ['logout', {}, null, '/api/v1/auth/logout'],
+    ['password', { currentPassword: 'old', newPassword: 'a-long-new-password' }, { changed: true }, '/api/v1/users/me/password'],
+    ['reset-password', { token: 'email-token', newPassword: 'a-long-new-password' }, { reset: true }, '/api/v1/auth/reset-password'],
+  ] as const)('clears the session and private cache after successful %s', async (action, values, response, path) => {
+    respond(response)
+    const { runAuthAction } = await import('../hooks/use-auth-action')
+    const { getSession, setSession } = await import('@/shared/api/session')
+    const { queryClient } = await import('@/shared/lib/query-client')
+    setSession(tokens)
+    queryClient.setQueryData(['private'], true)
+    await runAuthAction(action, values)
+    expect(fetcher.mock.calls[0][0]).toBe(path)
+    expect(getSession()).toBeNull()
+    expect(queryClient.getQueryData(['private'])).toBeUndefined()
+  })
+
+  it('rejects invalid registration input before contacting the backend', async () => {
+    const { runAuthAction } = await import('../hooks/use-auth-action')
+    await expect(runAuthAction('register', { email: 'a@b.com', password: 'short', fullName: 'Test', phone: '123' })).rejects.toBeDefined()
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['email-verifications', { token: 'verify-token' }, { accepted: true }, '/api/v1/auth/email-verifications'],
+    ['forgot-password', { email: 'a@b.com' }, { accepted: true }, '/api/v1/auth/forgot-password'],
+    ['register', { email: 'a@b.com', password: 'a-long-new-password', fullName: 'Test', phone: '123' }, {
+      id: '11111111-1111-4111-8111-111111111111', email: 'a@b.com', fullName: 'Test', phone: '123',
+      status: 'PENDING_VERIFICATION', emailVerified: false, version: 0,
+    }, '/api/v1/auth/register'],
+  ] as const)('preserves the backend contract for %s', async (action, values, response, path) => {
+    respond(response)
+    const { runAuthAction } = await import('../hooks/use-auth-action')
+    expect(await runAuthAction(action, values)).toEqual(response)
+    expect(fetcher.mock.calls[0][0]).toBe(path)
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual(values)
+  })
+
+  it('reads the current account with its roles and Bearer token', async () => {
+    const account = {
+      id: '11111111-1111-4111-8111-111111111111', email: 'a@b.com', fullName: 'Test', phone: null,
+      status: 'ACTIVE', emailVerified: true, version: 1, roles: ['ADMIN'],
+    }
+    respond(account)
+    const { getCurrentUser } = await import('./auth-api')
+    const { setSession } = await import('@/shared/api/session')
+    setSession(tokens)
+    expect(await getCurrentUser()).toEqual(account)
+    expect(fetcher.mock.calls[0][0]).toBe('/api/v1/users/me')
+    expect(new Headers(fetcher.mock.calls[0][1]?.headers).get('Authorization')).toBe('Bearer access')
+  })
+
+  it('rejects with ApiError 401 when fetching /users/me with invalid token', async () => {
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ detail: 'Unauthorized', code: 'UNAUTHORIZED' }), { status: 401 }))
+    const { getCurrentUser } = await import('./auth-api')
+    const { setSession } = await import('@/shared/api/session')
+    setSession(tokens)
+    await expect(getCurrentUser()).rejects.toMatchObject({ status: 401 })
+  })
+
+  it('preserves the session when /users/me fails with 500 internal server error', async () => {
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ detail: 'Server Error', code: 'INTERNAL_ERROR' }), { status: 500 }))
+    const { getCurrentUser } = await import('./auth-api')
+    const { getSession, setSession } = await import('@/shared/api/session')
+    setSession(tokens)
+    await expect(getCurrentUser()).rejects.toMatchObject({ status: 500 })
+    expect(getSession()).toMatchObject({ accessToken: 'access' })
+  })
+
+  it('keeps verification tokens out of the URL while preserving other parameters and hash', async () => {
+    const { readAuthLinkToken } = await import('../model/auth-link-token')
+    expect(readAuthLinkToken('https://example.test/reset-password?token=a%2Bb&next=account#form')).toEqual({
+      token: 'a+b', cleanPath: '/reset-password?next=account#form',
     })
-
-    const res = await loginApi({
-      email: 'ADMIN@HOTELBOOKING.COM',
-      password: 'SecretPassword123!',
-    })
-
-    expect(spy).toHaveBeenCalledWith(
-      '/auth/login',
-      expect.objectContaining({
-        method: 'POST',
-        body: {
-          email: 'admin@hotelbooking.com',
-          password: 'SecretPassword123!',
-        },
-      }),
-    )
-    expect(res.accessToken).toBe('jwt.token.here')
-    expect(res.user?.fullName).toBe('Admin User')
-  })
-
-  it('calls GET /users/me and parses current user with roles', async () => {
-    const spy = vi.spyOn(http, 'request').mockResolvedValueOnce({
-      id: '99999999-9999-4999-8999-999999999901',
-      email: 'admin@hotelbooking.com',
-      fullName: 'Admin User',
-      phone: '0901234567',
-      status: 'active',
-      emailVerified: true,
-      roles: ['ADMIN', 'HOTEL_OWNER'],
-      version: 1,
-    })
-
-    const user = await getCurrentUserApi()
-    expect(spy).toHaveBeenCalledWith(
-      '/users/me',
-      expect.objectContaining({ method: 'GET' }),
-    )
-    expect(user.roles).toContain('ADMIN')
-    expect(user.roles).toContain('HOTEL_OWNER')
-  })
-
-  it('calls POST /auth/register and validates response envelope', async () => {
-    const spy = vi.spyOn(http, 'request').mockResolvedValueOnce({
-      id: '99999999-9999-4999-8999-999999999902',
-      email: 'newuser@hotelbooking.com',
-      fullName: 'Nguyen Van B',
-      phone: '0912345678',
-      status: 'pending',
-      emailVerified: false,
-      version: 0,
-    })
-
-    const res = await registerApi({
-      email: 'newuser@hotelbooking.com',
-      password: 'VeryStrongPassword123!',
-      fullName: 'Nguyen Van B',
-      phone: '0912345678',
-    })
-
-    expect(spy).toHaveBeenCalledWith(
-      '/auth/register',
-      expect.objectContaining({ method: 'POST' }),
-    )
-    expect(res.id).toBe('99999999-9999-4999-8999-999999999902')
-  })
-
-  it('calls POST /auth/refresh with refresh token', async () => {
-    const spy = vi.spyOn(http, 'request').mockResolvedValueOnce({
-      accessToken: 'new-access-token',
-      refreshToken: 'new-refresh-token',
-      tokenType: 'Bearer',
-      expiresAt: '2026-11-04T23:00:00Z',
-    })
-
-    const res = await refreshTokenApi('old-refresh-token')
-    expect(spy).toHaveBeenCalledWith(
-      '/auth/refresh',
-      expect.objectContaining({
-        method: 'POST',
-        body: { refreshToken: 'old-refresh-token' },
-      }),
-    )
-    expect(res.accessToken).toBe('new-access-token')
-  })
-
-  it('calls POST /auth/logout', async () => {
-    const spy = vi.spyOn(http, 'request').mockResolvedValueOnce(undefined)
-
-    await logoutApi('valid-refresh-token')
-    expect(spy).toHaveBeenCalledWith(
-      '/auth/logout',
-      expect.objectContaining({
-        method: 'POST',
-        body: { refreshToken: 'valid-refresh-token' },
-      }),
-    )
-  })
-
-  it('calls remaining auth endpoints: email verification, forgot & reset password, change password', async () => {
-    const spy = vi.spyOn(http, 'request').mockResolvedValue({})
-
-    await verifyEmailApi({ token: 'verify-token-123' })
-    expect(spy).toHaveBeenCalledWith(
-      '/auth/email-verifications',
-      expect.objectContaining({
-        method: 'POST',
-        body: { token: 'verify-token-123' },
-      }),
-    )
-
-    await forgotPasswordApi({ email: 'user@example.com' })
-    expect(spy).toHaveBeenCalledWith(
-      '/auth/forgot-password',
-      expect.objectContaining({
-        method: 'POST',
-        body: { email: 'user@example.com' },
-      }),
-    )
-
-    await resetPasswordApi({ token: 'reset-123', newPassword: 'NewPassword123456!' })
-    expect(spy).toHaveBeenCalledWith(
-      '/auth/reset-password',
-      expect.objectContaining({
-        method: 'POST',
-        body: { token: 'reset-123', newPassword: 'NewPassword123456!' },
-      }),
-    )
-
-    await changePasswordApi({
-      currentPassword: 'OldPassword123!',
-      newPassword: 'NewPassword123456!',
-    })
-    expect(spy).toHaveBeenCalledWith(
-      '/users/me/password',
-      expect.objectContaining({
-        method: 'POST',
-        body: {
-          currentPassword: 'OldPassword123!',
-          newPassword: 'NewPassword123456!',
-        },
-      }),
-    )
+    expect(readAuthLinkToken('https://example.test/login')).toEqual({ token: '', cleanPath: '/login' })
   })
 })

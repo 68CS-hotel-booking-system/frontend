@@ -1,226 +1,176 @@
-import { describe, expect, it, vi } from 'vitest'
-import {
-  createHotelContractDraft,
-  getHotelContracts,
-} from '@/features/contracts/api/contract-api'
-import {
-  getFinancialAccess,
-  updateFinancialAccess,
-} from '@/features/finance/api/financial-access-api'
-import {
-  getMockFinancialAccess,
-  updateMockFinancialAccess,
-} from '@/features/finance/api/financial-access-mock'
-import { ApiError } from '@/shared/api/api-error'
-import { http } from '@/shared/api/http'
-import { getAmenities, getCities } from './catalog-api'
-import {
-  createAdminHotel,
-  createManagementRoom,
-  createManagementRoomType,
-  getManagementHotelDetail,
-  getManagementHotels,
-  getRoomTypeDailyRates,
-  updateHotelAmenities,
-  updateManagementHotel,
-} from './hotel-management-api'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-describe('TV4 Hotel Management, Pricing & Finance API contracts', () => {
-  it('calls HT01 /cities and HT02 /amenities with AbortSignal', async () => {
-    const spy = vi.spyOn(http, 'request').mockResolvedValue([])
+// Fields and nullability mirror ManagementHotelResponse / CreateHotelResponse.
+const id = '11111111-1111-4111-8111-111111111111'
+const hotel = {
+  id,
+  ownerId: '22222222-2222-4222-8222-222222222222',
+  cityId: '33333333-3333-4333-8333-333333333333',
+  name: 'Test Hotel',
+  slug: 'test-hotel-generated-by-backend',
+  description: null,
+  address: '01 Test Street',
+  latitude: null,
+  longitude: null,
+  starRating: null,
+  checkInTime: '14:00:00',
+  checkOutTime: '12:00:00',
+  status: 'DRAFT',
+  createdAt: '2026-11-04T00:00:00Z',
+  updatedAt: '2026-11-04T00:00:00Z',
+  version: 0,
+}
+const payload = {
+  name: 'Test Hotel', slug: 'ui-preview-slug',
+  cityId: hotel.cityId, ownerUserId: hotel.ownerId,
+  address: '01 Test Street', starRating: 3,
+  checkInTime: '14:00', checkOutTime: '12:00', description: '',
+  latitude: 21.123456, longitude: 105.123456,
+}
+const fetcher = vi.fn<typeof fetch>()
+function respond(data: unknown, status = 200) {
+  fetcher.mockResolvedValue(new Response(JSON.stringify({ message: 'ok', data }), { status }))
+}
+
+beforeEach(() => {
+  vi.resetModules()
+  vi.stubGlobal('fetch', fetcher)
+  fetcher.mockReset()
+})
+afterEach(() => vi.unstubAllGlobals())
+
+describe('management API compatibility with the implemented backend', () => {
+  it('reads a populated backend page and maps ownerId for the UI', async () => {
+    respond({ content: [hotel], page: 1, size: 6, totalElements: 7, totalPages: 2, first: false, last: true })
+    const { getManagementHotels } = await import('./hotel-management-api')
     const controller = new AbortController()
-
-    await getCities(controller.signal)
-    expect(spy).toHaveBeenCalledWith(
-      '/cities',
-      expect.objectContaining({ signal: controller.signal }),
-    )
-
-    await getAmenities(controller.signal)
-    expect(spy).toHaveBeenCalledWith(
-      '/amenities',
-      expect.objectContaining({ signal: controller.signal }),
-    )
-
-    spy.mockRestore()
+    const result = await getManagementHotels({ page: 1, size: 6 }, controller.signal)
+    expect(fetcher.mock.calls[0][0]).toBe('/api/v1/management/hotels?page=1&size=6')
+    expect(fetcher.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal)
+    expect(result).toMatchObject({
+      content: [{ id, ownerUserId: hotel.ownerId, starRating: null }],
+      page: 1, size: 6, totalElements: 7, totalPages: 2, first: false, last: true,
+    })
   })
 
-  it('calls HT07 /management/hotels with 0-based page and filters', async () => {
-    const spy = vi.spyOn(http, 'request').mockResolvedValue({
-      content: [],
-      page: 0,
-      size: 6,
-      totalElements: 0,
-      totalPages: 0,
-      first: true,
-      last: true,
-    })
-
-    await getManagementHotels({
-      page: 0,
-      size: 6,
-      status: 'ACTIVE',
-      keyword: 'Westlake',
-    })
-
-    expect(spy).toHaveBeenCalledWith(
-      '/management/hotels?page=0&size=6&status=ACTIVE&keyword=Westlake',
-      expect.any(Object),
-    )
-
-    spy.mockRestore()
+  it('reads backend detail without inventing missing amenities or room types', async () => {
+    respond(hotel)
+    const { getManagementHotelDetail } = await import('./hotel-management-api')
+    const result = await getManagementHotelDetail(id)
+    expect(result).toMatchObject({ id, ownerUserId: hotel.ownerId, slug: hotel.slug, version: 0 })
+    expect(result.roomTypes).toBeUndefined()
+    expect(result.amenityIds).toBeUndefined()
   })
 
-  it('calls HT06, HT08, HT09, HT14 and PR01 with exact paths and methods', async () => {
-    const spy = vi.spyOn(http, 'request').mockResolvedValue({})
-
-    await createAdminHotel({
-      name: 'StayVibe Test Hotel',
-      slug: 'stayvibe-test-hotel',
-      cityId: '11111111-1111-4111-8111-111111111101',
-      ownerUserId: '99999999-9999-4999-8999-999999999901',
-      address: '01 Test Street',
-      starRating: 5,
-      checkInTime: '14:00',
-      checkOutTime: '12:00',
-    })
-    expect(spy).toHaveBeenCalledWith(
-      '/admin/hotels',
-      expect.objectContaining({ method: 'POST' }),
-    )
-
-    await getManagementHotelDetail('hotel-123')
-    expect(spy).toHaveBeenCalledWith(
-      '/management/hotels/hotel-123',
-      expect.any(Object),
-    )
-
-    await updateManagementHotel('hotel-123', {
-      name: 'Updated Name',
-      cityId: 'city-1',
-      address: 'Updated Address',
-      starRating: 5,
-      checkInTime: '14:00',
-      checkOutTime: '12:00',
-      description: 'Desc',
-      latitude: 21.0,
-      longitude: 105.8,
-      status: 'ACTIVE',
-    })
-    expect(spy).toHaveBeenCalledWith(
-      '/management/hotels/hotel-123',
-      expect.objectContaining({ method: 'PATCH' }),
-    )
-
-    await updateHotelAmenities('hotel-123', { amenityIds: ['am-1', 'am-2'] })
-    expect(spy).toHaveBeenCalledWith(
-      '/management/hotels/hotel-123/amenities',
-      expect.objectContaining({ method: 'PUT' }),
-    )
-
-    await getRoomTypeDailyRates({
-      hotelId: 'hotel-123',
-      roomTypeId: 'rt-456',
-      startDate: '2026-11-01',
-      endDate: '2026-11-07',
-    })
-    expect(spy).toHaveBeenCalledWith(
-      '/management/hotels/hotel-123/room-types/rt-456/rates?startDate=2026-11-01&endDate=2026-11-07',
-      expect.any(Object),
-    )
-
-    await createManagementRoomType('hotel-123', {
-      name: 'Grand Penthouse Suite',
-      description: 'Private Terrace & Butler',
-      maxAdults: 4,
-      maxChildren: 1,
-    })
-    expect(spy).toHaveBeenCalledWith(
-      '/management/hotels/hotel-123/room-types',
-      expect.objectContaining({
-        method: 'POST',
-        body: {
-          name: 'Grand Penthouse Suite',
-          description: 'Private Terrace & Butler',
-          maxAdults: 4,
-          maxChildren: 1,
-        },
-      }),
-    )
-
-    await createManagementRoom('hotel-123', {
-      roomTypeId: '44444444-4444-4444-8444-444444444401',
-      roomNumber: '402',
-      floor: 'Floor 4',
-      operationalFrom: '2026-11-04T00:00:00Z',
-      operationalUntil: null,
-    })
-    expect(spy).toHaveBeenCalledWith(
-      '/management/hotels/hotel-123/rooms',
-      expect.objectContaining({
-        method: 'POST',
-        body: {
-          roomTypeId: '44444444-4444-4444-8444-444444444401',
-          roomNumber: '402',
-          floor: 'Floor 4',
-          operationalFrom: '2026-11-04T00:00:00Z',
-          operationalUntil: null,
-        },
-      }),
-    )
-
-    spy.mockRestore()
+  it('rejects a malformed response instead of accepting an incomplete hotel', async () => {
+    respond({ id })
+    const { getManagementHotelDetail } = await import('./hotel-management-api')
+    await expect(getManagementHotelDetail(id)).rejects.toMatchObject({ code: 'INVALID_RESPONSE' })
   })
 
-  it('calls FN01, FN02, FN16 and FN00 finance/contract endpoints accurately', async () => {
-    const spy = vi.spyOn(http, 'request').mockResolvedValue({})
+  it.each([null, 3])('displays backend starRating %s without substituting five stars', async (starRating) => {
+    respond({ ...hotel, starRating })
+    const { getManagementHotelDetail } = await import('./hotel-management-api')
+    const detail = await getManagementHotelDetail(id)
+    const { createElement } = await import('react')
+    const { renderToStaticMarkup } = await import('react-dom/server')
+    const { QueryClient, QueryClientProvider } = await import('@tanstack/react-query')
+    const { DataModeContext } = await import('@/shared/lib/data-mode-context')
+    const { HotelGeneralEditForm } = await import('../components/HotelGeneralEditForm')
+    const html = renderToStaticMarkup(createElement(QueryClientProvider, { client: new QueryClient() },
+      createElement(DataModeContext.Provider, { value: { mode: 'api', setMode: () => undefined } },
+        createElement(HotelGeneralEditForm, { hotel: detail, cities: [] })),
+    ))
+    const ratingInput = html.match(/<input\b[^>]*\bid="[^"]+-starRating"[^>]*>/)?.[0]
+    expect(ratingInput).toBeDefined()
+    expect(ratingInput).toContain(`value="${starRating ?? ''}"`)
+  }, 20_000)
 
-    await getHotelContracts('hotel-123')
-    expect(spy).toHaveBeenCalledWith(
-      '/finance/hotels/hotel-123/contracts',
-      expect.any(Object),
-    )
-
-    await createHotelContractDraft('hotel-123', {
-      contractCode: 'CTR-2027-01',
-      commissionPercentage: 12,
-      currency: 'VND',
-      effectiveFrom: '2027-01-01',
-      effectiveTo: '2027-12-31',
-      termsSummary: 'Standard commission contract terms.',
+  it('sends only CreateHotelRequest fields and accepts the backend generated slug', async () => {
+    respond(hotel, 201)
+    const { createAdminHotel } = await import('./hotel-management-api')
+    const result = await createAdminHotel(payload)
+    expect(fetcher.mock.calls[0][0]).toBe('/api/v1/admin/hotels')
+    expect(fetcher.mock.calls[0][1]?.method).toBe('POST')
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({
+      ownerId: hotel.ownerId, cityId: hotel.cityId,
+      name: 'Test Hotel', address: '01 Test Street', starRating: 3,
+      checkInTime: '14:00', checkOutTime: '12:00', description: '',
+      latitude: 21.123456, longitude: 105.123456,
     })
-    expect(spy).toHaveBeenCalledWith(
-      '/admin/hotels/hotel-123/contracts',
-      expect.objectContaining({ method: 'POST' }),
-    )
-
-    await getFinancialAccess({ hotelId: 'hotel-123', userId: 'user-999' })
-    expect(spy).toHaveBeenCalledWith(
-      '/admin/hotels/hotel-123/financial-access/user-999',
-      expect.any(Object),
-    )
-
-    await updateFinancialAccess(
-      { hotelId: 'hotel-123', userId: 'user-999' },
-      {
-        contractId: 'ctr-1',
-        status: 'GRANTED',
-        canReadContracts: true,
-        canReadSettlements: true,
-        canExportReports: false,
-        expectedVersion: 2,
-        reason: 'Approved by partner agreement.',
-      },
-    )
-    expect(spy).toHaveBeenCalledWith(
-      '/admin/hotels/hotel-123/financial-access/user-999',
-      expect.objectContaining({ method: 'PUT' }),
-    )
-
-    spy.mockRestore()
+    expect(result.slug).toBe(hotel.slug)
   })
 
+  it('allows backend-valid short names and an empty slug in the real create form', async () => {
+    const { createAdminHotelApiFormSchema } = await import('../model/hotel-form-schemas')
+    const result = createAdminHotelApiFormSchema.safeParse({
+      ...payload, name: 'A', address: 'A', slug: '', latitude: null, longitude: null,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it.each([
+    ['cityId', 'sample-city'],
+    ['latitude', 21.1234567],
+    ['longitude', 105.1234567],
+  ])('rejects invalid backend input in form field %s', async (field, value) => {
+    const { createAdminHotelApiFormSchema } = await import('../model/hotel-form-schemas')
+    const result = createAdminHotelApiFormSchema.safeParse({ ...payload, [field]: value })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues.map((issue) => issue.path[0])).toContain(field)
+    }
+  })
+
+  it('maps backend ownerId field errors back to the owner form field', async () => {
+    fetcher.mockResolvedValue(new Response(JSON.stringify({
+      status: 400, detail: 'Invalid owner', code: 'VALIDATION_FAILED', traceId: 'trace-1',
+      errors: [{ field: 'ownerId', message: 'Owner không được để trống.' }],
+    }), { status: 400 }))
+    const { createAdminHotel } = await import('./hotel-management-api')
+    await expect(createAdminHotel(payload)).rejects.toMatchObject({
+      status: 400, code: 'VALIDATION_FAILED', traceId: 'trace-1',
+      errors: [{ field: 'ownerUserId', message: 'Owner không được để trống.' }],
+    })
+  })
+
+  it('sends pagination only because the backend does not implement filters', async () => {
+    respond({ content: [], page: 0, size: 6, totalElements: 0, totalPages: 0, first: true, last: true })
+    const { getManagementHotels } = await import('./hotel-management-api')
+    await getManagementHotels({ cityId: hotel.cityId, status: 'ACTIVE', keyword: 'Test', vibe: 'Glamping' })
+    expect(fetcher.mock.calls[0][0]).toBe('/api/v1/management/hotels?page=0&size=6')
+  })
+
+  it.each([
+    ['cities', async () => (await import('./catalog-api')).getCities()],
+    ['amenities', async () => (await import('./catalog-api')).getAmenities()],
+    ['hotel update', async () => (await import('./hotel-management-api')).updateManagementHotel(id, {
+      name: 'Test', cityId: hotel.cityId, address: 'Address', starRating: 3,
+      checkInTime: '14:00', checkOutTime: '12:00', description: '', latitude: null, longitude: null, status: 'DRAFT',
+    })],
+    ['hotel amenities', async () => (await import('./hotel-management-api')).updateHotelAmenities(id, { amenityIds: [] })],
+    ['rates', async () => (await import('./hotel-management-api')).getRoomTypeDailyRates({
+      hotelId: id, roomTypeId: id, startDate: '2026-11-04', endDate: '2026-11-05',
+    })],
+    ['contracts', async () => (await import('@/features/contracts/api/contract-api')).getHotelContracts(id)],
+    ['contract creation', async () => (await import('@/features/contracts/api/contract-api')).createHotelContractDraft(id, {
+      contractCode: 'TEST', commissionPercentage: 10, currency: 'VND', effectiveFrom: '2026-11-04', effectiveTo: '2027-11-04', termsSummary: '',
+    })],
+    ['financial access', async () => (await import('@/features/finance/api/financial-access-api')).getFinancialAccess({ hotelId: id, userId: id })],
+    ['financial access update', async () => (await import('@/features/finance/api/financial-access-api')).updateFinancialAccess({ hotelId: id, userId: id }, {
+      contractId: id, status: 'GRANTED', canReadContracts: true, canReadSettlements: false, canExportReports: false, expectedVersion: 0, reason: 'Test',
+    })],
+  ] as const)('reports %s as unsupported without sending a request', async (_name, call) => {
+    respond(null)
+    await expect(call()).rejects.toMatchObject({ kind: 'unsupported', code: 'API_NOT_IMPLEMENTED' })
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+})
+
+describe('mock financial access', () => {
   it('enforces optimistic locking (expectedVersion) on FN00 financial access updates', async () => {
+    const { getMockFinancialAccess, updateMockFinancialAccess } = await import('@/features/finance/mocks/financial-access-mock')
+    const { ApiError } = await import('@/shared/api/api-error')
     const current = await getMockFinancialAccess({
       hotelId: '33333333-3333-4333-8333-333333333301',
       userId: '99999999-9999-4999-8999-999999999901',

@@ -9,6 +9,10 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({ error, onRetry, retrying = false }: ErrorStateProps) {
+  if (error instanceof ApiError && error.kind === 'unsupported') {
+    return <Alert type="info" showIcon title="Chức năng chưa được hỗ trợ" description={error.message} />
+  }
+
   return (
     <div className="state-panel">
       <Alert

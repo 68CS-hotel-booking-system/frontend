@@ -6,21 +6,19 @@ import {
   ReloadOutlined,
   TableOutlined,
 } from '@ant-design/icons'
-import { Button, Input, Segmented, Space, Table, Tag } from 'antd'
+import { Alert, Button, Input, Segmented, Space, Table, Tag } from 'antd'
+import { useDataMode } from '@/shared/lib/data-mode-context'
 import { formatCurrencyAmount } from '@/shared/lib/format'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
-import { useRoomTypeDailyRatesQuery } from '../hooks/use-hotel-management'
-import type {
-  DailyRoomRate,
-  ManagementRoomTypeSummary,
-} from '../types/hotel-management'
+import { useRoomTypeDailyRatesQuery } from '../hooks/use-room-type-daily-rates-query'
+import type { DailyRoomRate, ManagementRoomTypeSummary } from '../model/hotel'
 
 interface RoomTypeDailyRatesPanelProps {
   hotelId: string
   hotelName?: string
-  roomTypes: ManagementRoomTypeSummary[]
+  roomTypes?: ManagementRoomTypeSummary[]
 }
 
 type RateViewMode = 'grid' | 'table'
@@ -56,8 +54,9 @@ function formatDisplayDate(isoDate: string): string {
 export function RoomTypeDailyRatesPanel({
   hotelId,
   hotelName,
-  roomTypes,
+  roomTypes = [],
 }: RoomTypeDailyRatesPanelProps) {
+  const { mode } = useDataMode()
   const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string>(
     roomTypes[0]?.id ?? '',
   )
@@ -84,6 +83,10 @@ export function RoomTypeDailyRatesPanel({
     end.setUTCDate(start.getUTCDate() + (days - 1))
     setStartDate(start.toISOString().slice(0, 10))
     setEndDate(end.toISOString().slice(0, 10))
+  }
+
+  if (mode === 'api') {
+    return <Alert type="info" showIcon title="Backend hiện chưa hỗ trợ danh sách hạng phòng và giá phòng theo ngày." />
   }
 
   if (roomTypes.length === 0) {

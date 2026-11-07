@@ -1,39 +1,15 @@
-import { z } from 'zod'
-import { http } from '@/shared/api/http'
-import {
-  type CreateHotelContractFormValues,
-  hotelCommissionContractSchema,
-} from '../types/contract'
+import { unsupportedApi } from '@/shared/api/unsupported-api'
+import type { CreateHotelContractFormValues } from '../model/contract-form-schema'
+import type { HotelCommissionContract } from '../model/contract'
 
-/**
- * FN01: GET /api/v1/finance/hotels/{hotelId}/contracts — Owner/đại diện xem thỏa thuận được phép.
- */
-export function getHotelContracts(hotelId: string, signal?: AbortSignal) {
-  return http.request(
-    `/finance/hotels/${encodeURIComponent(hotelId)}/contracts`,
-    {
-      signal,
-      schema: z.array(hotelCommissionContractSchema),
-    },
-  )
-}
+// Finance contracts are a mock preview until the backend implements this module.
+export const getHotelContracts: (
+  hotelId: string,
+  signal?: AbortSignal,
+) => Promise<HotelCommissionContract[]> = () => unsupportedApi('tra cứu hợp đồng khách sạn')
 
-/**
- * FN02: POST /api/v1/admin/hotels/{hotelId}/contracts — Tạo dự thảo hợp đồng hoa hồng.
- */
-export function createHotelContractDraft(
+export const createHotelContractDraft: (
   hotelId: string,
   payload: CreateHotelContractFormValues,
   signal?: AbortSignal,
-) {
-  return http.request(
-    `/admin/hotels/${encodeURIComponent(hotelId)}/contracts`,
-    {
-      method: 'POST',
-      body: payload,
-      signal,
-      schema: hotelCommissionContractSchema,
-    },
-  )
-}
-
+) => Promise<HotelCommissionContract> = () => unsupportedApi('tạo hợp đồng khách sạn')

@@ -4,22 +4,18 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Alert, App as AntApp, Button, Space, Tag } from 'antd'
 import { useForm, useWatch } from 'react-hook-form'
 import { errorMessage } from '@/shared/api/api-error'
+import { useDataMode } from '@/shared/lib/data-mode-context'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
-import {
-  useAmenitiesQuery,
-  useUpdateHotelAmenitiesMutation,
-} from '../hooks/use-hotel-management'
-import {
-  type AmenityItem,
-  updateHotelAmenitiesFormSchema,
-  type UpdateHotelAmenitiesFormValues,
-} from '../types/hotel-management'
+import { useAmenitiesQuery } from '../hooks/use-amenities-query'
+import { useUpdateHotelAmenitiesMutation } from '../hooks/use-update-hotel-amenities-mutation'
+import { type AmenityItem } from '../model/hotel'
+import { updateHotelAmenitiesFormSchema, type UpdateHotelAmenitiesFormValues } from '../model/hotel-form-schemas'
 
 interface HotelAmenitiesManagerProps {
   hotelId: string
-  initialAmenityIds: string[]
+  initialAmenityIds?: string[]
 }
 
 export function HotelAmenitiesManager({
@@ -27,6 +23,7 @@ export function HotelAmenitiesManager({
   initialAmenityIds,
 }: HotelAmenitiesManagerProps) {
   const { message } = AntApp.useApp()
+  const { mode } = useDataMode()
   const amenitiesQuery = useAmenitiesQuery()
   const updateAmenitiesMutation = useUpdateHotelAmenitiesMutation(hotelId)
 
@@ -67,6 +64,10 @@ export function HotelAmenitiesManager({
     } catch {
       // Lỗi hiển thị qua Alert bên dưới
     }
+  }
+
+  if (mode === 'api') {
+    return <Alert type="info" showIcon title="Backend hiện chưa hỗ trợ xem và cập nhật tiện ích khách sạn." />
   }
 
   if (amenitiesQuery.isPending) {
@@ -202,4 +203,3 @@ export function HotelAmenitiesManager({
     </section>
   )
 }
-

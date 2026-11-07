@@ -8,19 +8,21 @@ import {
   ReloadOutlined,
   StarFilled,
 } from '@ant-design/icons'
-import { Button, Space, Tabs } from 'antd'
+import { Button, Space, Tabs, Tag } from 'antd'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
-import { HotelContractsSection } from '@/features/contracts/components/HotelContractsSection'
-import { useHotelContractsQuery } from '@/features/contracts/hooks/use-hotel-contracts'
-import { FinancialAccessSection } from '@/features/finance/components/FinancialAccessSection'
-import { HotelAmenitiesManager } from '@/features/hotels/components/HotelAmenitiesManager'
-import { HotelGeneralEditForm } from '@/features/hotels/components/HotelGeneralEditForm'
-import { HotelStatusBadge } from '@/features/hotels/components/HotelStatusBadge'
-import { RoomTypeDailyRatesPanel } from '@/features/hotels/components/RoomTypeDailyRatesPanel'
+import { HotelContractsSection, useHotelContractsQuery } from '@/features/contracts'
+
+import { FinancialAccessSection } from '@/features/finance'
 import {
+  HotelAmenitiesManager,
+  HotelGeneralEditForm,
+  HotelStatusBadge,
+  RoomTypeDailyRatesPanel,
   useCitiesQuery,
   useManagementHotelDetailQuery,
-} from '@/features/hotels/hooks/use-hotel-management'
+} from '@/features/hotels'
+
+import { DataSourceBanner } from '@/shared/ui/DataSourceBanner'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
 
@@ -37,6 +39,7 @@ export function HotelManagementDetailPage() {
   if (detailQuery.isPending) {
     return (
       <div className="management-page">
+        <DataSourceBanner />
         <PageLoading />
       </div>
     )
@@ -45,6 +48,7 @@ export function HotelManagementDetailPage() {
   if (detailQuery.isError) {
     return (
       <div className="management-page">
+        <DataSourceBanner />
         <div className="surface-card">
           <ErrorState
             error={detailQuery.error}
@@ -62,6 +66,8 @@ export function HotelManagementDetailPage() {
 
   return (
     <div className="management-page">
+      <DataSourceBanner />
+
       <div className="detail-top-nav">
         <Button
           icon={<ArrowLeftOutlined aria-hidden="true" />}
@@ -92,59 +98,15 @@ export function HotelManagementDetailPage() {
           <Space wrap size={8}>
             <HotelStatusBadge status={hotel.status} />
             {hotel.starRating && (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  padding: '3px 10px',
-                  borderRadius: 9999,
-                  backgroundColor: 'rgba(217, 119, 6, 0.12)',
-                  color: '#b45309',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  lineHeight: '16px',
-                }}
-              >
-                <StarFilled style={{ fontSize: 12, color: '#d97706' }} aria-hidden="true" />{' '}
-                {hotel.starRating} Sao
-              </span>
+              <Tag color="gold">
+                <StarFilled aria-hidden="true" /> {hotel.starRating} Sao
+              </Tag>
             )}
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                padding: '3px 10px',
-                borderRadius: 9999,
-                backgroundColor: 'var(--atelier-surface-container)',
-                color: 'var(--atelier-on-surface-variant)',
-                fontSize: 12,
-                fontWeight: 600,
-                lineHeight: '16px',
-              }}
-            >
-              <EnvironmentOutlined style={{ fontSize: 12, color: 'var(--atelier-primary)' }} aria-hidden="true" />{' '}
-              {hotel.cityName ?? 'Việt Nam'}
-            </span>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                padding: '3px 10px',
-                borderRadius: 9999,
-                backgroundColor: 'var(--atelier-surface-container-low)',
-                color: 'var(--atelier-on-surface)',
-                fontSize: 12,
-                fontWeight: 500,
-                lineHeight: '16px',
-                border: '1px solid var(--atelier-surface-high)',
-              }}
-            >
+            <Tag color="blue">{hotel.cityName ?? 'Việt Nam'}</Tag>
+            <Tag>
               Nhận phòng {hotel.checkInTime.slice(0, 5)} · Trả phòng{' '}
               {hotel.checkOutTime.slice(0, 5)}
-            </span>
+            </Tag>
           </Space>
 
           <h1>{hotel.name}</h1>
@@ -222,4 +184,3 @@ export function HotelManagementDetailPage() {
     </div>
   )
 }
-

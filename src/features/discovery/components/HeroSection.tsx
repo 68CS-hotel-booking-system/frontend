@@ -1,12 +1,9 @@
 import {
-  CheckCircleFilled,
-  SafetyCertificateFilled,
-  ThunderboltFilled,
+  CompassOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons'
-import {
-  SmartSearchBar,
-  type SmartSearchFormValues,
-} from '@/features/discovery/components/SmartSearchBar'
+import { SmartSearchBar } from './SmartSearchBar'
+import type { SmartSearchFormValues } from '../model/search-form-schema'
 
 interface HeroSectionProps {
   onSearchSubmit: (values: SmartSearchFormValues) => void
@@ -20,56 +17,48 @@ export function HeroSection({
   activeDestinationFilter,
 }: HeroSectionProps) {
   return (
-    <section
-      className="stayvibe-hero-section"
-      aria-labelledby="stayvibe-hero-heading"
-    >
-      <div className="stayvibe-hero-banner">
-        <div className="stayvibe-hero-aurora" aria-hidden="true" />
-        <div className="stayvibe-hero-content">
-          <div className="stayvibe-hero-badges-row">
-            <span className="stayvibe-trend-pill">
-              <ThunderboltFilled aria-hidden="true" /> Sovereign Sanctuary Collection
+    <section aria-labelledby="stayhub-hero-heading" className="w-full">
+      <div className="relative overflow-hidden rounded-3xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-subtle)] p-6 sm:p-8 lg:p-10 shadow-sm">
+        {/* Subtle Background Ambience */}
+        <div
+          className="absolute -right-20 -top-20 w-96 h-96 rounded-full bg-[var(--md-sys-color-primary)]/5 blur-3xl pointer-events-none"
+          aria-hidden="true"
+        />
+
+        {/* Content Box */}
+        <div className="relative z-10 max-w-3xl mb-6 sm:mb-8">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] text-xs font-semibold">
+              <CompassOutlined aria-hidden="true" />
+              <span>Khám phá chỗ nghỉ StayHub</span>
             </span>
-            <span className="stayvibe-verified-pill">
-              <SafetyCertificateFilled aria-hidden="true" /> Bespoke &amp; Transparent Rates
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[var(--md-sys-color-outline-subtle)] text-[var(--md-sys-color-on-surface-variant)] text-xs font-medium">
+              <InfoCircleOutlined aria-hidden="true" />
+              <span>Chế độ tìm kiếm khám phá (Dữ liệu minh họa)</span>
             </span>
           </div>
 
-          <h1 id="stayvibe-hero-heading" className="stayvibe-hero-title">
-            Tuyệt tác nghỉ dưỡng mang đậm{' '}
-            <span className="stayvibe-gradient-text">dấu ấn độc bản</span> của bạn
+          <h1
+            id="stayhub-hero-heading"
+            className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[var(--md-sys-color-on-surface)] tracking-tight leading-tight mb-2"
+          >
+            Tìm chỗ nghỉ lý tưởng cho kỳ nghỉ tiếp theo của bạn
           </h1>
 
-          <p className="stayvibe-hero-subtitle">
-            Bộ sưu tập tuyển chọn hơn <strong>1.240+</strong> dinh thự nghỉ dưỡng,
-            Boutique Di Sản, Cliffside Retreat và Glamping thượng lưu khắp Việt Nam —
-            cam kết minh bạch tuyệt đối giá niêm yết và tồn phòng từ hệ thống.
+          <p className="text-sm sm:text-base text-[var(--md-sys-color-on-surface-variant)] max-w-2xl leading-relaxed">
+            Tra cứu các khách sạn, khu nghỉ dưỡng, homestay và điểm lưu trú đặc sắc theo thành phố hoặc phong cách trải nghiệm.
           </p>
-
-          <ul className="stayvibe-hero-trust-list" aria-label="Cam kết nền tảng">
-            <li>
-              <CheckCircleFilled aria-hidden="true" /> Giá &amp; thuế phí minh
-              bạch từ hệ thống
-            </li>
-            <li>
-              <CheckCircleFilled aria-hidden="true" /> Xác nhận quỹ phòng thực tế
-              tức thì
-            </li>
-            <li>
-              <CheckCircleFilled aria-hidden="true" /> Tuyển chọn kiến trúc nghỉ
-              dưỡng đặc sắc
-            </li>
-          </ul>
         </div>
 
-        <SmartSearchBar
-          onSearchSubmit={onSearchSubmit}
-          onResetSearch={onResetSearch}
-          activeDestinationFilter={activeDestinationFilter}
-        />
+        {/* Smart Search Bar */}
+        <div className="relative z-10 w-full">
+          <SmartSearchBar
+            onSearchSubmit={onSearchSubmit}
+            onResetSearch={onResetSearch}
+            activeDestinationFilter={activeDestinationFilter}
+          />
+        </div>
       </div>
     </section>
   )
 }
-

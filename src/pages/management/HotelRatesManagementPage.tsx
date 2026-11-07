@@ -6,14 +6,16 @@ import {
   SettingOutlined,
   StarFilled,
 } from '@ant-design/icons'
-import { Button, Select, Space } from 'antd'
+import { Button, Select, Space, Tag } from 'antd'
 import { useNavigate, useSearchParams } from 'react-router'
-import { HotelStatusBadge } from '@/features/hotels/components/HotelStatusBadge'
-import { RoomTypeDailyRatesPanel } from '@/features/hotels/components/RoomTypeDailyRatesPanel'
 import {
+  HotelStatusBadge,
+  RoomTypeDailyRatesPanel,
   useManagementHotelDetailQuery,
   useManagementHotelsQuery,
-} from '@/features/hotels/hooks/use-hotel-management'
+} from '@/features/hotels'
+
+import { DataSourceBanner } from '@/shared/ui/DataSourceBanner'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
@@ -41,6 +43,8 @@ export function HotelRatesManagementPage() {
 
   return (
     <div className="management-page rates-management-page">
+      <DataSourceBanner />
+
       {/* 1. Header trang tinh gọn, sang trọng */}
       <header className="rates-page-header">
         <div className="rates-page-header__content">
@@ -130,58 +134,20 @@ export function HotelRatesManagementPage() {
                 <Space wrap size={8}>
                   <HotelStatusBadge status={hotelDetailQuery.data.status} />
                   {hotelDetailQuery.data.starRating && (
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 4,
-                        padding: '3px 10px',
-                        borderRadius: 9999,
-                        backgroundColor: 'rgba(217, 119, 6, 0.12)',
-                        color: '#b45309',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        lineHeight: '16px',
-                      }}
-                    >
-                      <StarFilled style={{ fontSize: 12, color: '#d97706' }} aria-hidden="true" />{' '}
+                    <Tag color="gold">
+                      <StarFilled aria-hidden="true" />{' '}
                       {hotelDetailQuery.data.starRating} Sao
-                    </span>
+                    </Tag>
                   )}
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      padding: '3px 10px',
-                      borderRadius: 9999,
-                      backgroundColor: 'var(--atelier-surface-container)',
-                      color: 'var(--atelier-on-surface-variant)',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      lineHeight: '16px',
-                    }}
-                  >
-                    <EnvironmentOutlined style={{ fontSize: 12, color: 'var(--atelier-primary)' }} aria-hidden="true" />{' '}
+                  <Tag color="blue">
+                    <EnvironmentOutlined aria-hidden="true" />{' '}
                     {hotelDetailQuery.data.cityName}
-                  </span>
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      padding: '3px 10px',
-                      borderRadius: 9999,
-                      backgroundColor: 'var(--atelier-surface-container-low)',
-                      color: 'var(--atelier-on-surface)',
-                      fontSize: 12,
-                      fontWeight: 500,
-                      lineHeight: '16px',
-                      border: '1px solid var(--atelier-surface-high)',
-                    }}
-                  >
-                    {hotelDetailQuery.data.roomTypes.length} hạng phòng
-                  </span>
+                  </Tag>
+                  <Tag>
+                    {hotelDetailQuery.data.roomTypes
+                      ? `${hotelDetailQuery.data.roomTypes.length} hạng phòng`
+                      : 'Chưa có dữ liệu hạng phòng'}
+                  </Tag>
                 </Space>
               </div>
             )}

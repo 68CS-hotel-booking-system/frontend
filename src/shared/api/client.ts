@@ -6,7 +6,7 @@ interface ClientConfig {
   baseUrl: string
   timeoutMs: number
   fetcher?: typeof fetch
-  getAccessToken?: () => string | null
+  getAccessToken?: () => string | undefined
 }
 
 export interface RequestOptions<T> {
@@ -79,16 +79,13 @@ export function createHttpClient(config: ClientConfig) {
 
     try {
       const headers = new Headers(options.headers)
+      const token = config.getAccessToken?.()
+      if (!raw && !path.startsWith('/auth/') && token) headers.set('Authorization', 'Bearer ' + token)
+      if (path === '/auth/logout' && token) headers.set('Authorization', 'Bearer ' + token)
       if (!headers.has('Accept')) headers.set('Accept', 'application/json')
       const multipart = options.body instanceof FormData
       if (options.body !== undefined && !multipart && !headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/json')
-      }
-      if (!headers.has('Authorization')) {
-        const token = config.getAccessToken?.()
-        if (token) {
-          headers.set('Authorization', `Bearer ${token}`)
-        }
       }
       const response = await fetcher(url, {
         method: options.method ?? 'GET',
