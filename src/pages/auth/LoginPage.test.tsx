@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { LoginPage } from './LoginPage'
-import { setSession } from '@/shared/api/session'
+import { setAuthStatus, setSession } from '@/shared/api/session'
 
 const tokens = {
   accessToken: 'login-test-token',
@@ -13,6 +13,7 @@ const tokens = {
 
 describe('LoginPage returnTo and admin access protection', () => {
   beforeEach(() => {
+    setAuthStatus('unauthenticated')
     setSession(null)
   })
 

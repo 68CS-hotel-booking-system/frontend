@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import {
   ArrowLeftOutlined,
+  ArrowRightOutlined,
   CheckCircleFilled,
   ClockCircleFilled,
   CloseCircleFilled,
@@ -11,15 +12,27 @@ import {
   LoginOutlined,
   ReloadOutlined,
 } from '@ant-design/icons'
-import { useVerifyEmail, type VerifyEmailStatus } from '../hooks/use-verify-email'
+import { useVerifyEmail, type VerifyEmailResult, type VerifyEmailStatus } from '../hooks/use-verify-email'
 
 export interface VerifyEmailViewProps {
   overrideToken?: string
   overrideStatus?: VerifyEmailStatus
+  countdown?: number | null
+  onSuccess?: (result: VerifyEmailResult) => void
+  onNavigateHome?: () => void
 }
 
-export function VerifyEmailView({ overrideToken, overrideStatus }: VerifyEmailViewProps) {
-  const { status: liveStatus, errorMessage, isVerifying, retry } = useVerifyEmail(overrideToken)
+export function VerifyEmailView({
+  overrideToken,
+  overrideStatus,
+  countdown,
+  onSuccess,
+  onNavigateHome,
+}: VerifyEmailViewProps) {
+  const { status: liveStatus, errorMessage, isVerifying, retry } = useVerifyEmail({
+    overrideToken,
+    onSuccess: overrideStatus ? undefined : onSuccess,
+  })
   const status = overrideStatus ?? liveStatus
 
   return (
@@ -138,6 +151,14 @@ export function VerifyEmailView({ overrideToken, overrideStatus }: VerifyEmailVi
             )}
           </div>
 
+          {/* Status Badge when verified with countdown */}
+          {status === 'success' && countdown !== undefined && countdown !== null && (
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--forest-pale,#eef5f1)] text-[var(--forest,#2a583e)] border border-[#c6ded0] text-xs font-semibold mb-3 mx-auto">
+              <CheckCircleFilled className="text-xs" aria-hidden="true" />
+              <span>Đăng ký &amp; kích hoạt tài khoản thành công</span>
+            </div>
+          )}
+
           {/* Heading */}
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--ink,#1a1918)] mb-3">
             {status === 'verifying' && 'Đang xác minh email'}
@@ -156,9 +177,23 @@ export function VerifyEmailView({ overrideToken, overrideStatus }: VerifyEmailVi
             )}
 
             {status === 'success' && (
-              <p>
-                Email của bạn đã được xác minh thành công. Bạn đã có thể đăng nhập để bắt đầu khám phá và đặt phòng nghỉ dưỡng.
-              </p>
+              <div className="flex flex-col items-center gap-3">
+                <p>
+                  Email của bạn đã được xác minh thành công. Bạn đã được đăng nhập tự động vào hệ thống StayHub.
+                </p>
+                {countdown !== undefined && countdown !== null && (
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--paper-deep,#f3ede2)] border border-[var(--line,#e3dcd1)] text-xs sm:text-sm font-medium text-[var(--ink-soft,#423f3b)] shadow-xs">
+                    <ClockCircleFilled className="text-[var(--accent,#b66d3a)] text-sm animate-pulse" aria-hidden="true" />
+                    <span>
+                      Tự động chuyển về trang chủ sau{' '}
+                      <strong className="text-[var(--accent,#b66d3a)] font-bold text-base tabular-nums">
+                        {countdown}
+                      </strong>{' '}
+                      giây...
+                    </span>
+                  </div>
+                )}
+              </div>
             )}
 
             {status === 'missing-token' && (
@@ -205,19 +240,40 @@ export function VerifyEmailView({ overrideToken, overrideStatus }: VerifyEmailVi
 
             {status === 'success' && (
               <>
-                <Link
-                  to="/login"
-                  className="w-full sm:w-auto min-h-[48px] px-7 py-2.5 rounded-xl bg-[var(--accent,#b66d3a)] hover:bg-[var(--accent-hover,#9e5b2c)] text-white font-semibold text-sm shadow-sm transition-all inline-flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-[var(--accent,#b66d3a)] active:scale-[0.99]"
-                >
-                  <LoginOutlined aria-hidden="true" />
-                  <span>Đăng nhập</span>
-                </Link>
-                <Link
-                  to="/"
-                  className="w-full sm:w-auto min-h-[48px] px-5 py-2.5 rounded-xl border border-[var(--line,#e3dcd1)] hover:bg-[var(--paper-deep,#f3ede2)] text-[var(--ink-soft,#423f3b)] font-semibold text-sm transition-colors inline-flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[var(--accent,#b66d3a)]"
-                >
-                  <span>Khám phá chỗ nghỉ</span>
-                </Link>
+                {countdown !== undefined && countdown !== null ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={onNavigateHome}
+                      className="w-full sm:w-auto min-h-[48px] px-7 py-2.5 rounded-xl bg-[var(--accent,#b66d3a)] hover:bg-[var(--accent-hover,#9e5b2c)] text-white font-semibold text-sm shadow-sm transition-all inline-flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-[var(--accent,#b66d3a)] active:scale-[0.99] cursor-pointer"
+                    >
+                      <span>Đến trang chủ ngay</span>
+                      <ArrowRightOutlined aria-hidden="true" />
+                    </button>
+                    <Link
+                      to="/"
+                      className="w-full sm:w-auto min-h-[48px] px-5 py-2.5 rounded-xl border border-[var(--line,#e3dcd1)] hover:bg-[var(--paper-deep,#f3ede2)] text-[var(--ink-soft,#423f3b)] font-semibold text-sm transition-colors inline-flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[var(--accent,#b66d3a)]"
+                    >
+                      <span>Khám phá chỗ nghỉ</span>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="w-full sm:w-auto min-h-[48px] px-7 py-2.5 rounded-xl bg-[var(--accent,#b66d3a)] hover:bg-[var(--accent-hover,#9e5b2c)] text-white font-semibold text-sm shadow-sm transition-all inline-flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-[var(--accent,#b66d3a)] active:scale-[0.99]"
+                    >
+                      <LoginOutlined aria-hidden="true" />
+                      <span>Đăng nhập</span>
+                    </Link>
+                    <Link
+                      to="/"
+                      className="w-full sm:w-auto min-h-[48px] px-5 py-2.5 rounded-xl border border-[var(--line,#e3dcd1)] hover:bg-[var(--paper-deep,#f3ede2)] text-[var(--ink-soft,#423f3b)] font-semibold text-sm transition-colors inline-flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[var(--accent,#b66d3a)]"
+                    >
+                      <span>Khám phá chỗ nghỉ</span>
+                    </Link>
+                  </>
+                )}
               </>
             )}
 

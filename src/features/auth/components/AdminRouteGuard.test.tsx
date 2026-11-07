@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AdminRouteGuard } from './AdminRouteGuard'
-import { setSession } from '@/shared/api/session'
+import { setAuthStatus, setSession } from '@/shared/api/session'
 
 const tokens = {
   accessToken: 'test-token',
@@ -13,7 +13,40 @@ const tokens = {
 
 describe('AdminRouteGuard component', () => {
   beforeEach(() => {
+    setAuthStatus('unauthenticated')
     setSession(null)
+  })
+
+  it('renders loading state when restoring session on boot/F5', () => {
+    setAuthStatus('restoring')
+    const qc = new QueryClient()
+    const markup = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/admin/overview']}>
+        <QueryClientProvider client={qc}>
+          <AdminRouteGuard>
+            <div data-testid="admin-content">Admin Area</div>
+          </AdminRouteGuard>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+    expect(markup).not.toContain('admin-content')
+    expect(markup).toContain('aria-label="Đang tải dữ liệu"')
+  })
+
+  it('renders ErrorState when session restore encounters network/5xx error', () => {
+    setAuthStatus('restore-error', new Error('Network error'))
+    const qc = new QueryClient()
+    const markup = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/admin/overview']}>
+        <QueryClientProvider client={qc}>
+          <AdminRouteGuard>
+            <div data-testid="admin-content">Admin Area</div>
+          </AdminRouteGuard>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+    expect(markup).not.toContain('admin-content')
+    expect(markup).toContain('Thử lại')
   })
 
   it('blocks guest and does not render admin content', () => {

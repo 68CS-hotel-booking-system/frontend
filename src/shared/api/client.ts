@@ -7,6 +7,7 @@ interface ClientConfig {
   timeoutMs: number
   fetcher?: typeof fetch
   getAccessToken?: () => string | undefined
+  onRefreshToken?: () => Promise<string | null>
 }
 
 export interface RequestOptions<T> {
@@ -16,6 +17,7 @@ export interface RequestOptions<T> {
   signal?: AbortSignal
   timeoutMs?: number
   schema?: ZodType<T>
+  _retryCount?: number
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -55,6 +57,12 @@ function invalidResponse(status: number) {
   })
 }
 
+function getXsrfToken(): string | undefined {
+  if (typeof document === 'undefined') return undefined
+  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : undefined
+}
+
 export function createHttpClient(config: ClientConfig) {
   const fetcher = config.fetcher ?? globalThis.fetch.bind(globalThis)
 
@@ -83,6 +91,10 @@ export function createHttpClient(config: ClientConfig) {
       if (!raw && !path.startsWith('/auth/') && token) headers.set('Authorization', 'Bearer ' + token)
       if (path === '/auth/logout' && token) headers.set('Authorization', 'Bearer ' + token)
       if (!headers.has('Accept')) headers.set('Accept', 'application/json')
+      if (!headers.has('X-Requested-With')) headers.set('X-Requested-With', 'XMLHttpRequest')
+      const xsrfToken = getXsrfToken()
+      if (xsrfToken && !headers.has('X-XSRF-TOKEN')) headers.set('X-XSRF-TOKEN', xsrfToken)
+
       const multipart = options.body instanceof FormData
       if (options.body !== undefined && !multipart && !headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/json')
@@ -110,6 +122,26 @@ export function createHttpClient(config: ClientConfig) {
       }
 
       if (!response.ok) {
+        if (
+          response.status === 401 &&
+          !path.startsWith('/auth/') &&
+          config.onRefreshToken &&
+          (options._retryCount ?? 0) < 1
+        ) {
+          try {
+            const newToken = await config.onRefreshToken()
+            if (newToken) {
+              return await send(
+                path,
+                { ...options, _retryCount: (options._retryCount ?? 0) + 1 },
+                raw,
+              )
+            }
+          } catch {
+            // Refresh failed or revoked; fall through to throw original ApiError
+          }
+        }
+
         const problem = problemFrom(payload)
         throw new ApiError(
           response.status < 500 && problem.detail ? problem.detail : fallbackMessage(response.status),

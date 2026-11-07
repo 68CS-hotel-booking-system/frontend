@@ -40,6 +40,41 @@ describe('verify-email-state logic', () => {
     expect(apiMock).toHaveBeenCalledTimes(1)
   })
 
+  it('returns session and user when response includes tokens and user profile', async () => {
+    const apiResponse = {
+      accepted: true,
+      accessToken: 'access-jwt-token',
+      tokenType: 'Bearer' as const,
+      expiresAt: '2026-11-07T12:00:00Z',
+      user: {
+        id: '11111111-1111-4111-8111-111111111111',
+        email: 'customer@stayhub.test',
+        fullName: 'Nguyen Van A',
+        phone: '0901234567',
+        status: 'ACTIVE',
+        emailVerified: true,
+        version: 1,
+      },
+    }
+    const apiMock = vi.fn().mockResolvedValue(apiResponse)
+    const result = await executeEmailVerification('jwt-token-val', apiMock)
+
+    expect(result).toEqual({
+      status: 'success',
+      errorMessage: null,
+      session: {
+        accessToken: 'access-jwt-token',
+        expiresAt: '2026-11-07T12:00:00Z',
+      },
+      user: apiResponse.user,
+    })
+
+    // Cached result also retains session and user
+    const secondCall = await executeEmailVerification('jwt-token-val', apiMock)
+    expect(secondCall).toEqual(result)
+    expect(apiMock).toHaveBeenCalledTimes(1)
+  })
+
   it('prevents concurrent / StrictMode duplicate requests by reusing the in-flight promise', async () => {
     let resolvePromise: (value: { accepted: boolean }) => void
     const pendingPromise = new Promise<{ accepted: boolean }>((resolve) => {

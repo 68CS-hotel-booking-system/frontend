@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ApiError } from '@/shared/api/api-error'
-import { setSession } from '@/shared/api/session'
+import { setAuthStatus, setSession } from '@/shared/api/session'
 import { AdminLoginPage } from './AdminLoginPage'
 
 const session = { accessToken: 'admin-entry-test', refreshToken: 'refresh-test', expiresAt: '2099-01-01T00:00:00Z' }
@@ -16,10 +16,11 @@ const account = {
 describe('admin login screen', () => {
   let client: QueryClient
   beforeEach(() => {
+    setAuthStatus('unauthenticated')
     setSession(null)
     client = new QueryClient({ defaultOptions: { queries: { retry: false, retryOnMount: false } } })
   })
-  afterEach(() => { setSession(null); client.clear() })
+  afterEach(() => { setAuthStatus('unauthenticated'); setSession(null); client.clear() })
 
   function render() {
     return renderToStaticMarkup(
@@ -39,6 +40,13 @@ describe('admin login screen', () => {
     expect(html).toContain('Quên mật khẩu?')
     expect(html).not.toContain('Kết quả từ máy chủ')
     expect(html).not.toContain('Làm mới phiên')
+  })
+
+  it('shows verifying state while session restoration is in flight', () => {
+    setAuthStatus('restoring')
+    const html = render()
+    expect(html).toContain('Đang xác minh quyền truy cập')
+    expect(html).not.toContain('type="password"')
   })
 
   it('does not offer another credential submission while verifying a session', () => {

@@ -39,7 +39,12 @@ Chỉ copy env khi chưa có `.env.local`. Backend dev mặc định ở http://
 - Các màn quản lý khách sạn mặc định dùng mock. Switch nguồn dữ liệu bật API tạo, danh sách và chi tiết; bộ lọc chưa có ở backend bị khóa.
 - Khi dùng API, tạo khách sạn cần Owner UUID và City UUID có thật. Backend tự sinh slug. Chưa có API danh mục cities để cấp lựa chọn.
 - Sửa khách sạn, danh mục/gắn tiện ích, giá theo ngày, hợp đồng và quyền tài chính chưa được backend hỗ trợ. FE khóa thao tác và báo rõ, không gửi request đến endpoint giả định.
-- Discovery và admin users hiện là giao diện preview dùng mock. Các thao tác mô phỏng ở đó không chứng minh có API quản trị tương ứng.
+- Discovery còn dữ liệu preview/mock. Màn admin users dùng API thật cho danh sách, tìm kiếm,
+  bộ lọc, phân trang, số lượng theo tab, khóa/mở khóa, gửi lại email xác minh và cấp/thu hồi vai trò.
+  Số lượng tab lấy từ `totalElements` của API danh sách; thao tác hàng loạt gọi API từng tài khoản
+  và báo kết quả một phần khi có lỗi. Không chuyển sang mock khi kết nối thất bại.
+- Tạo người dùng từ admin chưa được BE triển khai nên nút được khóa; đã bỏ chức năng xuất CSV.
+  Modal chi tiết dùng dữ liệu từ danh sách, chưa có API chi tiết người dùng riêng.
 - `/system-status` gọi `GET /actuator/health` thật; backend dừng sẽ hiện lỗi, không tự chuyển sang mock.
 
 ## Xác thực
