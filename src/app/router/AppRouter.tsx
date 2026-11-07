@@ -24,6 +24,7 @@ export function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="admin/login" element={<AdminLoginPage />} />
+        <Route path="verify-email" element={<VerifyEmailPage />} />
         {/* Admin Portal Layout Routes (Protected by AdminRouteGuard) */}
         <Route
           path="admin"
@@ -58,7 +59,6 @@ export function AppRouter() {
             element={<FinancialAccessManagementPage />}
           />
           <Route path="management/live" element={<Navigate to="/" replace />} />
-          <Route path="verify-email" element={<VerifyEmailPage />} />
           <Route path="reset-password" element={<ResetPasswordPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />

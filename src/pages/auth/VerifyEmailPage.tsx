@@ -1,5 +1,5 @@
-import { AuthPanel } from '@/features/auth'
+import { VerifyEmailView } from '@/features/auth'
 
 export function VerifyEmailPage() {
-  return <AuthPanel initialAction="email-verifications" />
+  return <VerifyEmailView />
 }
