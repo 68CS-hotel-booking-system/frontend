@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useLocation, useNavigate, useSearchParams } from 'react-router'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import {
   ArrowRightOutlined,
   EyeInvisibleOutlined,
@@ -36,6 +36,7 @@ export function ClientLoginForm({
   const [searchParams] = useSearchParams()
 
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
 
   const mutation = useAuthAction('login')
@@ -58,7 +59,7 @@ export function ClientLoginForm({
     setApiError(null)
 
     try {
-      const result = await mutation.mutateAsync(values)
+      const result = await mutation.mutateAsync({ ...values, rememberMe })
 
       // Xử lý returnTo nếu có
       const rawReturnTo =
@@ -194,6 +195,27 @@ export function ClientLoginForm({
             {errors.password.message}
           </p>
         )}
+      </div>
+
+      {/* Remember me & Forgot password */}
+      <div className="auth-stagger-item auth-stagger-4 flex items-center justify-between gap-2 -mt-1 select-none">
+        <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-[var(--color-ink-muted)]">
+          <input
+            type="checkbox"
+            name="rememberMe"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            disabled={busy}
+            className="w-4 h-4 rounded cursor-pointer accent-[#9b5b32]"
+          />
+          <span>Ghi nhớ đăng nhập</span>
+        </label>
+        <Link
+          to="/forgot-password"
+          className="text-sm font-medium text-[var(--color-primary)] hover:underline"
+        >
+          Quên mật khẩu?
+        </Link>
       </div>
 
       {/* Submit Button & Switch Line */}

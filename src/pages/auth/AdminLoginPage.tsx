@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
-import { ADMIN_LOGIN_PHOTO, AdminLoginForm, adminLoginDestination, clearAuthSession, useCurrentUser, useSession } from '@/features/auth'
+import { ADMIN_LOGIN_PHOTO, AdminLoginForm, adminLoginDestination, clearAuthSession, useAuthStatus, useCurrentUser, useSession } from '@/features/auth'
 import { errorMessage } from '@/shared/api/api-error'
 
 export function AdminLoginPage() {
@@ -8,6 +8,7 @@ export function AdminLoginPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const session = useSession()
+  const { status } = useAuthStatus()
   const { currentUser, isChecking, isAdmin, isError, error, isFetching, refetch } = useCurrentUser()
   const [helpOpen, setHelpOpen] = useState(false)
 
@@ -21,7 +22,9 @@ export function AdminLoginPage() {
     }
   }, [session, currentUser, isAdmin, isChecking, isError, destination, navigate])
 
-  const verifying = Boolean(session) && (isChecking || (!isError && (!currentUser || isAdmin)))
+  const verifying =
+    status === 'restoring' ||
+    (Boolean(session) && (isChecking || (!isError && (!currentUser || isAdmin))))
 
   return (
     <div className="admin-login-shell min-h-screen min-h-[100dvh] bg-warm-bg text-warm-fg selection:bg-warm-accent selection:text-warm-surface">
@@ -111,7 +114,7 @@ export function AdminLoginPage() {
               </div>
 
               {/* Form or State content */}
-              {!session ? (
+              {!session && status !== 'restoring' ? (
                 <AdminLoginForm />
               ) : verifying ? (
                 <div className="flex flex-col items-center justify-center gap-4 py-12" role="status" aria-live="polite">

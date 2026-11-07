@@ -1,13 +1,15 @@
 import { useEffect } from 'react'
 import { Alert } from 'antd'
 import { useLocation, useNavigate, useSearchParams } from 'react-router'
-import { AuthPanel, sanitizeReturnTo, useCurrentUser, useSession } from '@/features/auth'
+import { AuthPanel, sanitizeReturnTo, useAuthStatus, useCurrentUser, useSession } from '@/features/auth'
+import { PageLoading } from '@/shared/ui/PageLoading'
 
 export function LoginPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const session = useSession()
+  const { status } = useAuthStatus()
   const { currentUser, isChecking, isAdmin } = useCurrentUser()
 
   const rawReturnTo = (location.state as { from?: string } | null)?.from ?? searchParams.get('returnTo')
@@ -27,6 +29,10 @@ export function LoginPage() {
       navigate(returnTo, { replace: true })
     }
   }, [session, isChecking, currentUser, isAdmin, returnTo, navigate])
+
+  if (returnTo && status === 'restoring') {
+    return <PageLoading />
+  }
 
   const hasForbiddenAdminAttempt =
     Boolean(session && !isChecking && currentUser && returnTo?.startsWith('/admin') && !isAdmin)

@@ -44,6 +44,27 @@ describe('VerifyEmailView component', () => {
     expect(html).not.toContain('<input')
   })
 
+  it('renders countdown indicator and immediate navigation action when countdown is active', () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <VerifyEmailView overrideStatus="success" countdown={3} />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+
+    expect(html).toContain('Xác minh email thành công')
+    expect(html).toContain('Đăng ký &amp; kích hoạt tài khoản thành công')
+    expect(html).toContain('Tự động chuyển về trang chủ sau')
+    expect(html).toContain('3')
+    expect(html).toContain('Đến trang chủ ngay')
+    expect(html).toContain('Khám phá chỗ nghỉ')
+  })
+
   it('renders missing-token state when no verification token is provided', () => {
     const html = renderView('missing-token')
 

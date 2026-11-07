@@ -35,4 +35,23 @@ describe('VerifyEmailPage', () => {
     expect(html).not.toContain('workbench')
     expect(html).not.toContain('Trạng thái hệ thống')
   })
+
+  it('renders verifying state when a token is provided in the query params', () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/verify-email?token=valid-token-123']}>
+        <QueryClientProvider client={queryClient}>
+          <VerifyEmailPage overrideToken="valid-token-123" />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+
+    expect(html).toContain('Đang xác minh email')
+    expect(html).toContain('Hệ thống đang kiểm tra liên kết xác minh tài khoản của bạn')
+    expect(html).toContain('Đang xử lý...')
+    expect(html).toContain('disabled=""')
+  })
 })

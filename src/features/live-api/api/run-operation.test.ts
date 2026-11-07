@@ -135,9 +135,9 @@ describe('develop integration', () => {
     await runOperation(find('refresh'), {})
     expect(http.request).toHaveBeenLastCalledWith(
       '/auth/refresh',
-      expect.objectContaining({ body: { refreshToken: 'refresh' } }),
+      expect.objectContaining({ body: {} }),
     )
-    expect(getSession()?.refreshToken).toBe('rotated')
+    expect(getSession()?.accessToken).toBe('next')
     vi.mocked(http.request).mockResolvedValue(null)
     await runOperation(find('logout'), {})
     expect(getSession()).toBeNull()

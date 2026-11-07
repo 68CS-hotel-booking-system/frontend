@@ -3,8 +3,10 @@ import { http } from '@/shared/api/http'
 import {
   acceptedResponseSchema, authUserSchema, changePasswordResponseSchema,
   currentUserSchema, loginResponseSchema, resetPasswordResponseSchema,
+  verifyEmailResponseSchema,
   type ChangePasswordRequest, type ForgotPasswordRequest, type LoginRequest,
   type RegisterRequest, type ResetPasswordRequest, type VerifyEmailRequest,
+  type VerifyEmailResponse,
 } from './auth-contracts'
 
 export async function login(payload: LoginRequest, signal?: AbortSignal) {
@@ -25,12 +27,12 @@ export async function register(payload: RegisterRequest, signal?: AbortSignal) {
   })
 }
 
-export async function verifyEmail(payload: VerifyEmailRequest, signal?: AbortSignal) {
+export async function verifyEmail(payload: VerifyEmailRequest, signal?: AbortSignal): Promise<VerifyEmailResponse> {
   return http.request('/auth/email-verifications', {
     method: 'POST',
     body: payload,
     signal,
-    schema: acceptedResponseSchema,
+    schema: verifyEmailResponseSchema,
   })
 }
 
@@ -52,19 +54,19 @@ export async function resetPassword(payload: ResetPasswordRequest, signal?: Abor
   })
 }
 
-export async function refreshSession(refreshToken: string, signal?: AbortSignal) {
+export async function refreshSession(refreshToken?: string, signal?: AbortSignal) {
   return http.request('/auth/refresh', {
     method: 'POST',
-    body: { refreshToken },
+    body: refreshToken ? { refreshToken } : {},
     signal,
     schema: loginResponseSchema,
   })
 }
 
-export async function logout(refreshToken: string, signal?: AbortSignal) {
+export async function logout(refreshToken?: string, signal?: AbortSignal) {
   return http.request('/auth/logout', {
     method: 'POST',
-    body: { refreshToken },
+    body: refreshToken ? { refreshToken } : {},
     signal,
     schema: z.null(),
   })

@@ -3,7 +3,7 @@ name: Frontend CI
 on:
   pull_request: {}
   push:
-    branches: [develop, staging, main]
+    branches: [develop, staging, main, features/staging-api-integration]
 
 permissions:
   contents: read
@@ -80,7 +80,7 @@ jobs:
 
       - name: Build candidate image once
         id: build
-        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/develop'
+        if: github.event_name == 'pull_request' || (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/features/staging-api-integration')
         run: |
           docker build --pull --platform linux/amd64 \
             --label "org.opencontainers.image.source=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
@@ -93,13 +93,13 @@ jobs:
           printf 'image_id=%s\n' "$(cat image-id.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Save candidate image before smoke test
-        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/features/staging-api-integration')
         run: |
           docker save --output image.tar "$LOCAL_IMAGE"
           sha256sum image.tar > image.tar.sha256
 
       - name: Smoke test the frontend image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/features/staging-api-integration')
         env:
           VERIFIED_IMAGE_ID: ${{ steps.build.outputs.image_id }}
         run: |
@@ -137,7 +137,7 @@ jobs:
             rootPage: true, spaFallback: true}' > smoke-result.json
 
       - name: Smoke diagnostics and cleanup
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        if: always() && github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/features/staging-api-integration')
         env:
           JOB_STATUS: ${{ job.status }}
         run: |
@@ -147,7 +147,7 @@ jobs:
           docker rm --force ci-frontend > /dev/null 2>&1 || true
 
       - name: Upload tested image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/features/staging-api-integration')
         uses: actions/upload-artifact@v7.0.2
         with:
           name: frontend-tested-image
@@ -164,7 +164,7 @@ jobs:
   publish:
     name: Publish frontend image
     needs: verify
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/features/staging-api-integration')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -318,7 +318,7 @@ jobs:
   deploy-staging:
     name: Request frontend deployment to staging
     needs: publish
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/features/staging-api-integration')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
 

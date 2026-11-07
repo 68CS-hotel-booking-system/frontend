@@ -24,7 +24,7 @@ export function AdminLoginForm() {
     if (inFlight.current) return
     inFlight.current = true
     try {
-      await mutation.mutateAsync(values)
+      await mutation.mutateAsync({ ...values, rememberMe: remember })
       resetField('password')
     } catch (error) {
       applyApiFieldErrors(error, setError, ['email', 'password'])

@@ -24,21 +24,28 @@ describe('independent authentication feature', () => {
     queryClient.setQueryData(['private-before-login'], { private: true })
     const result = await runAuthAction('login', { email: 'a@b.com', password: 'password' })
     expect(fetcher.mock.calls[0][0]).toBe('/api/v1/auth/login')
-    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({ email: 'a@b.com', password: 'password' })
-    expect(getSession()).toMatchObject({ accessToken: 'access', refreshToken: 'refresh' })
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({ email: 'a@b.com', password: 'password', rememberMe: false })
+    expect(getSession()).toMatchObject({ accessToken: 'access' })
     expect(queryClient.getQueryData(['private-before-login'])).toBeUndefined()
     expect(result).toEqual({ user: null, expiresAt: tokens.expiresAt })
   })
 
+  it('sends rememberMe flag when provided in login request', async () => {
+    respond(tokens)
+    const { runAuthAction } = await import('../hooks/use-auth-action')
+    await runAuthAction('login', { email: 'a@b.com', password: 'password', rememberMe: true })
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({ email: 'a@b.com', password: 'password', rememberMe: true })
+  })
+
   it('rotates the in-memory refresh token and sends no stale access token to refresh', async () => {
-    respond({ ...tokens, accessToken: 'next', refreshToken: 'rotated' })
+    respond({ ...tokens, accessToken: 'next', refreshToken: null })
     const { runAuthAction } = await import('../hooks/use-auth-action')
     const { getSession, setSession } = await import('@/shared/api/session')
     setSession(tokens)
     await runAuthAction('refresh', {})
-    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({ refreshToken: 'refresh' })
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({})
     expect(new Headers(fetcher.mock.calls[0][1]?.headers).has('Authorization')).toBe(false)
-    expect(getSession()?.refreshToken).toBe('rotated')
+    expect(getSession()?.accessToken).toBe('next')
   })
 
   it('retains session and cache when logout is rejected', async () => {
@@ -49,7 +56,7 @@ describe('independent authentication feature', () => {
     setSession(tokens)
     queryClient.setQueryData(['private'], 'retained')
     await expect(runAuthAction('logout', {})).rejects.toMatchObject({ status: 403 })
-    expect(getSession()?.refreshToken).toBe('refresh')
+    expect(getSession()?.accessToken).toBe('access')
     expect(queryClient.getQueryData(['private'])).toBe('retained')
     expect(new Headers(fetcher.mock.calls[0][1]?.headers).get('Authorization')).toBe('Bearer access')
     queryClient.clear()

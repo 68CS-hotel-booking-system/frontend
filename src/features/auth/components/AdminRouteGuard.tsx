@@ -3,17 +3,32 @@ import { Navigate, Outlet, useLocation, useNavigate } from 'react-router'
 import { Button, Result } from 'antd'
 import { PageLoading } from '@/shared/ui/PageLoading'
 import { ErrorState } from '@/shared/ui/ErrorState'
-import { useSession } from '../hooks/use-session'
+import { useAuthStatus, useSession } from '../hooks/use-session'
 import { useCurrentUser } from '../hooks/use-current-user'
 
 export function AdminRouteGuard({ children }: { children?: ReactNode }) {
   const session = useSession()
+  const { status, error: restoreError, retry } = useAuthStatus()
   const location = useLocation()
   const navigate = useNavigate()
   const { currentUser, isChecking, isError, error, isAdmin, refetch } = useCurrentUser()
 
-  // 1. Chưa đăng nhập: mở cổng đăng nhập quản trị và giữ đường dẫn đang truy cập.
-  if (!session) {
+  // 1. Đang trong quá trình khôi phục phiên: chờ hoàn tất, không chuyển hướng hoặc nháy màn đăng nhập khi F5
+  if (status === 'restoring') {
+    return <PageLoading />
+  }
+
+  // 2. Lỗi mạng hoặc 5xx khi đang khôi phục phiên: hiển thị màn hình thử lại, không coi là đăng xuất
+  if (status === 'restore-error') {
+    return (
+      <div className="m3-card max-w-lg mx-auto my-12 shadow-sm">
+        <ErrorState error={restoreError} onRetry={() => void retry()} />
+      </div>
+    )
+  }
+
+  // 3. Chưa đăng nhập hoặc phiên hết hạn: mở cổng đăng nhập quản trị và giữ đường dẫn đang truy cập
+  if (!session || status === 'unauthenticated') {
     return (
       <Navigate
         to="/admin/login"
@@ -23,12 +38,12 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
     )
   }
 
-  // 2. Đang kiểm tra tài khoản: hiển thị loading, chưa mount AdminLayout hoặc trang con
+  // 4. Đang kiểm tra tài khoản: hiển thị loading, chưa mount AdminLayout hoặc trang con
   if (isChecking) {
     return <PageLoading />
   }
 
-  // 3. Lỗi mạng hoặc 5xx: hiển thị lỗi và nút thử lại, không cho vào admin và không xóa session
+  // 5. Lỗi mạng hoặc 5xx khi tải /users/me: hiển thị lỗi và nút thử lại, không cho vào admin và không xóa session
   if (isError) {
     return (
       <div className="m3-card max-w-lg mx-auto my-12 shadow-sm">
@@ -37,7 +52,7 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
     )
   }
 
-  // 4. Đã đăng nhập nhưng không có role ADMIN: từ chối truy cập
+  // 6. Đã đăng nhập nhưng không có role ADMIN: từ chối truy cập
   if (!isAdmin) {
     return (
       <div className="m3-card max-w-lg mx-auto my-12 shadow-sm" role="alert">
@@ -59,7 +74,6 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
     )
   }
 
-  // 5. Đã xác minh có role ADMIN: cho phép truy cập
+  // 7. Đã xác minh có role ADMIN: cho phép truy cập
   return children ? <>{children}</> : <Outlet />
 }
-
