@@ -22,20 +22,14 @@ import {
 import { Controller, useForm } from 'react-hook-form'
 import { errorMessage } from '@/shared/api/api-error'
 import { applyApiFieldErrors } from '@/shared/lib/form-errors'
+import { useDataMode } from '@/shared/lib/data-mode-context'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
-import {
-  useCreateHotelContractMutation,
-  useHotelContractsQuery,
-} from '../hooks/use-hotel-contracts'
-import {
-  type ContractStatus,
-  contractStatusValues,
-  createHotelContractFormSchema,
-  type CreateHotelContractFormValues,
-  type HotelCommissionContract,
-} from '../types/contract'
+import { useCreateHotelContractMutation } from '../hooks/use-create-hotel-contract-mutation'
+import { useHotelContractsQuery } from '../hooks/use-hotel-contracts-query'
+import { type ContractStatus, contractStatusValues, type HotelCommissionContract } from '../model/contract'
+import { createHotelContractFormSchema, type CreateHotelContractFormValues } from '../model/contract-form-schema'
 
 interface HotelContractsSectionProps {
   hotelId: string
@@ -64,6 +58,7 @@ export function HotelContractsSection({
   hotelName,
 }: HotelContractsSectionProps) {
   const formId = useId()
+  const { mode } = useDataMode()
   const { message } = AntApp.useApp()
   const [statusFilter, setStatusFilter] = useState<ContractStatus | 'ALL'>('ALL')
   const [searchKeyword, setSearchKeyword] = useState('')
@@ -108,6 +103,10 @@ export function HotelContractsSection({
     } catch (error) {
       applyApiFieldErrors(error, setError)
     }
+  }
+
+  if (mode === 'api') {
+    return <Alert type="info" showIcon title="Backend hiện chưa hỗ trợ tra cứu và tạo hợp đồng khách sạn." />
   }
 
   const allContracts = contractsQuery.data ?? []

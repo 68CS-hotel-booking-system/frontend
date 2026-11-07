@@ -1,0 +1,233 @@
+/* ==========================================================================
+   StayHub Admin Dashboard — Teal Admin Console (design.md)
+   ========================================================================== */
+
+:root {
+  /* 3.1 Color Tokens */
+  --bg: #f4f8f7;
+  --surface: #ffffff;
+  --surface-soft: #f7fbfa;
+  --teal: #0b5f53;
+  --teal-dark: #08473e;
+  --teal-soft: #d9f0ea;
+  --teal-tint: #eef8f5;
+  --ink: #12211d;
+  --ink-2: #344a44;
+  --muted: #5f736e;
+  --border: #dce7e3;
+  --border-strong: #bfd3cd;
+  --success: #0f7a5f;
+  --danger: #9b2c22;
+  --chart-pending: #946412;
+  --chart-confirmed: #4e9b86;
+  --chart-completed: #0b5f53;
+  --chart-cancel: #b45143;
+
+  /* 3.3 Radii and Shadows */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(8, 36, 31, 0.04), 0 8px 24px rgba(8, 36, 31, 0.035);
+  --shadow-md: 0 18px 50px rgba(8, 36, 31, 0.14);
+
+  /* Material token backward compatibility aliases */
+  --md-sys-color-primary: #0b5f53;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #d9f0ea;
+  --md-sys-color-on-primary-container: #08473e;
+  --md-sys-color-secondary: #344a44;
+  --md-sys-color-surface: #ffffff;
+  --md-sys-color-on-surface: #12211d;
+  --md-sys-color-on-surface-variant: #5f736e;
+  --md-sys-color-outline: #5f736e;
+  --md-sys-color-outline-subtle: #dce7e3;
+  --md-sys-color-error: #9b2c22;
+}
+
+.admin-console-shell {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--ink);
+  background-color: var(--bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.admin-console-shell a {
+  color: inherit;
+}
+
+/* Primary CTA button for Admin Console */
+.console-primary-btn {
+  background-color: var(--teal) !important;
+  color: #ffffff !important;
+  border-radius: 10px;
+  min-height: 44px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none !important;
+  box-shadow: 0 1px 2px rgba(8, 36, 31, 0.08);
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms ease;
+  text-decoration: none !important;
+}
+
+.console-primary-btn:hover {
+  background-color: var(--teal-dark) !important;
+  color: #ffffff !important;
+}
+
+.console-primary-btn:active {
+  transform: translateY(1px);
+}
+
+.console-primary-btn span,
+.console-primary-btn .anticon,
+.console-primary-btn svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Guest navigation button in Topbar */
+.admin-guest-btn {
+  color: var(--ink-2) !important;
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: 9999px;
+  min-height: 40px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none !important;
+  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+.admin-guest-btn:hover {
+  border-color: var(--teal) !important;
+  color: var(--teal) !important;
+}
+
+.admin-guest-btn:hover span,
+.admin-guest-btn:hover .anticon,
+.admin-guest-btn:hover svg {
+  color: var(--teal) !important;
+  fill: var(--teal) !important;
+}
+
+.admin-guest-btn span,
+.admin-guest-btn .anticon,
+.admin-guest-btn svg {
+  color: var(--ink-2) !important;
+  fill: var(--ink-2) !important;
+}
+
+/* Card lift animation */
+.console-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.console-card:hover {
+  border-color: #b9d9d0;
+  box-shadow: 0 4px 12px rgba(8, 36, 31, 0.07);
+}
+
+/* Hoverable queue card */
+.queue-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.queue-card:hover {
+  transform: translateY(-1px);
+  border-color: #b9d9d0;
+  box-shadow: 0 4px 12px rgba(8, 36, 31, 0.07);
+}
+
+.queue-card:hover .queue-arrow {
+  transform: translateX(3px);
+}
+
+/* Navigation Link styles */
+.admin-nav-link {
+  min-height: 44px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.admin-nav-link:hover {
+  background-color: var(--surface-soft);
+  color: var(--ink);
+}
+
+.admin-nav-link.is-active {
+  background-color: var(--teal-soft);
+  color: var(--teal-dark);
+  font-weight: 600;
+}
+
+.admin-nav-link.is-active svg {
+  color: var(--teal);
+}
+
+/* Module card interactive effect */
+.module-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  min-height: 238px;
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.module-card:hover {
+  transform: translateY(-1px);
+  border-color: #b9d9d0;
+  box-shadow: 0 6px 16px rgba(8, 36, 31, 0.08);
+}
+
+.module-card:hover .module-cta-arrow {
+  transform: translateX(3px);
+}
+
+/* Chart visual helpers */
+.chart-bar-fill {
+  background-color: var(--teal);
+  transition: height 300ms ease;
+}
+
+.chart-bar-fill.is-peak {
+  background-color: var(--teal-dark);
+}
+
+/* Tabular numerals for data scans */
+.tabular-data {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dialog scrim */
+.dialog-scrim {
+  background-color: rgba(7, 28, 24, 0.48);
+  backdrop-filter: blur(2px);
+}

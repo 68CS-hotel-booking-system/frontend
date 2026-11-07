@@ -9,9 +9,8 @@ import {
 } from '@ant-design/icons'
 import { Button, Space } from 'antd'
 import { useNavigate } from 'react-router'
-import { HealthSummary } from '@/features/system-status/components/HealthSummary'
-import { RefreshSettings } from '@/features/system-status/components/RefreshSettings'
-import { useBackendHealth } from '@/features/system-status/hooks/use-backend-health'
+import { HealthSummary, RefreshSettings, useBackendHealth } from '@/features/system-status'
+
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
 

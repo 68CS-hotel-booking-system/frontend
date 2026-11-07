@@ -1,7 +1,7 @@
 import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { Tag } from 'antd'
 import { env } from '@/shared/config/env'
-import type { BackendHealth } from '../types/health'
+import type { BackendHealth } from '../api/health-contracts'
 
 interface HealthSummaryProps {
   health: BackendHealth

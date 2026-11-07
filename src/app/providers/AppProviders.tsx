@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { App as AntApp, ConfigProvider } from 'antd'
 import viVN from 'antd/locale/vi_VN'
-import { AuthProvider } from '@/features/auth/components/AuthProvider'
 import { DataModeProvider } from '@/shared/lib/data-mode'
 import { queryClient } from '@/shared/lib/query-client'
 import { AppErrorBoundary } from '@/shared/ui/AppErrorBoundary'
@@ -13,38 +12,40 @@ export function AppProviders({ children }: { children: ReactNode }) {
       locale={viVN}
       theme={{
         token: {
-          colorPrimary: '#ab2f0c',
-          colorInfo: '#2f3038',
-          colorSuccess: '#006947',
-          colorWarning: '#b4690e',
-          colorError: '#ba1a1a',
-          colorText: '#1a1b22',
-          colorTextSecondary: '#59413b',
-          colorBgLayout: '#fbf8ff',
-          colorBgContainer: '#ffffff',
-          colorBorder: '#e3e1ec',
-          borderRadius: 10,
-          borderRadiusLG: 18,
+          colorPrimary: '#006A6A',
+          colorInfo: '#4B607C',
+          colorSuccess: '#0D6B40',
+          colorWarning: '#8A5A00',
+          colorError: '#BA1A1A',
+          colorText: '#191C1C',
+          colorTextSecondary: '#3F4948',
+          colorBgLayout: '#F4FBFB',
+          colorBgContainer: '#FFFFFF',
+          colorBorder: '#BEC9C8',
+          borderRadius: 8,
+          borderRadiusLG: 16,
           controlHeight: 40,
           fontFamily:
-            "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            "'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         },
         components: {
           Button: {
             fontWeight: 600,
-            primaryShadow: '0 2px 6px rgba(171, 47, 12, 0.2)',
+            borderRadius: 9999,
           },
           Card: {
-            colorBorderSecondary: '#eeedf7',
+            borderRadiusLG: 16,
+            colorBorderSecondary: '#E2E9E9',
           },
           Tabs: {
-            inkBarColor: '#ab2f0c',
-            itemSelectedColor: '#ab2f0c',
-            itemHoverColor: '#cd4723',
+            inkBarColor: '#006A6A',
+            itemSelectedColor: '#006A6A',
+            itemHoverColor: '#005050',
           },
           Table: {
-            headerBg: '#f4f2fd',
-            headerColor: '#59413b',
+            headerBg: '#EEF5F5',
+            headerColor: '#191C1C',
+            borderColor: '#BEC9C8',
           },
         },
       }}
@@ -53,9 +54,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <AppErrorBoundary>
           <DataModeProvider>
             <QueryClientProvider client={queryClient}>
-              <AuthProvider>
-                {children}
-              </AuthProvider>
+              {children}
             </QueryClientProvider>
           </DataModeProvider>
         </AppErrorBoundary>

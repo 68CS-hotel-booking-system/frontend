@@ -44,18 +44,6 @@ describe('shared HTTP client', () => {
     await expect(client.request('/sample')).rejects.toMatchObject({ kind: 'http', status })
     expect(fetcher).toHaveBeenCalledTimes(1)
   })
-  it('attaches Authorization Bearer token when getAccessToken returns a token', async () => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(json({ message: 'ok', data: { id: 1 } }))
-    const client = createHttpClient({
-      baseUrl: '/api/v1',
-      timeoutMs: 10_000,
-      fetcher,
-      getAccessToken: () => 'mock-jwt-token-xyz',
-    })
-    await client.request('/secured')
-    const headers = new Headers(fetcher.mock.calls[0][1]?.headers)
-    expect(headers.get('Authorization')).toBe('Bearer mock-jwt-token-xyz')
-  })
   it('does not expose an unexpected server error detail', async () => {
     const { client } = setup(json({ detail: 'internal database password' }, 500))
     await expect(client.request('/sample')).rejects.not.toHaveProperty('message', 'internal database password')

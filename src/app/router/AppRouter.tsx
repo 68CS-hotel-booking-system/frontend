@@ -1,7 +1,15 @@
-import { BrowserRouter, Route, Routes } from 'react-router'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { AppLayout } from '@/app/layouts/AppLayout'
-import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
+import { AdminLayout } from '@/app/layouts/AdminLayout'
+import { AdminRouteGuard } from '@/features/auth'
 import { LoginPage } from '@/pages/auth/LoginPage'
+import { AdminLoginPage } from '@/pages/auth/AdminLoginPage'
+import { RegisterPage } from '@/pages/auth/RegisterPage'
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
+import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage'
+import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
+import { AdminOverviewPage } from '@/pages/admin/AdminOverviewPage'
 import { FinancialAccessManagementPage } from '@/pages/management/FinancialAccessManagementPage'
 import { HotelContractsManagementPage } from '@/pages/management/HotelContractsManagementPage'
 import { HotelManagementDetailPage } from '@/pages/management/HotelManagementDetailPage'
@@ -15,12 +23,26 @@ export function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="admin/login" element={<AdminLoginPage />} />
+        <Route path="verify-email" element={<VerifyEmailPage />} />
+        {/* Admin Portal Layout Routes (Protected by AdminRouteGuard) */}
+        <Route
+          path="admin"
+          element={
+            <AdminRouteGuard>
+              <AdminLayout />
+            </AdminRouteGuard>
+          }
+        >
+          <Route index element={<Navigate to="/admin/overview" replace />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="overview" element={<AdminOverviewPage />} />
+        </Route>
+
+        {/* Public / Partner Main Layout Routes */}
         <Route element={<AppLayout />}>
           <Route index element={<StayVibeHomePage />} />
           <Route path="explore" element={<StayVibeHomePage />} />
-          <Route path="admin" element={<AdminDashboardPage />} />
-          <Route path="admin/dashboard" element={<AdminDashboardPage />} />
-          <Route path="management/dashboard" element={<AdminDashboardPage />} />
           <Route path="system-status" element={<SystemStatusPage />} />
           <Route path="management/hotels" element={<HotelManagementListPage />} />
           <Route
@@ -36,7 +58,11 @@ export function AppRouter() {
             path="management/financial-access"
             element={<FinancialAccessManagementPage />}
           />
+          <Route path="management/live" element={<Navigate to="/" replace />} />
+          <Route path="reset-password" element={<ResetPasswordPage />} />
           <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<RegisterPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
