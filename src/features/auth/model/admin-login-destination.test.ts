@@ -21,4 +21,11 @@ describe('admin login destination', () => {
   ])('returns a safe admin page for %s', (input, expected) => {
     expect(adminLoginDestination(input)).toBe(expected)
   })
+
+  it('supports management destinations and owner fallback options', () => {
+    expect(adminLoginDestination('/management/hotels', { allowManagement: true })).toBe('/management/hotels')
+    expect(adminLoginDestination('/management/hotels?tab=create', { allowManagement: true })).toBe('/management/hotels?tab=create')
+    expect(adminLoginDestination(undefined, { isOwnerOnly: true })).toBe('/management/hotels')
+    expect(adminLoginDestination('/admin/users', { isOwnerOnly: true })).toBe('/management/hotels')
+  })
 })

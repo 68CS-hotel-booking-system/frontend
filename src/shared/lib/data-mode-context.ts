@@ -14,11 +14,10 @@ export interface DataModeContextValue {
 }
 
 export const DataModeContext = createContext<DataModeContextValue>({
-  mode: 'mock',
+  mode: 'api',
   setMode: () => undefined,
 })
 
 export function useDataMode() {
   return useContext(DataModeContext)
 }
-

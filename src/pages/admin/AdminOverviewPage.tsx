@@ -17,6 +17,7 @@ import {
   UserAddOutlined,
 } from '@ant-design/icons'
 import { useCurrentUser } from '@/features/auth'
+import { formatRoleLabel } from '@/shared/lib/format'
 
 export function AdminOverviewPage() {
   const navigate = useNavigate()
@@ -701,7 +702,7 @@ export function AdminOverviewPage() {
                         key={role}
                         className="px-2 py-0.5 rounded text-[10.5px] font-semibold bg-[#d9f0ea] text-[#08473e]"
                       >
-                        {role}
+                        {formatRoleLabel(role)}
                       </span>
                     ))}
                     <span className="px-2 py-0.5 rounded text-[10.5px] font-semibold bg-[#eef8f5] text-[#0b5f53] border border-[#d6ebe5]">

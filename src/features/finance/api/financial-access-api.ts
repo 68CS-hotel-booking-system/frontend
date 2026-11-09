@@ -1,15 +1,12 @@
-import { unsupportedApi } from '@/shared/api/unsupported-api'
-import type { FinancialAccessGrant } from '../model/financial-access'
-import type { UpdateFinancialAccessFormValues } from '../model/financial-access-form-schema'
+import { http } from '@/shared/api/http'
+import { financialAccessDetailSchema, financialAccessUpdateSchema, updateApiFinancialAccessFormSchema, type UpdateApiFinancialAccessFormValues } from '../model/financial-access-api-contract'
 
-// No financial access controller exists in the current backend.
-export const getFinancialAccess: (
-  params: { hotelId: string; userId: string },
-  signal?: AbortSignal,
-) => Promise<FinancialAccessGrant> = () => unsupportedApi('tra cứu quyền tài chính')
-
-export const updateFinancialAccess: (
-  params: { hotelId: string; userId: string },
-  payload: UpdateFinancialAccessFormValues,
-  signal?: AbortSignal,
-) => Promise<FinancialAccessGrant> = () => unsupportedApi('cập nhật quyền tài chính')
+function accessPath(params: { hotelId: string; userId: string }) {
+  return `/admin/hotels/${encodeURIComponent(params.hotelId)}/financial-access/${encodeURIComponent(params.userId)}`
+}
+export function getFinancialAccess(params: { hotelId: string; userId: string }, signal?: AbortSignal) {
+  return http.request(accessPath(params), { signal, schema: financialAccessDetailSchema })
+}
+export function updateFinancialAccess(params: { hotelId: string; userId: string }, payload: UpdateApiFinancialAccessFormValues, signal?: AbortSignal) {
+  return http.request(accessPath(params), { method: 'PUT', signal, body: updateApiFinancialAccessFormSchema.parse(payload), schema: financialAccessUpdateSchema })
+}

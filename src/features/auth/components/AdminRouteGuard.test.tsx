@@ -145,6 +145,61 @@ describe('AdminRouteGuard component', () => {
     expect(markup).not.toContain('Bạn không có quyền truy cập')
   })
 
+  it('renders management content when user has HOTEL_OWNER role', () => {
+    setSession(tokens)
+    const qc = new QueryClient()
+    qc.setQueryData(['auth', 'current-user', 'test-token'], {
+      id: '33333333-3333-4333-8333-333333333333',
+      email: 'owner@stayhub.vn',
+      fullName: 'Chủ Khách Sạn',
+      phone: null,
+      status: 'ACTIVE',
+      emailVerified: true,
+      version: 1,
+      roles: ['HOTEL_OWNER'],
+    })
+
+    const markup = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/management/hotels']}>
+        <QueryClientProvider client={qc}>
+          <AdminRouteGuard>
+            <div data-testid="owner-content">Owner Area</div>
+          </AdminRouteGuard>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+    expect(markup).toContain('owner-content')
+    expect(markup).toContain('Owner Area')
+    expect(markup).not.toContain('Bạn không có quyền truy cập')
+  })
+
+  it('redirects hotel owner away from /admin/users to /hotels', () => {
+    setSession(tokens)
+    const qc = new QueryClient()
+    qc.setQueryData(['auth', 'current-user', 'test-token'], {
+      id: '33333333-3333-4333-8333-333333333333',
+      email: 'owner@stayhub.vn',
+      fullName: 'Chủ Khách Sạn',
+      phone: null,
+      status: 'ACTIVE',
+      emailVerified: true,
+      version: 1,
+      roles: ['HOTEL_OWNER'],
+    })
+
+    const markup = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/admin/users']}>
+        <QueryClientProvider client={qc}>
+          <AdminRouteGuard>
+            <div data-testid="users-management">Quản trị người dùng</div>
+          </AdminRouteGuard>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+    // In SSR, Navigate returns null/empty
+    expect(markup).not.toContain('users-management')
+  })
+
   it('renders ErrorState when network/server error occurs on /users/me', () => {
     setSession(tokens)
     const qc = new QueryClient()

@@ -30,10 +30,12 @@ import { useCreateHotelContractMutation } from '../hooks/use-create-hotel-contra
 import { useHotelContractsQuery } from '../hooks/use-hotel-contracts-query'
 import { type ContractStatus, contractStatusValues, type HotelCommissionContract } from '../model/contract'
 import { createHotelContractFormSchema, type CreateHotelContractFormValues } from '../model/contract-form-schema'
+import { ApiHotelContractsSection } from './ApiHotelContractsSection'
 
 interface HotelContractsSectionProps {
   hotelId: string
   hotelName?: string
+  ownerUserId?: string
 }
 
 const CONTRACT_STATUS_COLOR: Record<
@@ -53,12 +55,16 @@ const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
   TERMINATED: 'Đã chấm dứt',
 }
 
-export function HotelContractsSection({
+export function HotelContractsSection(props: HotelContractsSectionProps) {
+  const { mode } = useDataMode()
+  return mode === 'api' ? <ApiHotelContractsSection {...props} /> : <MockHotelContractsSection {...props} />
+}
+
+function MockHotelContractsSection({
   hotelId,
   hotelName,
 }: HotelContractsSectionProps) {
   const formId = useId()
-  const { mode } = useDataMode()
   const { message } = AntApp.useApp()
   const [statusFilter, setStatusFilter] = useState<ContractStatus | 'ALL'>('ALL')
   const [searchKeyword, setSearchKeyword] = useState('')
@@ -105,10 +111,6 @@ export function HotelContractsSection({
     }
   }
 
-  if (mode === 'api') {
-    return <Alert type="info" showIcon title="Backend hiện chưa hỗ trợ tra cứu và tạo hợp đồng khách sạn." />
-  }
-
   const allContracts = contractsQuery.data ?? []
   const activeContracts = allContracts.filter((item) => item.status === 'ACTIVE')
   const draftContracts = allContracts.filter((item) => item.status === 'DRAFT')
@@ -125,6 +127,7 @@ export function HotelContractsSection({
 
   return (
     <>
+      <Alert type="info" showIcon title="Dữ liệu mẫu: hợp đồng trong màn hình này chỉ dùng để xem trước." />
       <div className="detail-grid-layout">
         <section className="surface-card" aria-labelledby="contracts-list-title">
           <div className="section-header">

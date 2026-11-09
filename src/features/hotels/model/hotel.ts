@@ -91,6 +91,8 @@ export const managementHotelDetailSchema = managementHotelSummarySchema.extend({
   amenityIds: z.array(z.string()).optional(),
   roomTypes: z.array(managementRoomTypeSummarySchema).optional(),
   createdAt: z.string(),
+  hasConfiguredRates: z.boolean().optional(),
+  imageCount: z.number().int().nonnegative().optional(),
 })
 export type ManagementHotelDetail = z.infer<typeof managementHotelDetailSchema>
 
@@ -98,8 +100,9 @@ export type ManagementHotelDetail = z.infer<typeof managementHotelDetailSchema>
 export const dailyRoomRateSchema = z.object({
   roomTypeId: z.string().min(1),
   rateDate: z.string().min(1),
-  amount: z.number().nonnegative(),
+  amount: z.number().nonnegative().nullable(),
   currency: z.string().length(3),
+  hasRate: z.boolean().optional(),
 })
 export type DailyRoomRate = z.infer<typeof dailyRoomRateSchema>
 

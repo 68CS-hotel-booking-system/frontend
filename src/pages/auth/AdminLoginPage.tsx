@@ -9,22 +9,25 @@ export function AdminLoginPage() {
   const [searchParams] = useSearchParams()
   const session = useSession()
   const { status } = useAuthStatus()
-  const { currentUser, isChecking, isAdmin, isError, error, isFetching, refetch } = useCurrentUser()
+  const { currentUser, isChecking, isAdmin, isOwner, isAuthorized, isError, error, isFetching, refetch } = useCurrentUser()
   const [helpOpen, setHelpOpen] = useState(false)
 
   const state: unknown = location.state
   const from = state && typeof state === 'object' && 'from' in state ? state.from : undefined
-  const destination = adminLoginDestination(from ?? searchParams.get('returnTo'))
+  const destination = adminLoginDestination(from ?? searchParams.get('returnTo'), {
+    allowManagement: true,
+    isOwnerOnly: isOwner && !isAdmin,
+  })
 
   useEffect(() => {
-    if (session && currentUser && isAdmin && !isChecking && !isError) {
+    if (session && currentUser && isAuthorized && !isChecking && !isError) {
       void navigate(destination, { replace: true })
     }
-  }, [session, currentUser, isAdmin, isChecking, isError, destination, navigate])
+  }, [session, currentUser, isAuthorized, isChecking, isError, destination, navigate])
 
   const verifying =
     status === 'restoring' ||
-    (Boolean(session) && (isChecking || (!isError && (!currentUser || isAdmin))))
+    (Boolean(session) && (isChecking || (!isError && (!currentUser || isAuthorized))))
 
   return (
     <div className="admin-login-shell min-h-screen min-h-[100dvh] bg-warm-bg text-warm-fg selection:bg-warm-accent selection:text-warm-surface">
@@ -156,7 +159,7 @@ export function AdminLoginPage() {
                         <span>Tài khoản chưa có quyền quản trị</span>
                       </div>
                       <p className="m-0 text-xs text-warm-fg-2 leading-relaxed pl-6">
-                        Tài khoản <strong className="font-semibold text-warm-fg">{currentUser?.email}</strong> chưa được cấp quyền ADMIN. Vui lòng sử dụng tài khoản quản trị hoặc liên hệ người quản lý.
+                        Tài khoản <strong className="font-semibold text-warm-fg">{currentUser?.email}</strong> chưa được cấp quyền quản trị viên (ADMIN) hoặc đối tác khách sạn (HOTEL_OWNER). Vui lòng sử dụng tài khoản có thẩm quyền hoặc liên hệ người quản trị.
                       </p>
                     </div>
                   )}

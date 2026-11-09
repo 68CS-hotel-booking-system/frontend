@@ -15,7 +15,6 @@ import {
   useManagementHotelsQuery,
 } from '@/features/hotels'
 
-import { DataSourceBanner } from '@/shared/ui/DataSourceBanner'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
@@ -43,8 +42,6 @@ export function HotelRatesManagementPage() {
 
   return (
     <div className="management-page rates-management-page">
-      <DataSourceBanner />
-
       {/* 1. Header trang tinh gọn, sang trọng */}
       <header className="rates-page-header">
         <div className="rates-page-header__content">

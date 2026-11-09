@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router'
 import {
   useClientHomeContext,
   ClientHeroSection,
@@ -9,6 +10,7 @@ import {
 } from '@/features/discovery'
 
 export function StayVibeHomePage() {
+  const navigate = useNavigate()
   const {
     allStays,
     destinations,
@@ -26,11 +28,14 @@ export function StayVibeHomePage() {
     toggleSaved,
     resetAll,
     handleSearchSubmit,
-    openModal,
     closeModal,
     showToast,
     scrollToStays,
   } = useClientHomeContext()
+
+  const handleOpenStay = (id: string) => {
+    navigate(`/stays/${id}`)
+  }
 
   return (
     <div className="w-full flex flex-col">
@@ -38,7 +43,7 @@ export function StayVibeHomePage() {
       <ClientHeroSection
         onSearchSubmit={handleSearchSubmit}
         onQuickCity={(city) => applyCity(city)}
-        onOpenStay={openModal}
+        onOpenStay={handleOpenStay}
       />
 
       {/* 2. Điểm đến thịnh hành */}
@@ -63,7 +68,7 @@ export function StayVibeHomePage() {
         onSelectVibe={selectVibe}
         onSelectSort={setSort}
         onToggleSaved={toggleSaved}
-        onOpenStay={openModal}
+        onOpenStay={handleOpenStay}
         onResetAll={() => resetAll()}
       />
 

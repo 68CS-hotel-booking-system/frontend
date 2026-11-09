@@ -1,83 +1,50 @@
-import { useEffect, useState } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import {
-  AppstoreOutlined,
   ArrowLeftOutlined,
-  BarChartOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
   CloseOutlined,
-  CloudServerOutlined,
   CompassOutlined,
-  CreditCardOutlined,
   DownOutlined,
   HomeOutlined,
   LogoutOutlined,
+  MenuFoldOutlined,
   MenuOutlined,
-  MessageOutlined,
+  MenuUnfoldOutlined,
   SettingOutlined,
-  ShopOutlined,
-  TagOutlined,
-  TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons'
-import { Dropdown, type MenuProps } from 'antd'
+import { ConfigProvider, Dropdown, Tooltip, type MenuProps } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
 import { setSession } from '@/shared/api/session'
 import { useCurrentUser } from '@/features/auth'
+import { MAIN_NAV_GROUPS } from '@/config/navigation.config'
+import { formatRoleLabel } from '@/shared/lib/format'
 
-interface NavItemDef {
-  to: string
-  label: string
-  icon: typeof AppstoreOutlined
-  end?: boolean
-}
-
-interface NavGroupDef {
-  title: string
-  items: NavItemDef[]
-}
-
-const NAV_GROUPS: NavGroupDef[] = [
-  {
-    title: 'Bảng điều khiển',
-    items: [
-      { to: '/admin/overview', label: 'Tổng quan', icon: AppstoreOutlined },
-    ],
-  },
-  {
-    title: 'Vận hành',
-    items: [
-      { to: '/admin/users', label: 'Người dùng & Phân quyền', icon: TeamOutlined },
-      { to: '/management/hotels', label: 'Khách sạn', icon: ShopOutlined },
-      { to: '/management/bookings', label: 'Đặt phòng', icon: CalendarOutlined },
-      { to: '/management/vouchers', label: 'Voucher', icon: TagOutlined },
-      { to: '/management/complaints', label: 'Khiếu nại', icon: MessageOutlined },
-    ],
-  },
-  {
-    title: 'Tài chính & báo cáo',
-    items: [
-      { to: '/management/finance', label: 'Tài chính', icon: CreditCardOutlined },
-      { to: '/management/reports', label: 'Báo cáo', icon: BarChartOutlined },
-    ],
-  },
-  {
-    title: 'Hệ thống',
-    items: [
-      { to: '/system-status', label: 'Trạng thái máy chủ', icon: CloudServerOutlined },
-    ],
-  },
-]
+const ADMIN_DASHBOARD_FONT_FAMILY =
+  "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 
 export function AdminLayout() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
-  const [profileModalOpen, setProfileModalOpen] = useState(false)
-  const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { currentUser } = useCurrentUser()
+  const { currentUser, isAdmin, isOwner } = useCurrentUser()
+
+  const isOwnerOnly = Boolean(
+    !isAdmin && (isOwner || currentUser?.roles?.includes('HOTEL_OWNER')),
+  )
+
+  // Danh mục menu điều hướng tùy biến theo vai trò người dùng từ file cấu hình duy nhất
+  const navGroups = useMemo(() => {
+    return MAIN_NAV_GROUPS.filter((g) => (isAdmin ? true : !g.adminOnly)).map((g) => ({
+      ...g,
+      items: g.items.filter((item) => (isAdmin ? true : !item.adminOnly)),
+    }))
+  }, [isAdmin])
+
+  // Trạng thái đang ở trong ngữ cảnh 1 khách sạn cụ thể (/hotels/:hotelId/*)
+  const isHotelWorkspace =
+    location.pathname.startsWith('/hotels/') && location.pathname !== '/hotels/new'
 
   // Close mobile drawer on Escape key
   useEffect(() => {
@@ -90,32 +57,40 @@ export function AdminLayout() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [mobileDrawerOpen])
 
-  // Determine current page title
-  let currentPageTitle = 'Tổng quan'
+  // Derive current page title for breadcrumb
+  let currentPageTitle = 'Quản lý'
   if (location.pathname.includes('/admin/users')) {
     currentPageTitle = 'Người dùng & Phân quyền'
   } else if (location.pathname.includes('/admin/overview')) {
     currentPageTitle = 'Tổng quan'
-  } else if (location.pathname.includes('/management/hotels')) {
+  } else if (location.pathname.startsWith('/hotels')) {
     currentPageTitle = 'Khách sạn'
-  } else if (location.pathname.includes('/management/bookings')) {
+  } else if (location.pathname.includes('/bookings')) {
     currentPageTitle = 'Đặt phòng'
-  } else if (location.pathname.includes('/management/vouchers')) {
-    currentPageTitle = 'Voucher'
-  } else if (location.pathname.includes('/management/complaints')) {
+  } else if (location.pathname.includes('/customers')) {
+    currentPageTitle = 'Khách hàng'
+  } else if (location.pathname.includes('/vouchers')) {
+    currentPageTitle = 'Voucher & Ưu đãi'
+  } else if (location.pathname.includes('/complaints')) {
     currentPageTitle = 'Khiếu nại'
-  } else if (location.pathname.includes('/management/finance')) {
-    currentPageTitle = 'Tài chính'
-  } else if (location.pathname.includes('/management/reports')) {
-    currentPageTitle = 'Báo cáo'
+  } else if (location.pathname.includes('/finance')) {
+    currentPageTitle = 'Quản lý doanh thu'
+  } else if (location.pathname.includes('/reports')) {
+    currentPageTitle = 'Báo cáo doanh thu'
+  } else if (location.pathname.includes('/contracts')) {
+    currentPageTitle = 'Hợp đồng lưu trú'
+  } else if (location.pathname.includes('/financial-access')) {
+    currentPageTitle = 'Phân quyền tài chính'
   } else if (location.pathname.includes('/system-status')) {
     currentPageTitle = 'Trạng thái máy chủ'
   }
 
-  // Real user display values (defaults match design.md sample)
-  const userFullName = currentUser?.fullName || (currentUser?.email ? currentUser.email.split('@')[0] : 'Nguyễn Văn C')
-  const userEmail = currentUser?.email || 'an.demo06@example.test'
-  const userRoles = currentUser?.roles && currentUser.roles.length > 0 ? currentUser.roles : ['ADMIN', 'HOTEL_OWNER']
+  // Real user display values
+  const userFullName =
+    currentUser?.fullName || (currentUser?.email ? currentUser.email.split('@')[0] : 'Tài khoản')
+  const userEmail = currentUser?.email || ''
+  const userRoles =
+    currentUser?.roles && currentUser.roles.length > 0 ? currentUser.roles : ['ADMIN']
   const userInitials =
     userFullName
       .split(' ')
@@ -123,7 +98,7 @@ export function AdminLayout() {
       .map((part) => part[0])
       .slice(-2)
       .join('')
-      .toUpperCase() || 'VC'
+      .toUpperCase() || 'SH'
 
   const handleLogout = () => {
     setSession(null)
@@ -137,19 +112,15 @@ export function AdminLayout() {
       key: 'user-profile-header',
       label: (
         <div className="py-1 px-1">
-          <div className="text-sm font-semibold text-[#12211d]">
-            {userFullName}
-          </div>
-          <div className="text-xs text-[#5f736e] mt-0.5">
-            {userEmail}
-          </div>
+          <div className="text-sm font-semibold text-[#12211d]">{userFullName}</div>
+          <div className="text-xs text-[#5f736e] mt-0.5">{userEmail}</div>
           <div className="mt-2 flex items-center gap-1.5 flex-wrap">
             {userRoles.map((role) => (
               <span
                 key={role}
                 className="inline-flex items-center px-2 py-0.5 rounded text-[10.5px] font-semibold bg-[#d9f0ea] text-[#08473e]"
               >
-                {role}
+                {formatRoleLabel(role)}
               </span>
             ))}
           </div>
@@ -161,14 +132,12 @@ export function AdminLayout() {
     {
       key: 'profile-action',
       icon: <UserOutlined />,
-      label: 'Hồ sơ quản trị',
-      onClick: () => setProfileModalOpen(true),
+      label: isOwnerOnly ? 'Hồ sơ chủ khách sạn' : 'Hồ sơ quản trị',
     },
     {
       key: 'settings-action',
       icon: <SettingOutlined />,
-      label: 'Cài đặt cổng quản trị',
-      onClick: () => setSettingsModalOpen(true),
+      label: isOwnerOnly ? 'Cài đặt cổng đối tác' : 'Cài đặt cổng quản trị',
     },
     { type: 'divider' },
     {
@@ -188,8 +157,40 @@ export function AdminLayout() {
 
   const closeMobileDrawer = () => setMobileDrawerOpen(false)
 
+  // Cho phép người dùng thu gọn / mở rộng menu thủ công, lưu trạng thái vào localStorage
+  const [userCollapsed, setUserCollapsed] = useState<boolean | null>(() => {
+    try {
+      const saved = localStorage.getItem('stayhub_sidebar_collapsed')
+      if (saved !== null) return saved === 'true'
+    } catch {
+      // bỏ qua lỗi nếu localStorage không khả dụng
+    }
+    return null
+  })
+
+  const toggleCollapsed = () => {
+    const next = userCollapsed !== null ? !userCollapsed : !isHotelWorkspace
+    setUserCollapsed(next)
+    try {
+      localStorage.setItem('stayhub_sidebar_collapsed', String(next))
+    } catch {
+      // bỏ qua lỗi nếu localStorage không khả dụng
+    }
+  }
+
+  // Sidebar width: khi thu gọn thì chỉ 68px và chỉ hiện logo; khi mở rộng thì 264px
+  const isCollapsed =
+    !mobileDrawerOpen && (userCollapsed !== null ? userCollapsed : isHotelWorkspace)
+
   return (
-    <div className="admin-console-shell bg-[#f4f8f7] text-[#12211d] min-h-screen flex">
+    <ConfigProvider
+      theme={{
+        token: {
+          fontFamily: ADMIN_DASHBOARD_FONT_FAMILY,
+        },
+      }}
+    >
+      <div className="admin-console-shell bg-[#f4f8f7] text-[#12211d] min-h-screen flex">
       {/* Mobile Backdrop Scrim */}
       {mobileDrawerOpen && (
         <div
@@ -199,75 +200,122 @@ export function AdminLayout() {
         />
       )}
 
-      {/* Sidebar Navigation */}
+      {/* CẤP 1: Sidebar Navigation Toàn hệ thống */}
       <aside
         id="admin-sidebar"
-        className={`fixed min-[981px]:sticky top-0 bottom-0 left-0 z-50 w-[264px] h-screen bg-white border-r border-[#dce7e3] flex flex-col justify-between shrink-0 transition-transform duration-200 ease-out p-3 pt-[18px] pb-3 ${
+        className={`fixed min-[981px]:sticky top-0 bottom-0 left-0 z-50 h-screen bg-white border-r border-[#dce7e3] flex flex-col justify-between shrink-0 transition-all duration-200 ease-out p-3 pt-[18px] pb-3 ${
           mobileDrawerOpen
-            ? 'translate-x-0 shadow-2xl'
-            : '-translate-x-full min-[981px]:translate-x-0 shadow-none'
+            ? 'w-[264px] translate-x-0 shadow-2xl'
+            : isCollapsed
+              ? 'w-[68px] -translate-x-full min-[981px]:translate-x-0 shadow-none px-2'
+              : 'w-[264px] -translate-x-full min-[981px]:translate-x-0 shadow-none'
         }`}
-        aria-label="Thanh điều hướng quản trị"
+        aria-label="Thanh điều hướng toàn hệ thống"
       >
         <div className="flex flex-col flex-1 min-h-0">
           {/* Brand Row */}
-          <div className="flex items-center justify-between px-2 pb-4 mb-2 border-b border-[#dce7e3]">
+          <div
+            className={`flex items-center pb-4 mb-2 border-b border-[#dce7e3] ${
+              isCollapsed ? 'justify-center px-0' : 'justify-between px-2'
+            }`}
+          >
             <NavLink
               to="/admin/overview"
               className="flex items-center gap-3 no-underline select-none group"
               onClick={closeMobileDrawer}
-              aria-label="StayHub Admin Portal - Về trang tổng quan"
+              aria-label="StayHub Portal - Về trang tổng quan"
             >
               <div className="w-[38px] h-[38px] rounded-[11px] bg-[#0b5f53] text-white flex items-center justify-center text-lg shadow-sm shrink-0 group-hover:bg-[#08473e] transition-colors">
                 <HomeOutlined aria-hidden="true" />
               </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-[17.5px] font-bold text-[#12211d] leading-[1.1] tracking-tight">
-                  StayHub
-                </span>
-                <span className="text-[9.5px] uppercase font-bold tracking-[.13em] text-[#5f736e]">
-                  Admin Portal
-                </span>
-              </div>
+              {!isCollapsed && (
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[17.5px] font-semibold text-[#12211d] leading-[1.1] tracking-tight">
+                    StayHub
+                  </span>
+                  <span className="text-[9.5px] uppercase font-semibold tracking-[.13em] text-[#5f736e]">
+                    {isOwnerOnly ? 'Partner Portal' : 'Admin Portal'}
+                  </span>
+                </div>
+              )}
             </NavLink>
 
+            {/* Desktop Collapse Button */}
+            {!isCollapsed && (
+              <button
+                type="button"
+                className="hidden min-[981px]:flex w-7 h-7 rounded-md text-[#5f736e] hover:text-[#0b5f53] hover:bg-[#eef8f5] transition-colors border-0 bg-transparent cursor-pointer items-center justify-center"
+                onClick={toggleCollapsed}
+                title="Thu gọn menu"
+                aria-label="Thu gọn menu"
+              >
+                <MenuFoldOutlined className="text-sm" />
+              </button>
+            )}
+
             {/* Mobile Close Button */}
-            <button
-              type="button"
-              className="min-[981px]:hidden w-8 h-8 rounded-md flex items-center justify-center text-[#5f736e] hover:text-[#12211d] hover:bg-[#f7fbfa] transition-colors border-0 bg-transparent cursor-pointer"
-              onClick={closeMobileDrawer}
-              aria-label="Đóng thanh điều hướng"
-            >
-              <CloseOutlined className="text-sm" />
-            </button>
+            {!isCollapsed && (
+              <button
+                type="button"
+                className="min-[981px]:hidden w-8 h-8 rounded-md flex items-center justify-center text-[#5f736e] hover:text-[#12211d] hover:bg-[#f7fbfa] transition-colors border-0 bg-transparent cursor-pointer"
+                onClick={closeMobileDrawer}
+                aria-label="Đóng thanh điều hướng"
+              >
+                <CloseOutlined className="text-sm" />
+              </button>
+            )}
           </div>
 
           {/* Navigation Links Scroll Container */}
-          <div className="flex-1 overflow-y-auto px-1 py-1 flex flex-col gap-5">
-            {NAV_GROUPS.map((group) => (
+          <div className="flex-1 overflow-y-auto px-1 py-1 flex flex-col gap-4">
+            {navGroups.map((group) => (
               <div key={group.title} className="flex flex-col">
-                <div className="px-3 mb-1 text-[10.5px] font-bold uppercase tracking-[.12em] text-[#5f736e]">
-                  {group.title}
-                </div>
+                {!isCollapsed ? (
+                  <div className="px-3 mb-1 text-[10.5px] font-semibold uppercase tracking-[.12em] text-[#5f736e]">
+                    {group.title}
+                  </div>
+                ) : (
+                  <div className="my-1 border-t border-[#eef8f5]" />
+                )}
                 <nav className="flex flex-col gap-[2px]" aria-label={group.title}>
                   {group.items.map((item) => {
                     const IconComponent = item.icon
-                    return (
-                      <NavLink
+                    // Khách sạn active với mọi route bắt đầu bằng /hotels
+                    const isHotelsActive = location.pathname.startsWith('/hotels')
+                    const isActive =
+                      item.to === '/hotels'
+                        ? isHotelsActive
+                        : item.exact
+                          ? location.pathname === item.to
+                          : location.pathname === item.to ||
+                            (item.to !== '/admin/overview' && location.pathname.startsWith(item.to))
+
+                    const linkContent = (
+                      <Link
                         key={item.to}
                         to={item.to}
-                        end={item.end}
-                        className={({ isActive }) =>
-                          `admin-nav-link ${isActive ? 'is-active' : ''}`
-                        }
+                        className={`admin-nav-link ${isActive ? 'is-active' : ''} ${
+                          isCollapsed ? '!justify-center !px-0 !py-2.5' : ''
+                        }`}
                         onClick={closeMobileDrawer}
+                        aria-current={isActive ? 'page' : undefined}
                       >
                         <span className="text-base shrink-0 flex items-center">
                           <IconComponent aria-hidden="true" />
                         </span>
-                        <span className="truncate">{item.label}</span>
-                      </NavLink>
+                        {!isCollapsed && <span className="truncate">{item.label}</span>}
+                      </Link>
                     )
+
+                    if (isCollapsed) {
+                      return (
+                        <Tooltip key={item.to} title={item.label} placement="right">
+                          {linkContent}
+                        </Tooltip>
+                      )
+                    }
+
+                    return linkContent
                   })}
                 </nav>
               </div>
@@ -275,28 +323,58 @@ export function AdminLayout() {
           </div>
         </div>
 
+        {/* Sidebar Collapse/Expand Toggle Row */}
+        <div className="pt-2 pb-1 border-t border-[#edf4f1]">
+          {isCollapsed ? (
+            <Tooltip title="Mở rộng menu" placement="right">
+              <button
+                type="button"
+                className="hidden min-[981px]:flex w-full h-8 rounded-lg text-[#5f736e] hover:text-[#0b5f53] hover:bg-[#eef8f5] transition-colors border-0 bg-transparent cursor-pointer items-center justify-center"
+                onClick={toggleCollapsed}
+                aria-label="Mở rộng menu"
+              >
+                <MenuUnfoldOutlined className="text-sm" />
+              </button>
+            </Tooltip>
+          ) : (
+            <button
+              type="button"
+              className="hidden min-[981px]:flex w-full h-8 px-2.5 rounded-lg text-xs font-medium text-[#5f736e] hover:text-[#0b5f53] hover:bg-[#eef8f5] transition-colors border-0 bg-transparent cursor-pointer items-center justify-between"
+              onClick={toggleCollapsed}
+              aria-label="Thu gọn menu"
+            >
+              <span className="flex items-center gap-2">
+                <MenuFoldOutlined className="text-sm shrink-0" />
+                <span>Thu gọn menu</span>
+              </span>
+            </button>
+          )}
+        </div>
+
         {/* Sidebar Footer User Button */}
-        <div className="pt-3 border-t border-[#dce7e3]">
+        <div className="pt-2 border-t border-[#dce7e3]">
           <Dropdown menu={{ items: accountMenuItems }} trigger={['click']} placement="topRight">
             <button
               type="button"
-              className="w-full min-h-[60px] px-3 py-2 rounded-[10px] hover:bg-[#f7fbfa] transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-between gap-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#0b5f53]"
-              aria-label={`Tài khoản quản trị viên ${userFullName}`}
+              className={`w-full min-h-[52px] rounded-[10px] hover:bg-[#f7fbfa] transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-between gap-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#0b5f53] ${
+                isCollapsed ? 'px-1 justify-center' : 'px-3 py-2'
+              }`}
+              aria-label={`Tài khoản ${isOwnerOnly ? 'chủ khách sạn' : 'quản trị viên'} ${userFullName}`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-[#0b5f53] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                <div className="w-8 h-8 rounded-full bg-[#0b5f53] text-white flex items-center justify-center text-xs font-semibold shrink-0">
                   {userInitials}
                 </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-semibold text-[#12211d] truncate">
-                    {userFullName}
-                  </span>
-                  <span className="text-[11px] text-[#5f736e] truncate">
-                    {userEmail}
-                  </span>
-                </div>
+                {!isCollapsed && (
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-semibold text-[#12211d] truncate">
+                      {userFullName}
+                    </span>
+                    <span className="text-[11px] text-[#5f736e] truncate">{userEmail}</span>
+                  </div>
+                )}
               </div>
-              <DownOutlined className="text-[10px] text-[#5f736e] shrink-0" />
+              {!isCollapsed && <DownOutlined className="text-[10px] text-[#5f736e] shrink-0" />}
             </button>
           </Dropdown>
         </div>
@@ -309,8 +387,23 @@ export function AdminLayout() {
           className="sticky top-0 z-40 min-h-[64px] bg-white border-b border-[#dce7e3] px-4 sm:px-7 flex items-center justify-between gap-3 shadow-xs"
           role="banner"
         >
-          {/* Left: Mobile hamburger & Breadcrumb */}
-          <div className="flex items-center gap-3 min-w-0">
+          {/* Left: Desktop collapse toggle, Mobile hamburger & Breadcrumb */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            {/* Desktop Collapse / Expand Toggle Button */}
+            <button
+              type="button"
+              className="hidden min-[981px]:flex w-8 h-8 rounded-lg border border-[#dce7e3] hover:border-[#0b5f53] hover:text-[#0b5f53] text-[#5f736e] bg-white items-center justify-center cursor-pointer transition-colors shadow-2xs"
+              onClick={toggleCollapsed}
+              title={isCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'}
+              aria-label={isCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'}
+            >
+              {isCollapsed ? (
+                <MenuUnfoldOutlined className="text-sm" />
+              ) : (
+                <MenuFoldOutlined className="text-sm" />
+              )}
+            </button>
+
             {/* Mobile Hamburger Toggle */}
             <button
               type="button"
@@ -327,12 +420,10 @@ export function AdminLayout() {
                 to="/admin/overview"
                 className="text-[#5f736e] hover:text-[#0b5f53] transition-colors no-underline hidden sm:inline"
               >
-                Quản trị
+                {isOwnerOnly ? 'Đối tác' : 'Quản trị'}
               </NavLink>
               <span className="text-[#bfd3cd] hidden sm:inline">/</span>
-              <span className="font-semibold text-[#12211d] truncate">
-                {currentPageTitle}
-              </span>
+              <span className="font-semibold text-[#12211d] truncate">{currentPageTitle}</span>
             </nav>
           </div>
 
@@ -345,146 +436,18 @@ export function AdminLayout() {
               style={{ color: '#344a44', textDecoration: 'none' }}
               title="Về trang khách"
             >
-              <ArrowLeftOutlined aria-hidden="true" className="text-xs" />
-              <span className="hidden sm:inline">Về trang khách</span>
+              <ArrowLeftOutlined className="text-xs" aria-hidden="true" />
+              <span>Về trang khách</span>
             </NavLink>
-
-            {/* User Dropdown Button */}
-            <Dropdown menu={{ items: accountMenuItems }} trigger={['click']} placement="bottomRight">
-              <button
-                type="button"
-                className="min-h-[44px] px-3 py-1.5 rounded-full border border-[#bfd3cd] hover:border-[#0b5f53] bg-white transition-colors flex items-center gap-2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#0b5f53]"
-                aria-label={`Menu tài khoản ${userFullName}`}
-              >
-                <div className="w-7 h-7 rounded-full bg-[#0b5f53] text-white flex items-center justify-center text-xs font-bold shrink-0">
-                  {userInitials}
-                </div>
-                <span className="hidden sm:inline text-xs font-semibold text-[#12211d] max-w-[130px] truncate">
-                  {userFullName}
-                </span>
-                <DownOutlined className="text-[10px] text-[#5f736e]" />
-              </button>
-            </Dropdown>
           </div>
         </header>
 
-        {/* Main Content Body */}
-        <main
-          id="main-content"
-          tabIndex={-1}
-          className="flex-1 w-full max-w-[1360px] mx-auto p-4 sm:p-6 lg:p-8 box-border outline-none"
-        >
+        {/* Dynamic Main Viewport */}
+        <main className="admin-content-viewport flex-1 p-4 lg:p-6 flex flex-col min-w-0" id="admin-main-content">
           <Outlet />
         </main>
       </div>
-
-      {/* Profile Dialog */}
-      {profileModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071c18]/48 backdrop-blur-xs"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="profileDialogTitle"
-        >
-          <div className="w-full max-w-[500px] p-6 sm:p-7 border border-[#dce7e3] rounded-[16px] bg-white text-[#12211d] shadow-2xl flex flex-col gap-4 animate-in fade-in duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-[#dce7e3]">
-              <h2 id="profileDialogTitle" className="text-xl font-bold text-[#12211d] m-0">
-                Hồ sơ quản trị
-              </h2>
-              <button
-                type="button"
-                onClick={() => setProfileModalOpen(false)}
-                className="w-8 h-8 rounded-md flex items-center justify-center text-[#5f736e] hover:text-[#12211d] hover:bg-[#f7fbfa] transition-colors border-0 bg-transparent cursor-pointer"
-                aria-label="Đóng hộp thoại"
-              >
-                <CloseOutlined />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-4 py-2">
-              <div className="w-14 h-14 rounded-full bg-[#0b5f53] text-white flex items-center justify-center text-xl font-bold shrink-0">
-                {userInitials}
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-base font-bold text-[#12211d] truncate">
-                  {userFullName}
-                </span>
-                <span className="text-sm text-[#5f736e] truncate">
-                  {userEmail}
-                </span>
-                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                  {userRoles.map((role) => (
-                    <span
-                      key={role}
-                      className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#d9f0ea] text-[#08473e]"
-                    >
-                      {role}
-                    </span>
-                  ))}
-                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#eef8f5] text-[#0b5f53] border border-[#d6ebe5]">
-                    Phiên demo
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-xs text-[#5f736e] leading-relaxed m-0 p-3 rounded-lg bg-[#f7fbfa] border border-[#dce7e3]">
-              Dữ liệu tài khoản quản trị vận hành phục vụ giám sát và phân quyền trên StayHub. Phiên đăng nhập hiện tại được bảo mật trong bộ nhớ máy khách.
-            </p>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setProfileModalOpen(false)}
-                className="min-h-[40px] px-5 border border-[#bfd3cd] hover:border-[#0b5f53] rounded-[9px] text-sm font-semibold text-[#12211d] bg-transparent transition-colors cursor-pointer"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Settings Dialog */}
-      {settingsModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071c18]/48 backdrop-blur-xs"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="settingsDialogTitle"
-        >
-          <div className="w-full max-w-[500px] p-6 sm:p-7 border border-[#dce7e3] rounded-[16px] bg-white text-[#12211d] shadow-2xl flex flex-col gap-4 animate-in fade-in duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-[#dce7e3]">
-              <h2 id="settingsDialogTitle" className="text-xl font-bold text-[#12211d] m-0">
-                Cài đặt cổng quản trị
-              </h2>
-              <button
-                type="button"
-                onClick={() => setSettingsModalOpen(false)}
-                className="w-8 h-8 rounded-md flex items-center justify-center text-[#5f736e] hover:text-[#12211d] hover:bg-[#f7fbfa] transition-colors border-0 bg-transparent cursor-pointer"
-                aria-label="Đóng hộp thoại"
-              >
-                <CloseOutlined />
-              </button>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#eef8f5] border border-[#d6ebe5] flex items-center gap-3 text-sm text-[#08473e]">
-              <CheckCircleOutlined className="text-base text-[#0b5f53] shrink-0" />
-              <span>Bản xem trước hiện tại không hỗ trợ thay đổi cấu hình tài khoản trực tiếp. Vui lòng liên hệ quản trị viên cấp cao.</span>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setSettingsModalOpen(false)}
-                className="min-h-[40px] px-5 border border-[#bfd3cd] hover:border-[#0b5f53] rounded-[9px] text-sm font-semibold text-[#12211d] bg-transparent transition-colors cursor-pointer"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
+  </ConfigProvider>
   )
 }

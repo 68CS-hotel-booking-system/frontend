@@ -2,6 +2,7 @@
 export * from './model/client-home'
 export * from './model/client-search-schema'
 export * from './mocks/client-home-data'
+export * from './mocks/hotel-detail-data'
 export * from './api/client-home-api'
 export * from './hooks/use-client-home'
 export * from './hooks/use-client-home-context'

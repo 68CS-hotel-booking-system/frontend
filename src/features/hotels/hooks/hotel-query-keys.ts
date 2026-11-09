@@ -8,6 +8,8 @@ export const hotelManagementKeys = {
     ['hotels', 'management-list', mode, query] as const,
   detail: (mode: string, hotelId: string) =>
     ['hotels', 'management-detail', mode, hotelId] as const,
+  images: (mode: string, hotelId: string) =>
+    ['hotels', 'images', mode, hotelId] as const,
   rates: (
     mode: string,
     params: {
@@ -17,4 +19,6 @@ export const hotelManagementKeys = {
       endDate: string
     },
   ) => ['hotels', 'room-rates', mode, params] as const,
+  publicDetail: (hotelId: string) => ['hotels', 'public-detail', hotelId] as const,
+  publicRoomTypes: (hotelId: string) => ['hotels', 'public-room-types', hotelId] as const,
 }

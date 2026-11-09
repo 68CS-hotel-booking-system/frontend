@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useNavigate } from 'react-router'
 import type { ClientStay } from '../model/client-home'
 import { formatPrice } from '../hooks/use-client-home'
 import { ClientIcon } from './ClientSiteIcons'
@@ -16,6 +17,7 @@ export function ClientStayModal({
   onClose,
   onBookStay,
 }: ClientStayModalProps) {
+  const navigate = useNavigate()
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape' && isOpen) {
@@ -109,13 +111,25 @@ export function ClientStayModal({
                 </div>
               </div>
 
-              <button
-                className="btn btn--dark"
-                type="button"
-                onClick={() => onBookStay(stay)}
-              >
-                Chọn chỗ nghỉ <ClientIcon name="arrow" />
-              </button>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  className="btn btn--outline"
+                  type="button"
+                  onClick={() => {
+                    onClose()
+                    navigate(`/hotels/${stay.id}`)
+                  }}
+                >
+                  Xem chi tiết đầy đủ
+                </button>
+                <button
+                  className="btn btn--dark"
+                  type="button"
+                  onClick={() => onBookStay(stay)}
+                >
+                  Chọn chỗ nghỉ <ClientIcon name="arrow" />
+                </button>
+              </div>
             </div>
 
             <p className="modal-note">

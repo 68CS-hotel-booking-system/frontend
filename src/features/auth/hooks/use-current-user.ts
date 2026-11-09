@@ -31,11 +31,17 @@ export function useCurrentUser() {
 
   const isChecking = Boolean(token) && (query.isLoading || (query.isPending && query.fetchStatus !== 'idle'))
   const isAdmin = Boolean(query.data?.roles?.includes('ADMIN'))
+  const isOwner = Boolean(
+    query.data?.roles?.includes('HOTEL_OWNER') || query.data?.roles?.includes('OWNER'),
+  )
+  const isAuthorized = isAdmin || isOwner
 
   return {
     ...query,
     currentUser: query.data,
     isChecking,
     isAdmin,
+    isOwner,
+    isAuthorized,
   }
 }

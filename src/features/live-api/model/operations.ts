@@ -73,7 +73,7 @@ const httpOperations: Omit<HttpOperation, 'kind'>[] = [
     title: 'Tạo khách sạn (ADMIN)',
     group: hotels,
     method: 'POST',
-    path: () => '/admin/hotels',
+    path: () => '/management/hotels',
     fields: [
       f('ownerId', 'ID chủ sở hữu', uuid),
       f('cityId', 'ID thành phố', uuid),

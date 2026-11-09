@@ -52,14 +52,17 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
     )
   }
 
-  // 6. Đã đăng nhập nhưng không có role ADMIN: từ chối truy cập
-  if (!isAdmin) {
+  // 6. Đã đăng nhập nhưng không có role ADMIN hoặc HOTEL_OWNER: từ chối truy cập
+  const isAuthorized =
+    isAdmin ||
+    Boolean(currentUser?.roles?.includes('HOTEL_OWNER') || currentUser?.roles?.includes('OWNER'))
+  if (!isAuthorized) {
     return (
       <div className="m3-card max-w-lg mx-auto my-12 shadow-sm" role="alert">
         <Result
           status="403"
           title="Bạn không có quyền truy cập"
-          subTitle={`Tài khoản ${currentUser?.email ?? ''} không có quyền quản trị viên (ADMIN) để truy cập khu vực này.`}
+          subTitle={`Tài khoản ${currentUser?.email ?? ''} không có quyền quản trị viên (ADMIN) hoặc chủ khách sạn (HOTEL_OWNER) để truy cập khu vực này.`}
           extra={
             <Button
               type="primary"
@@ -74,6 +77,11 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
     )
   }
 
-  // 7. Đã xác minh có role ADMIN: cho phép truy cập
+  // 7. Bảo vệ riêng trang Quản trị người dùng: chỉ dành cho ADMIN, nếu là Owner chuyển hướng về Quản lý khách sạn
+  if (location.pathname.startsWith('/admin/users') && !isAdmin) {
+    return <Navigate to="/hotels" replace />
+  }
+
+  // 8. Đã xác minh có thẩm quyền: cho phép truy cập
   return children ? <>{children}</> : <Outlet />
 }

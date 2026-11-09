@@ -33,6 +33,7 @@ import { MOCK_REPRESENTATIVE_CANDIDATES } from '../mocks/financial-access-mock'
 import { useFinancialAccessQuery } from '../hooks/use-financial-access-query'
 import { useUpdateFinancialAccessMutation } from '../hooks/use-update-financial-access-mutation'
 import { updateFinancialAccessFormSchema, type UpdateFinancialAccessFormValues } from '../model/financial-access-form-schema'
+import { ApiFinancialAccessSection } from './ApiFinancialAccessSection'
 
 interface FinancialAccessSectionProps {
   hotelId: string
@@ -41,14 +42,18 @@ interface FinancialAccessSectionProps {
   contracts: HotelCommissionContract[]
 }
 
-export function FinancialAccessSection({
+export function FinancialAccessSection(props: FinancialAccessSectionProps) {
+  const { mode } = useDataMode()
+  return mode === 'api' ? <ApiFinancialAccessSection {...props} /> : <MockFinancialAccessSection {...props} />
+}
+
+function MockFinancialAccessSection({
   hotelId,
   hotelName,
   defaultOwnerUserId,
   contracts,
 }: FinancialAccessSectionProps) {
   const formId = useId()
-  const { mode } = useDataMode()
   const { message } = AntApp.useApp()
   const [selectedUserByHotel, setSelectedUserByHotel] = useState<
     Record<string, string>
@@ -167,12 +172,9 @@ export function FinancialAccessSection({
     )
   })
 
-  if (mode === 'api') {
-    return <Alert type="info" showIcon title="Backend hiện chưa hỗ trợ tra cứu và cấp quyền tài chính." />
-  }
-
   return (
     <section className="rates-scientific-panel" aria-labelledby="financial-access-title">
+      <Alert type="info" showIcon title="Dữ liệu mẫu: các quyền riêng và hợp đồng liên kết trong bản xem trước chưa có trong API." />
       {/* 1. Header tinh gọn của phân quyền tài chính */}
       <div className="rates-panel-header">
         <div>

@@ -1,22 +1,37 @@
 import type { ClientDestination, ClientStay } from '../model/client-home'
 import { CLIENT_HOME_DESTINATIONS, CLIENT_HOME_HOTELS } from '../mocks/client-home-data'
-
-/**
- * Ghi chú kiến trúc tích hợp Backend:
- * - Hiện tại Backend StayHub chỉ mới cung cấp endpoint quản lý: /api/v1/management/hotels (yêu cầu quyền quản lý).
- * - Chưa có endpoint công khai (Public Catalog / Search API) cho khách du lịch vãng lai tìm kiếm theo ngày, điểm đến và phong cách nghỉ dưỡng.
- * - Khi Backend bổ sung endpoint công khai (ví dụ: GET /api/v1/public/hotels/search), thay thế logic bên dưới bằng:
- *   return http.request('/public/hotels/search', { signal, schema: ... })
- *   và ánh xạ response sang ClientStay model.
- */
+import { getPublicHotels } from '@/features/hotels'
 
 export async function fetchClientStays(signal?: AbortSignal): Promise<ClientStay[]> {
-  if (signal?.aborted) {
-    throw new DOMException('Aborted', 'AbortError')
+  try {
+    const page = await getPublicHotels({ page: 0, size: 20 }, signal)
+    if (page && page.content.length > 0) {
+      return page.content.map((h, index) => {
+        const fallback = CLIENT_HOME_HOTELS[index % CLIENT_HOME_HOTELS.length]
+        return {
+          id: h.id,
+          name: h.name,
+          city: h.address.split(',').pop()?.trim() || fallback.city,
+          region: 'Việt Nam',
+          location: h.address,
+          type: 'Khách sạn',
+          rating: h.starRating ? Number(h.starRating) : 5,
+          reviews: 1,
+          price: fallback.price,
+          oldPrice: 0,
+          badge: 'Đã xác minh',
+          badgeClass: 'dark',
+          note: `Nhận phòng ${h.checkInTime.slice(0, 5)} · Trả phòng ${h.checkOutTime.slice(0, 5)}`,
+          amenities: ['Wi-Fi tốc độ cao', 'Máy lạnh', 'Lễ tân 24/7'],
+          vibes: ['all'],
+          image: fallback.image,
+          desc: h.description || fallback.desc,
+        }
+      })
+    }
+  } catch {
+    // Khi Backend chưa có khách sạn Active hoặc chưa kết nối, fallback dữ liệu mẫu
   }
-
-  // Giả lập độ trễ mạng nhẹ (không giả mạo HTTP call) để TanStack Query kích hoạt trạng thái loading chuẩn chỉ
-  await new Promise((resolve) => setTimeout(resolve, 80))
 
   return [...CLIENT_HOME_HOTELS]
 }
