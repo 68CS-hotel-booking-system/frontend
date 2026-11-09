@@ -5,6 +5,7 @@ import { DashboardOutlined, LogoutOutlined } from '@ant-design/icons'
 import { useCurrentUser, useSession } from '@/features/auth'
 import { setSession } from '@/shared/api/session'
 import { useQueryClient } from '@tanstack/react-query'
+import { formatRoleLabel } from '@/shared/lib/format'
 import { ClientIcon } from './ClientSiteIcons'
 
 interface ClientSiteHeaderProps {
@@ -78,7 +79,7 @@ export function ClientSiteHeader({
                   key={role}
                   className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[var(--accent-pale)] text-[var(--accent)]"
                 >
-                  {role}
+                  {formatRoleLabel(role)}
                 </span>
               ))}
             </div>

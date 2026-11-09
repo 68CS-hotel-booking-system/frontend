@@ -74,12 +74,12 @@ export function UserActionMenu({
             alignItems: 'center',
             gap: '8px',
             fontSize: '12px',
-            color: isLocked ? '#1F7A4D' : '#B42318',
+            color: isLocked ? '#1F7A4D' : undefined,
           }}
         >
           <span
             className="material-symbols-outlined"
-            style={{ fontSize: '16px', color: isLocked ? '#1F7A4D' : '#B42318' }}
+            style={{ fontSize: '16px', color: isLocked ? '#1F7A4D' : undefined }}
           >
             {isLocked ? 'lock_open' : 'lock'}
           </span>

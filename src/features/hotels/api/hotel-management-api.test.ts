@@ -90,7 +90,7 @@ describe('management API compatibility with the implemented backend', () => {
     respond(hotel, 201)
     const { createAdminHotel } = await import('./hotel-management-api')
     const result = await createAdminHotel(payload)
-    expect(fetcher.mock.calls[0][0]).toBe('/api/v1/admin/hotels')
+    expect(fetcher.mock.calls[0][0]).toBe('/api/v1/management/hotels')
     expect(fetcher.mock.calls[0][1]?.method).toBe('POST')
     expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({
       ownerId: hotel.ownerId, cityId: hotel.cityId,
@@ -99,6 +99,15 @@ describe('management API compatibility with the implemented backend', () => {
       latitude: 21.123456, longitude: 105.123456,
     })
     expect(result.slug).toBe(hotel.slug)
+  })
+
+  it('approves via the backend PATCH and preserves its returned ACTIVE state', async () => {
+    respond({ ...hotel, status: 'ACTIVE', version: 1 })
+    const { approveHotel } = await import('./hotel-management-api')
+    const result = await approveHotel(id)
+    expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/management/hotels/${id}/approve`)
+    expect(fetcher.mock.calls[0][1]?.method).toBe('PATCH')
+    expect(result).toMatchObject({ status: 'ACTIVE', version: 1, ownerUserId: hotel.ownerId })
   })
 
   it('allows backend-valid short names and an empty slug in the real create form', async () => {
@@ -141,25 +150,29 @@ describe('management API compatibility with the implemented backend', () => {
     expect(fetcher.mock.calls[0][0]).toBe('/api/v1/management/hotels?page=0&size=6')
   })
 
+  it('fetches cities from /api/v1/cities', async () => {
+    respond([{ id: '822cafba-73f6-4ec0-bae7-71804535cae3', countryCode: 'VN', name: 'Đà Nẵng', slug: 'da-nang' }])
+    const { getCities } = await import('./catalog-api')
+    const cities = await getCities()
+    expect(fetcher.mock.calls[0][0]).toBe('/api/v1/cities')
+    expect(fetcher.mock.calls[0][1]?.method).toBe('GET')
+    expect(cities[0]?.name).toBe('Đà Nẵng')
+  })
+
+  it('fetches amenities from /api/v1/amenities', async () => {
+    respond([{ id: '59fe1090-6e67-4d93-b140-232c5e885c27', code: 'FREE_PARKING', name: 'Bãi đỗ xe', category: 'HOTEL' }])
+    const { getAmenities } = await import('./catalog-api')
+    const amenities = await getAmenities('HOTEL')
+    expect(fetcher.mock.calls[0][0]).toBe('/api/v1/amenities?category=HOTEL')
+    expect(amenities[0]?.code).toBe('FREE_PARKING')
+  })
+
   it.each([
-    ['cities', async () => (await import('./catalog-api')).getCities()],
-    ['amenities', async () => (await import('./catalog-api')).getAmenities()],
     ['hotel update', async () => (await import('./hotel-management-api')).updateManagementHotel(id, {
       name: 'Test', cityId: hotel.cityId, address: 'Address', starRating: 3,
       checkInTime: '14:00', checkOutTime: '12:00', description: '', latitude: null, longitude: null, status: 'DRAFT',
     })],
     ['hotel amenities', async () => (await import('./hotel-management-api')).updateHotelAmenities(id, { amenityIds: [] })],
-    ['rates', async () => (await import('./hotel-management-api')).getRoomTypeDailyRates({
-      hotelId: id, roomTypeId: id, startDate: '2026-11-04', endDate: '2026-11-05',
-    })],
-    ['contracts', async () => (await import('@/features/contracts/api/contract-api')).getHotelContracts(id)],
-    ['contract creation', async () => (await import('@/features/contracts/api/contract-api')).createHotelContractDraft(id, {
-      contractCode: 'TEST', commissionPercentage: 10, currency: 'VND', effectiveFrom: '2026-11-04', effectiveTo: '2027-11-04', termsSummary: '',
-    })],
-    ['financial access', async () => (await import('@/features/finance/api/financial-access-api')).getFinancialAccess({ hotelId: id, userId: id })],
-    ['financial access update', async () => (await import('@/features/finance/api/financial-access-api')).updateFinancialAccess({ hotelId: id, userId: id }, {
-      contractId: id, status: 'GRANTED', canReadContracts: true, canReadSettlements: false, canExportReports: false, expectedVersion: 0, reason: 'Test',
-    })],
   ] as const)('reports %s as unsupported without sending a request', async (_name, call) => {
     respond(null)
     await expect(call()).rejects.toMatchObject({ kind: 'unsupported', code: 'API_NOT_IMPLEMENTED' })

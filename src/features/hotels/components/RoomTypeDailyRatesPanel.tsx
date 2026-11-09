@@ -6,19 +6,25 @@ import {
   ReloadOutlined,
   TableOutlined,
 } from '@ant-design/icons'
-import { Alert, Button, Input, Segmented, Space, Table, Tag } from 'antd'
+import { Alert, App as AntApp, Button, Input, InputNumber, Segmented, Space, Table, Tag } from 'antd'
+import { Controller, useForm, useWatch } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { errorMessage } from '@/shared/api/api-error'
 import { useDataMode } from '@/shared/lib/data-mode-context'
 import { formatCurrencyAmount } from '@/shared/lib/format'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
 import { useRoomTypeDailyRatesQuery } from '../hooks/use-room-type-daily-rates-query'
+import { useSetRoomRatesMutation } from '../hooks/use-set-room-rates-mutation'
+import { localRateDate, roomRatesRangeSchema, setRoomRatesFormSchema, type SetRoomRatesFormValues } from '../model/room-rates'
 import type { DailyRoomRate, ManagementRoomTypeSummary } from '../model/hotel'
 
 interface RoomTypeDailyRatesPanelProps {
   hotelId: string
   hotelName?: string
   roomTypes?: ManagementRoomTypeSummary[]
+  hotelStatus?: string
 }
 
 type RateViewMode = 'grid' | 'table'
@@ -55,13 +61,19 @@ export function RoomTypeDailyRatesPanel({
   hotelId,
   hotelName,
   roomTypes = [],
+  hotelStatus = 'ACTIVE',
 }: RoomTypeDailyRatesPanelProps) {
   const { mode } = useDataMode()
+  const { message } = AntApp.useApp()
   const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string>(
     roomTypes[0]?.id ?? '',
   )
-  const [startDate, setStartDate] = useState('2026-11-01')
-  const [endDate, setEndDate] = useState('2026-11-14')
+  const { control, setValue, handleSubmit, formState: { errors } } = useForm<SetRoomRatesFormValues>({
+    resolver: zodResolver(setRoomRatesFormSchema),
+    defaultValues: { startDate: localRateDate(), endDate: localRateDate(), amount: 0 },
+  })
+  const startDate = useWatch({ control, name: 'startDate' }) ?? ''
+  const endDate = useWatch({ control, name: 'endDate' }) ?? ''
   const [viewMode, setViewMode] = useState<RateViewMode>('grid')
 
   const activeRoomTypeId =
@@ -69,24 +81,23 @@ export function RoomTypeDailyRatesPanel({
       ? selectedRoomTypeId
       : (roomTypes[0]?.id ?? '')
   const selectedRoomType = roomTypes.find((rt) => rt.id === activeRoomTypeId)
+  const canReadRates = mode === 'mock' || (hotelStatus === 'ACTIVE' && selectedRoomType?.isActive === true)
+  const rateMutation = useSetRoomRatesMutation(hotelId, activeRoomTypeId)
+  const validRange = roomRatesRangeSchema.safeParse({ startDate, endDate }).success
 
   const ratesQuery = useRoomTypeDailyRatesQuery({
     hotelId,
     roomTypeId: activeRoomTypeId,
     startDate,
     endDate,
-  })
+  }, canReadRates)
 
   function applyPresetRange(startIso: string, days: number) {
     const start = new Date(`${startIso}T00:00:00Z`)
     const end = new Date(start)
     end.setUTCDate(start.getUTCDate() + (days - 1))
-    setStartDate(start.toISOString().slice(0, 10))
-    setEndDate(end.toISOString().slice(0, 10))
-  }
-
-  if (mode === 'api') {
-    return <Alert type="info" showIcon title="Backend hiện chưa hỗ trợ danh sách hạng phòng và giá phòng theo ngày." />
+    setValue('startDate', start.toISOString().slice(0, 10))
+    setValue('endDate', end.toISOString().slice(0, 10))
   }
 
   if (roomTypes.length === 0) {
@@ -102,10 +113,11 @@ export function RoomTypeDailyRatesPanel({
 
   const rates = ratesQuery.data ?? []
   const currency = rates[0]?.currency ?? 'VND'
+  const knownAmounts = rates.flatMap((rate) => rate.amount === null ? [] : [rate.amount])
   const minAmount =
-    rates.length > 0 ? Math.min(...rates.map((item) => item.amount)) : null
+    knownAmounts.length > 0 ? Math.min(...knownAmounts) : null
   const maxAmount =
-    rates.length > 0 ? Math.max(...rates.map((item) => item.amount)) : null
+    knownAmounts.length > 0 ? Math.max(...knownAmounts) : null
   const weekendCount = rates.filter((item) => isWeekendDate(item.rateDate)).length
 
   return (
@@ -200,7 +212,7 @@ export function RoomTypeDailyRatesPanel({
             <Input
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => setValue('startDate', e.target.value)}
               aria-label="Từ ngày"
               className="rates-date-field"
             />
@@ -210,7 +222,7 @@ export function RoomTypeDailyRatesPanel({
             <Input
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => setValue('endDate', e.target.value)}
               aria-label="Đến ngày"
               className="rates-date-field"
             />
@@ -222,28 +234,55 @@ export function RoomTypeDailyRatesPanel({
           <div className="rates-presets-buttons">
             <Button
               size="small"
-              onClick={() => applyPresetRange('2026-11-01', 7)}
+              onClick={() => applyPresetRange(localRateDate(), 7)}
             >
               7 đêm
             </Button>
             <Button
               size="small"
-              onClick={() => applyPresetRange('2026-11-01', 14)}
+              onClick={() => applyPresetRange(localRateDate(), 14)}
             >
               14 đêm
             </Button>
             <Button
               size="small"
-              onClick={() => applyPresetRange('2026-12-01', 21)}
+              onClick={() => applyPresetRange(localRateDate(), 21)}
             >
-              21 đêm (Tháng 12)
+              21 đêm
             </Button>
           </div>
         </div>
       </div>
 
+      {mode === 'api' && (
+        <form onSubmit={handleSubmit(async (values) => {
+          try {
+            await rateMutation.mutateAsync(values)
+            void message.success('Đã lưu giá phòng theo kết quả từ máy chủ.')
+          } catch (error) {
+            void message.error(errorMessage(error))
+          }
+        })} className="rates-date-toolbar">
+          <Space wrap>
+            <span>Giá mỗi đêm trong khoảng ngày đã chọn (VND):</span>
+            <Controller name="amount" control={control} render={({ field }) => (
+              <InputNumber min={1} precision={0} value={field.value || null}
+                onChange={(value) => field.onChange(value ?? 0)}
+                aria-label="Giá mỗi đêm" disabled={!canReadRates || rateMutation.isPending} />
+            )} />
+            <Button type="primary" htmlType="submit" loading={rateMutation.isPending}
+              disabled={!canReadRates || !validRange || startDate < localRateDate()}>Lưu giá</Button>
+            {errors.amount && <span role="alert">{errors.amount.message}</span>}
+          </Space>
+        </form>
+      )}
+
       {/* 5. Vùng hiển thị dữ liệu giá */}
-      {ratesQuery.isPending ? (
+      {!canReadRates ? (
+        <Alert type="info" showIcon title="Backend hiện chỉ hỗ trợ giá cho khách sạn ACTIVE và loại phòng đang mở bán." />
+      ) : !validRange ? (
+        <Alert type="warning" showIcon title="Chọn khoảng ngày hợp lệ, tối đa 90 ngày để xem bảng giá." />
+      ) : ratesQuery.isPending ? (
         <PageLoading />
       ) : ratesQuery.isError ? (
         <ErrorState
@@ -309,9 +348,9 @@ export function RoomTypeDailyRatesPanel({
                 const weekday = getWeekdayName(rate.rateDate)
                 const isWeekend = isWeekendDate(rate.rateDate)
                 const hasPremium =
-                  minAmount !== null && rate.amount > minAmount
+                  minAmount !== null && rate.amount !== null && rate.amount > minAmount
                 const premiumPercent =
-                  minAmount !== null && hasPremium
+                  minAmount !== null && minAmount > 0 && rate.amount !== null && hasPremium
                     ? Math.round(((rate.amount - minAmount) / minAmount) * 100)
                     : 0
 
@@ -329,7 +368,7 @@ export function RoomTypeDailyRatesPanel({
                     </div>
 
                     <div className="rate-clean-cell__price">
-                      {formatCurrencyAmount(rate.amount, rate.currency)}
+                      {rate.amount === null ? 'Chưa đặt giá' : formatCurrencyAmount(rate.amount, rate.currency)}
                     </div>
 
                     <div className="rate-clean-cell__bottom">
@@ -396,7 +435,7 @@ export function RoomTypeDailyRatesPanel({
                     dataIndex: 'amount',
                     key: 'amount',
                     align: 'right',
-                    render: (amount: number, record) => {
+                    render: (amount: number | null, record) => {
                       const isWeekend = isWeekendDate(record.rateDate)
                       return (
                         <strong
@@ -408,7 +447,7 @@ export function RoomTypeDailyRatesPanel({
                             fontVariantNumeric: 'tabular-nums',
                           }}
                         >
-                          {formatCurrencyAmount(amount, record.currency)}
+                          {amount === null ? 'Chưa đặt giá' : formatCurrencyAmount(amount, record.currency)}
                         </strong>
                       )
                     },
@@ -418,7 +457,7 @@ export function RoomTypeDailyRatesPanel({
                     key: 'variance',
                     align: 'center',
                     render: (_, record) => {
-                      if (minAmount === null || record.amount <= minAmount) {
+                      if (record.amount === null || minAmount === null || minAmount <= 0 || record.amount <= minAmount) {
                         return <span className="muted" style={{ fontSize: 12 }}>Chuẩn</span>
                       }
                       const diff = Math.round(

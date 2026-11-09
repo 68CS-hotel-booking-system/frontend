@@ -73,7 +73,7 @@ describe('develop integration', () => {
       checkOutTime: '12:00',
     })
     expect(spy).toHaveBeenCalledWith(
-      '/admin/hotels',
+      '/management/hotels',
       expect.objectContaining({
         method: 'POST',
         body: {

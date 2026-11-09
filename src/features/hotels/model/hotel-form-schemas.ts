@@ -5,19 +5,14 @@ const timeFormatRegex = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
-/** HT06: POST /api/v1/admin/hotels — Tạo khách sạn và phân công Owner */
+/** HT06: POST /api/v1/management/hotels — Tạo khách sạn và phân công Owner */
 export const createAdminHotelFormSchema = z.object({
   name: z
     .string()
     .trim()
     .min(3, 'Tên khách sạn cần ít nhất 3 ký tự.')
     .max(255, 'Tên khách sạn tối đa 255 ký tự.'),
-  slug: z
-    .string()
-    .trim()
-    .min(3, 'Slug cần ít nhất 3 ký tự.')
-    .max(255, 'Slug tối đa 255 ký tự.')
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug chỉ gồm chữ thường, số và dấu gạch ngang.'),
+  slug: z.string().trim().max(255),
   cityId: z.string().min(1, 'Vui lòng chọn thành phố.'),
   ownerUserId: z
     .string()
@@ -58,7 +53,7 @@ export type CreateAdminHotelFormValues = z.infer<typeof createAdminHotelFormSche
 /** API mode uses real city UUIDs and lets the backend generate the slug. */
 export const createAdminHotelApiFormSchema = createAdminHotelFormSchema.extend({
   name: z.string().trim().min(1, 'Nhập tên khách sạn.').max(255),
-  slug: z.string(),
+  slug: z.string().trim().max(255),
   cityId: z.string().trim().uuid('City ID phải đúng định dạng UUID.'),
   address: z.string().trim().min(1, 'Nhập địa chỉ.').max(255),
   description: z.string().optional(),

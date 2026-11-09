@@ -8,7 +8,10 @@ export function useCitiesQuery() {
   const { mode } = useDataMode()
   return useQuery({
     queryKey: hotelManagementKeys.cities(mode),
-    queryFn: ({ signal }) => (mode === 'mock' ? getMockCities() : getCities(signal)),
-    retry: false,
+    queryFn: async ({ signal }) => {
+      if (mode === 'mock') return getMockCities()
+      return getCities(signal)
+    },
+    staleTime: 5 * 60 * 1000,
   })
 }

@@ -1,6 +1,7 @@
 import { message } from 'antd'
+import { formatPhoneNumber, formatRoleLabel } from '@/shared/lib/format'
 import type { UserFilterTab } from '@/features/users'
-import { CreateUserModal, UserActionMenu, UserDetailModal, ChangeRoleModal, useAdminUsers } from '@/features/users'
+import { UserActionMenu, UserDetailModal, ChangeRoleModal, useAdminUsers } from '@/features/users'
 
 export function AdminUsersPage() {
   const {
@@ -16,8 +17,6 @@ export function AdminUsersPage() {
     viewState,
     errorText,
     isRetrying,
-    isCreateModalOpen,
-    setIsCreateModalOpen,
     selectedUserForDetail,
     setSelectedUserForDetail,
     selectedUserForRole,
@@ -33,7 +32,6 @@ export function AdminUsersPage() {
     handleSaveRole,
     handleBulkResendEmail,
     handleBulkLock,
-    handleCreateUser,
     handleRetryConnection,
     page,
     pageSize,
@@ -93,19 +91,6 @@ export function AdminUsersPage() {
             Theo dõi tài khoản, vai trò và trạng thái người dùng trên hệ thống StayHub.
           </p>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setIsCreateModalOpen(true)}
-          disabled
-          title="Chức năng thêm người dùng chưa được hỗ trợ."
-          className="admin-btn-primary"
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-            add
-          </span>
-          <span>Thêm người dùng</span>
-        </button>
       </div>
 
       {/* MAIN TABLE CONTAINER */}
@@ -137,7 +122,7 @@ export function AdminUsersPage() {
           >
             {[
               { id: 'all' as UserFilterTab, label: 'Tất cả', count: tabCounts.all },
-              { id: 'active' as UserFilterTab, label: 'Đang hoạt động', count: tabCounts.active },
+              { id: 'active' as UserFilterTab, label: 'Đã xác thực', count: tabCounts.active },
               { id: 'pending' as UserFilterTab, label: 'Chờ xác thực', count: tabCounts.pending },
               { id: 'inactive' as UserFilterTab, label: 'Chưa hoạt động', count: tabCounts.inactive },
               { id: 'locked' as UserFilterTab, label: 'Đã khóa', count: tabCounts.locked },
@@ -479,7 +464,7 @@ export function AdminUsersPage() {
                   />
                 </th>
                 <th style={{ padding: '14px 12px', fontWeight: 500 }}>Người dùng</th>
-                <th style={{ width: '140px', padding: '14px 12px', fontWeight: 500, textAlign: 'right' }}>
+                <th style={{ width: '150px', padding: '14px 12px', fontWeight: 500, textAlign: 'left', whiteSpace: 'nowrap' }}>
                   Số điện thoại
                 </th>
                 <th style={{ width: '140px', padding: '14px 12px', fontWeight: 500 }}>
@@ -493,10 +478,12 @@ export function AdminUsersPage() {
                 </th>
                 <th
                   style={{
-                    width: '56px',
+                    width: '90px',
+                    minWidth: '90px',
                     padding: '14px 12px',
                     textAlign: 'right',
                     fontWeight: 500,
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   Thao tác
@@ -595,8 +582,8 @@ export function AdminUsersPage() {
                         </div>
                       </td>
 
-                      <td style={{ padding: '0 12px', color: '#17212B', textAlign: 'right' }} className="tabular-nums">
-                        {user.phone}
+                      <td style={{ padding: '0 12px', color: '#17212B', textAlign: 'left', whiteSpace: 'nowrap' }} className="tabular-nums">
+                        {formatPhoneNumber(user.phone)}
                       </td>
 
                       <td style={{ padding: '0 12px', color: '#17212B' }}>
@@ -627,7 +614,7 @@ export function AdminUsersPage() {
                           </span>
                         )}
                         {user.role === 'CUSTOMER' && <span>Khách hàng</span>}
-                        {user.role === null && <span>{user.roles.join(', ') || '—'}</span>}
+                        {user.role === null && <span>{user.roles.map(formatRoleLabel).join(', ') || '—'}</span>}
                       </td>
 
                       <td style={{ padding: '0 12px' }}>
@@ -654,7 +641,7 @@ export function AdminUsersPage() {
                                 backgroundColor: '#1F7A4D',
                               }}
                             />
-                            Đang hoạt động
+                            Đã xác thực
                           </span>
                         )}
 
@@ -744,7 +731,7 @@ export function AdminUsersPage() {
                         {user.joinedDate}
                       </td>
 
-                      <td style={{ padding: '0 12px', textAlign: 'right' }}>
+                      <td style={{ width: '90px', minWidth: '90px', padding: '0 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                         <UserActionMenu
                           user={user}
                           disabled={isBusy}
@@ -1114,12 +1101,6 @@ export function AdminUsersPage() {
       )}
 
       {/* MODALS */}
-      <CreateUserModal
-        open={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateUser}
-      />
-
       <UserDetailModal
         user={selectedUserForDetail}
         open={Boolean(selectedUserForDetail)}

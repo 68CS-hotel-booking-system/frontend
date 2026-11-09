@@ -1,3 +1,4 @@
+import { slugifyHotelName } from '@/shared/lib/format'
 import type { AmenityItem, CityItem, DailyRoomRate, ManagementHotelDetail, ManagementHotelListQuery, ManagementHotelPage } from '../model/hotel'
 import type { CreateAdminHotelFormValues, UpdateManagementHotelFormValues } from '../model/hotel-form-schemas'
 
@@ -7,10 +8,40 @@ import type { CreateAdminHotelFormValues, UpdateManagementHotelFormValues } from
  */
 export const MOCK_CITIES: CityItem[] = [
   {
-    id: '11111111-1111-4111-8111-111111111101',
+    id: '822cafba-73f6-4ec0-bae7-71804535cae3',
+    countryCode: 'VN',
+    name: 'Đà Nẵng',
+    slug: 'da-nang',
+  },
+  {
+    id: '81560b64-8216-46c6-8f1b-f14214fc0c90',
     countryCode: 'VN',
     name: 'Hà Nội',
     slug: 'ha-noi',
+  },
+  {
+    id: '0c0fcb3f-45a8-4f37-a33c-dc39b5d2c79d',
+    countryCode: 'VN',
+    name: 'Thành phố Hồ Chí Minh',
+    slug: 'ho-chi-minh',
+  },
+  {
+    id: '286af3a8-b56c-4b79-8c9a-445d5bc4cbf5',
+    countryCode: 'VN',
+    name: 'Hải Phòng',
+    slug: 'hai-phong',
+  },
+  {
+    id: '4a6fd426-a8a4-49bf-99d0-015c6053d4e2',
+    countryCode: 'VN',
+    name: 'Cần Thơ',
+    slug: 'can-tho',
+  },
+  {
+    id: 'd4266df8-21c1-4f42-849a-30bebfc561b9',
+    countryCode: 'VN',
+    name: 'Huế',
+    slug: 'hue',
   },
 ]
 
@@ -140,7 +171,7 @@ export async function createMockAdminHotel(
     cityId: payload.cityId,
     cityName: city?.name ?? 'Việt Nam',
     name: payload.name,
-    slug: payload.slug,
+    slug: payload.slug || slugifyHotelName(payload.name),
     address: payload.address,
     starRating: payload.starRating,
     checkInTime: payload.checkInTime,

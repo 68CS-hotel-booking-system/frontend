@@ -66,6 +66,14 @@ describe('admin login screen', () => {
     expect(html).not.toContain('type="password"')
   })
 
+  it('allows a verified hotel owner to proceed without denial warning', () => {
+    setSession(session)
+    client.setQueryData(key, { ...account, roles: ['HOTEL_OWNER'] })
+    const html = render()
+    expect(html).not.toContain('Tài khoản chưa có quyền quản trị')
+    expect(html).toContain('Đang xác minh quyền truy cập')
+  })
+
   it('offers verification retry after server failure without requesting credentials again', async () => {
     setSession(session)
     await client.fetchQuery({ queryKey: key, queryFn: () => Promise.reject(new ApiError('Dịch vụ tạm thời không phản hồi.', { kind: 'http', status: 503 })) }).catch(() => {})

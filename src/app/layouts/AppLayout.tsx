@@ -14,7 +14,7 @@ import {
   StarOutlined,
   UserOutlined,
 } from '@ant-design/icons'
-import { Button, Drawer, Dropdown, Switch, type MenuProps } from 'antd'
+import { Button, Drawer, Dropdown, type MenuProps } from 'antd'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -30,7 +30,7 @@ import {
 } from '@/features/discovery'
 import { AuthModal, useCurrentUser, useSession } from '@/features/auth'
 import { setSession } from '@/shared/api/session'
-import { useDataMode } from '@/shared/lib/data-mode-context'
+import { formatRoleLabel } from '@/shared/lib/format'
 
 function ClientHomeLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -93,10 +93,12 @@ export function AppLayout() {
   const queryClient = useQueryClient()
   const session = useSession()
   const { currentUser, isAdmin } = useCurrentUser()
-  const { mode, setMode } = useDataMode()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const isHomeRoute = location.pathname === '/' || location.pathname === '/explore'
+  const isHomeRoute =
+    location.pathname === '/' ||
+    location.pathname === '/explore' ||
+    location.pathname.startsWith('/hotels')
 
   if (isHomeRoute) {
     return (
@@ -150,7 +152,7 @@ export function AppLayout() {
                   key={role}
                   className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]"
                 >
-                  {role}
+                  {formatRoleLabel(role)}
                 </span>
               ))}
             </div>
@@ -243,7 +245,7 @@ export function AppLayout() {
                   <span>Khám phá</span>
                 </NavLink>
                 <NavLink
-                  to="/management/hotels"
+                  to="/hotels"
                   className={({ isActive }) =>
                     `text-xs font-semibold px-3 py-2 rounded-full transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                       isActive
@@ -429,7 +431,7 @@ export function AppLayout() {
                 <span>Khám phá</span>
               </NavLink>
               <NavLink
-                to="/management/hotels"
+                to="/hotels"
                 className="flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)]"
                 onClick={closeMenu}
               >
@@ -509,19 +511,6 @@ export function AppLayout() {
         </div>
 
         <div className="pt-4 border-t border-[var(--md-sys-color-outline-subtle)] flex flex-col gap-3">
-          {isManagementRoute && (
-            <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-[var(--md-sys-color-outline-subtle)]">
-              <span className="text-xs font-semibold text-[var(--md-sys-color-on-surface-variant)]">
-                {mode === 'mock' ? 'Dữ liệu mẫu' : 'Hệ thống thực'}
-              </span>
-              <Switch
-                size="small"
-                checked={mode === 'api'}
-                onChange={(checked) => setMode(checked ? 'api' : 'mock')}
-              />
-            </div>
-          )}
-
           {session ? (
             <div className="flex flex-col gap-2">
               <div className="p-3 rounded-xl bg-white border border-[var(--md-sys-color-outline-subtle)]">
