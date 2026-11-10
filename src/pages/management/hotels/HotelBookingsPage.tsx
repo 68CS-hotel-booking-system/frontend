@@ -16,7 +16,7 @@ export function HotelBookingsPage() {
   ]
 
   return (
-    <div className="hotel-bookings-page max-w-5xl">
+    <div className="hotel-bookings-page max-w-5xl mx-auto">
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         kicker="VẬN HÀNH &amp; ĐẶT CHỖ"

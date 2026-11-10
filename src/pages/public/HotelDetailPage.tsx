@@ -75,6 +75,9 @@ export function HotelDetailPage() {
   const [isGalleryOpen, setIsGalleryOpen] = useState<boolean>(false)
   const [isAmenitiesOpen, setIsAmenitiesOpen] = useState<boolean>(false)
   const [isReserveOpen, setIsReserveOpen] = useState<boolean>(false)
+  const [activeHelpArticle, setActiveHelpArticle] = useState<
+    'rules' | 'safety' | 'cancellation' | 'staycover' | null
+  >(null)
   const [isSubnavVisible, setIsSubnavVisible] = useState<boolean>(false)
   const [activeSection, setActiveSection] = useState<string>('gallery')
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -118,6 +121,17 @@ export function HotelDetailPage() {
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Close Help Article Modal on Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && activeHelpArticle) {
+        setActiveHelpArticle(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [activeHelpArticle])
 
   // Price Calculations
   const roomSubtotal = hotel.price * nights
@@ -628,25 +642,42 @@ export function HotelDetailPage() {
             </div>
 
             {/* StayCover Protection Banner */}
-            <div className="bg-[#f8eee6] border border-[#e3dcd1] rounded-2xl p-5 md:p-6">
-              <div className="text-xl font-bold tracking-tight text-[#1a1918] mb-2 font-serif">
-                stay<span className="text-[#b66d3a]">cover</span>
+            <div className="bg-[#f8eee6] border border-[#e3dcd1] rounded-2xl p-5 md:p-6 space-y-3">
+              <div className="flex items-baseline justify-between gap-2">
+                <div className="text-2xl font-bold tracking-tight text-[#1a1918] font-serif">
+                  stay<span className="text-[#b66d3a]">cover</span>
+                </div>
+                <span className="text-[11px] font-semibold text-[#8c4f24] uppercase tracking-wider bg-[#eddccf] px-2.5 py-0.5 rounded-full">
+                  Bảo vệ miễn phí
+                </span>
               </div>
-              <p className="text-sm text-[#423f3b] leading-relaxed">
-                Mọi đặt phòng đều được bảo vệ toàn diện với chương trình Bảo vệ Đặt phòng StayCover:
-                bảo đảm hoàn tiền nếu chủ nhà hủy phòng, bảo đảm phòng đúng mô tả và hỗ trợ khách 24/7.
+              <p className="text-sm text-[#423f3b] leading-relaxed m-0">
+                Mọi đặt phòng tại StayHub đều bao gồm gói bảo vệ StayCover toàn diện chống sự cố hủy phòng bất ngờ và hỗ trợ khách lưu trú 24/7.
               </p>
-              <button
-                type="button"
-                onClick={() =>
-                  showToast(
-                    'Chính sách StayCover: Bảo vệ mọi kỳ nghỉ từ khi nhận phòng đến ngày trả phòng.',
-                  )
-                }
-                className="mt-3 text-sm font-semibold underline text-[#1a1918] hover:text-[#b66d3a] transition-colors cursor-pointer"
-              >
-                Tìm hiểu thêm
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-3 border-t border-[#ebd8cb] text-xs text-[#423f3b]">
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="text-[#b66d3a] font-bold">✓</span>
+                  <span>Bảo đảm phòng đúng mô tả</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="text-[#b66d3a] font-bold">✓</span>
+                  <span>Bảo đảm hoàn tiền do sự cố</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="text-[#b66d3a] font-bold">✓</span>
+                  <span>Đường dây nóng hỗ trợ 24/7</span>
+                </div>
+              </div>
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveHelpArticle('staycover')}
+                  className="text-sm font-semibold underline text-[#1a1918] hover:text-[#b66d3a] transition-colors cursor-pointer inline-flex items-center gap-1"
+                >
+                  <span>Tìm hiểu chi tiết quyền lợi StayCover</span>
+                  <span aria-hidden="true">&rarr;</span>
+                </button>
+              </div>
             </div>
 
             {/* Description Section */}
@@ -1488,50 +1519,168 @@ export function HotelDetailPage() {
           </div>
         </section>
 
-        {/* ─── THINGS TO KNOW ─── */}
+        {/* ─── THINGS TO KNOW & HELP ARTICLES ─── */}
         <section
           className="mt-14 pt-10 border-t border-[#ece5dc]"
+          id="help-articles"
           data-od-id="things-to-know"
+          aria-labelledby="things-to-know-heading"
         >
-          <h3 className="text-2xl font-serif font-bold text-[#1a1918] mb-6">
-            Những điều cần biết
-          </h3>
+          <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-8">
+            <div>
+              <h3
+                id="things-to-know-heading"
+                className="text-2xl sm:text-3xl font-serif font-bold text-[#1a1918] m-0"
+              >
+                Những điều cần biết
+              </h3>
+              <p className="text-sm text-[#706a62] mt-1.5 mb-0 max-w-2xl leading-relaxed">
+                Thông tin quy định nhận phòng, trang bị an toàn và điều kiện hủy đặt phòng áp dụng tại {hotel.title}.
+              </p>
+            </div>
+            <span className="text-xs text-[#8c827a] font-medium shrink-0">
+              Cập nhật cho kỳ nghỉ {nights} đêm của bạn
+            </span>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
-            <div>
-              <h4 className="font-bold text-[#1a1918] text-base mb-3">
-                Quy định chung
-              </h4>
-              <ul className="space-y-2 text-[#423f3b] leading-relaxed">
-                <li>• Nhận phòng: sau 14:00</li>
-                <li>• Trả phòng: trước 11:00</li>
-                <li>• Tự nhận phòng bằng khóa điện tử thông minh</li>
-                <li>• Không hút thuốc trong phòng</li>
-                <li>• Không tổ chức tiệc tùng hoặc sự kiện ồn ào</li>
-              </ul>
+            {/* Cột 1: Quy định chung */}
+            <div className="flex flex-col justify-between p-5 rounded-2xl bg-[#faf7f2] border border-[#ede5d8]">
+              <div>
+                <h4 className="font-bold text-[#1a1918] text-base mb-3.5 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-[#b66d3a] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span>Quy định chung</span>
+                </h4>
+
+                <div className="space-y-3 text-[#423f3b] leading-relaxed">
+                  <div className="flex items-start gap-2.5">
+                    <span className="font-semibold text-[#1a1918] shrink-0 w-24">Nhận phòng:</span>
+                    <span>Sau 14:00 (Linh hoạt)</span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <span className="font-semibold text-[#1a1918] shrink-0 w-24">Trả phòng:</span>
+                    <span>Trước 11:00</span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <span className="font-semibold text-[#1a1918] shrink-0 w-24">Vào phòng:</span>
+                    <span>Khóa điện tử tự động</span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <span className="font-semibold text-[#1a1918] shrink-0 w-24">Hạn chế:</span>
+                    <span className="text-[#843e18] font-medium">Không hút thuốc · Không tiệc tùng ồn ào</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 pt-3 border-t border-[#e8dfd3]">
+                <button
+                  type="button"
+                  onClick={() => setActiveHelpArticle('rules')}
+                  className="text-sm font-semibold underline text-[#1a1918] hover:text-[#b66d3a] transition-colors cursor-pointer inline-flex items-center gap-1"
+                >
+                  <span>Xem nội quy phòng chi tiết</span>
+                  <span aria-hidden="true">&rarr;</span>
+                </button>
+              </div>
             </div>
 
-            <div>
-              <h4 className="font-bold text-[#1a1918] text-base mb-3">
-                An toàn & Chỗ nghỉ
-              </h4>
-              <ul className="space-y-2 text-[#423f3b] leading-relaxed">
-                <li>• Đã trang bị đầu báo khói độc lập</li>
-                <li>• Có bình chữa cháy ở hành lang mỗi tầng</li>
-                <li>• Camera giám sát an ninh ở khu vực chung</li>
-                <li>• Khóa cửa số thẻ từ bảo mật 2 lớp</li>
-              </ul>
+            {/* Cột 2: An toàn & Chỗ nghỉ */}
+            <div className="flex flex-col justify-between p-5 rounded-2xl bg-[#faf7f2] border border-[#ede5d8]">
+              <div>
+                <h4 className="font-bold text-[#1a1918] text-base mb-3.5 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-[#b66d3a] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  <span>An toàn &amp; Chỗ nghỉ</span>
+                </h4>
+
+                <div className="space-y-3 text-[#423f3b] leading-relaxed">
+                  <div className="flex items-start gap-2">
+                    <span className="text-[#0b5f53] font-bold shrink-0">✓</span>
+                    <div>
+                      <strong className="text-[#1a1918]">Đầu báo khói độc lập:</strong>
+                      <span className="block text-xs text-[#706a62]">Trang bị trong phòng và hành lang</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-[#0b5f53] font-bold shrink-0">✓</span>
+                    <div>
+                      <strong className="text-[#1a1918]">Bình chữa cháy khẩn cấp:</strong>
+                      <span className="block text-xs text-[#706a62]">Bố trí tại cửa thoát hiểm mỗi tầng</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-[#0b5f53] font-bold shrink-0">✓</span>
+                    <div>
+                      <strong className="text-[#1a1918]">An ninh &amp; Khóa số:</strong>
+                      <span className="block text-xs text-[#706a62]">Camera sảnh chung và khóa thẻ từ 2 lớp</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 pt-3 border-t border-[#e8dfd3]">
+                <button
+                  type="button"
+                  onClick={() => setActiveHelpArticle('safety')}
+                  className="text-sm font-semibold underline text-[#1a1918] hover:text-[#b66d3a] transition-colors cursor-pointer inline-flex items-center gap-1"
+                >
+                  <span>Xem hướng dẫn an toàn</span>
+                  <span aria-hidden="true">&rarr;</span>
+                </button>
+              </div>
             </div>
 
-            <div>
-              <h4 className="font-bold text-[#1a1918] text-base mb-3">
-                Chính sách hủy phòng
-              </h4>
-              <ul className="space-y-2 text-[#423f3b] leading-relaxed">
-                <li>• Hủy miễn phí trong vòng 48 giờ sau khi đặt phòng</li>
-                <li>• Sau 48 giờ, hủy trước ngày 11 thg 11 được hoàn lại 50%</li>
-                <li>• Xem chính sách hủy đầy đủ để biết chi tiết áp dụng</li>
-              </ul>
+            {/* Cột 3: Chính sách hủy phòng */}
+            <div className="flex flex-col justify-between p-5 rounded-2xl bg-[#faf7f2] border border-[#ede5d8]">
+              <div>
+                <h4 className="font-bold text-[#1a1918] text-base mb-3.5 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-[#b66d3a] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  <span>Chính sách hủy phòng</span>
+                </h4>
+
+                <div className="space-y-3 text-[#423f3b] leading-relaxed">
+                  <div className="p-2.5 rounded-xl bg-[#f0e9df] border border-[#e0d5c5]">
+                    <div className="font-semibold text-[#1a1918] text-xs flex items-center justify-between">
+                      <span>Hủy miễn phí</span>
+                      <span className="text-[#0b5f53] font-bold">100% hoàn phí</span>
+                    </div>
+                    <p className="text-xs text-[#706a62] m-0 mt-0.5">
+                      Áp dụng trong vòng 48 giờ sau khi đặt phòng thành công.
+                    </p>
+                  </div>
+
+                  <div className="text-xs space-y-1.5 text-[#5f5b55]">
+                    <div className="flex items-baseline justify-between gap-1">
+                      <span>Sau 48h đến trước nhận phòng 5 ngày:</span>
+                      <strong className="text-[#1a1918] shrink-0">Hoàn 50%</strong>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-1">
+                      <span>Trong vòng 48h trước nhận phòng:</span>
+                      <strong className="text-[#843e18] shrink-0">Không hoàn tiền</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 pt-3 border-t border-[#e8dfd3]">
+                <button
+                  type="button"
+                  onClick={() => setActiveHelpArticle('cancellation')}
+                  className="text-sm font-semibold underline text-[#1a1918] hover:text-[#b66d3a] transition-colors cursor-pointer inline-flex items-center gap-1"
+                >
+                  <span>Chi tiết điều khoản hoàn hủy</span>
+                  <span aria-hidden="true">&rarr;</span>
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -1756,6 +1905,240 @@ export function HotelDetailPage() {
             >
               Xác nhận & Đặt phòng
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── HELP ARTICLE / POLICY DETAIL MODAL ─── */}
+      {activeHelpArticle && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setActiveHelpArticle(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="helpArticleModalTitle"
+        >
+          <div
+            className="bg-[#fdfbf7] border border-[#e3dcd1] rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setActiveHelpArticle(null)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full hover:bg-[#ede5d8] flex items-center justify-center text-[#706a62] hover:text-[#1a1918] transition-colors cursor-pointer"
+              aria-label="Đóng bài viết"
+            >
+              ✕
+            </button>
+
+            {/* Content for: House Rules */}
+            {activeHelpArticle === 'rules' && (
+              <article className="space-y-5 text-[#34302c]">
+                <div className="border-b border-[#e8dfd3] pb-4">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#b66d3a]">
+                    Hướng dẫn lưu trú
+                  </span>
+                  <h3 id="helpArticleModalTitle" className="text-2xl font-serif font-bold text-[#1a1918] mt-1 mb-0">
+                    Nội quy &amp; Quy định chỗ nghỉ
+                  </h3>
+                  <p className="text-xs text-[#706a62] mt-1 mb-0">
+                    Áp dụng cho tất cả khách lưu trú tại {hotel.title}
+                  </p>
+                </div>
+
+                <div className="space-y-4 text-sm leading-relaxed">
+                  <section className="space-y-1.5">
+                    <h4 className="font-bold text-[#1a1918] text-sm m-0">1. Thời gian nhận &amp; trả phòng</h4>
+                    <p className="m-0 text-[#55504a]">
+                      • <strong>Giờ nhận phòng tiêu chuẩn:</strong> Từ 14:00. Bạn có thể tự nhận phòng bất kỳ lúc nào bằng mã khóa điện tử thông minh gửi qua email/tin nhắn trước ngày check-in.
+                    </p>
+                    <p className="m-0 text-[#55504a]">
+                      • <strong>Giờ trả phòng tiêu chuẩn:</strong> Trước 11:00. Vui lòng đóng chặt cửa và để chìa khóa phụ (nếu có) vào hộp an toàn khi rời đi.
+                    </p>
+                  </section>
+
+                  <section className="space-y-1.5">
+                    <h4 className="font-bold text-[#1a1918] text-sm m-0">2. Quy định trong thời gian lưu trú</h4>
+                    <p className="m-0 text-[#55504a]">
+                      • <strong>Không hút thuốc:</strong> Nghiêm cấm hút thuốc lá và thuốc lá điện tử bên trong toàn bộ không gian phòng nghỉ. Khách vi phạm sẽ chịu phí vệ sinh chuyên sâu 2.000.000₫.
+                    </p>
+                    <p className="m-0 text-[#55504a]">
+                      • <strong>Khung giờ yên tĩnh:</strong> Từ 22:00 đến 08:00 sáng hôm sau. Vui lòng giữ âm lượng vừa phải nhằm tôn trọng sự yên bình của các phòng lân cận.
+                    </p>
+                    <p className="m-0 text-[#55504a]">
+                      • <strong>Tiệc tùng &amp; Sự kiện:</strong> Không cho phép tụ tập đông người, mở nhạc công suất lớn hoặc tổ chức sự kiện khi chưa có thỏa thuận trước bằng văn bản với chủ nhà.
+                    </p>
+                  </section>
+
+                  <section className="space-y-1.5">
+                    <h4 className="font-bold text-[#1a1918] text-sm m-0">3. Số lượng khách &amp; Thú cưng</h4>
+                    <p className="m-0 text-[#55504a]">
+                      • Số lượng khách tối đa phải tuân theo số lượng đã đăng ký khi đặt phòng ({hotel.specs[0] || 'theo sức chứa phòng'}). Khách phát sinh cần thông báo và phụ thu theo quy định cơ sở.
+                    </p>
+                  </section>
+                </div>
+              </article>
+            )}
+
+            {/* Content for: Safety */}
+            {activeHelpArticle === 'safety' && (
+              <article className="space-y-5 text-[#34302c]">
+                <div className="border-b border-[#e8dfd3] pb-4">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#b66d3a]">
+                    An toàn &amp; Khẩn cấp
+                  </span>
+                  <h3 id="helpArticleModalTitle" className="text-2xl font-serif font-bold text-[#1a1918] mt-1 mb-0">
+                    Hướng dẫn an toàn &amp; Tiện ích khẩn cấp
+                  </h3>
+                  <p className="text-xs text-[#706a62] mt-1 mb-0">
+                    Các biện pháp bảo vệ sự an toàn tối đa cho kỳ nghỉ của bạn
+                  </p>
+                </div>
+
+                <div className="space-y-4 text-sm leading-relaxed">
+                  <section className="space-y-1.5">
+                    <h4 className="font-bold text-[#1a1918] text-sm m-0">1. Thiết bị phòng cháy &amp; Báo khói</h4>
+                    <p className="m-0 text-[#55504a]">
+                      • <strong>Đầu báo khói quang học:</strong> Được lắp đặt tại phòng khách, phòng ngủ và trần hành lang, hoạt động liên tục 24/24.
+                    </p>
+                    <p className="m-0 text-[#55504a]">
+                      • <strong>Bình bọt chữa cháy:</strong> Trang bị sẵn tại góc hành lang mỗi tầng và gần cửa cầu thang thoát hiểm.
+                    </p>
+                  </section>
+
+                  <section className="space-y-1.5">
+                    <h4 className="font-bold text-[#1a1918] text-sm m-0">2. An ninh &amp; Giám sát</h4>
+                    <p className="m-0 text-[#55504a]">
+                      • <strong>Khóa thẻ từ và mã số bảo mật:</strong> Mã số mở cửa được tạo riêng cho từng lượt khách và tự động vô hiệu hóa sau giờ trả phòng.
+                    </p>
+                    <p className="m-0 text-[#55504a]">
+                      • <strong>Camera an ninh:</strong> Chỉ được lắp đặt ở lối vào chính và sảnh sinh hoạt chung nhằm bảo đảm an ninh; tuyệt đối không có camera trong không gian phòng riêng tư.
+                    </p>
+                  </section>
+
+                  <section className="space-y-1.5">
+                    <h4 className="font-bold text-[#1a1918] text-sm m-0">3. Đường dây liên lạc khẩn cấp</h4>
+                    <div className="bg-[#f5efe6] p-3 rounded-xl border border-[#e3dcd1] text-xs space-y-1">
+                      <div>• Cấp cứu y tế: <strong>115</strong> | Cứu hỏa: <strong>114</strong> | Công an: <strong>113</strong></div>
+                      <div>• Hotline hỗ trợ StayHub: <strong>1900 8888</strong> (Phục vụ 24/7)</div>
+                    </div>
+                  </section>
+                </div>
+              </article>
+            )}
+
+            {/* Content for: Cancellation Policy */}
+            {activeHelpArticle === 'cancellation' && (
+              <article className="space-y-5 text-[#34302c]">
+                <div className="border-b border-[#e8dfd3] pb-4">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#b66d3a]">
+                    Chính sách đặt chỗ
+                  </span>
+                  <h3 id="helpArticleModalTitle" className="text-2xl font-serif font-bold text-[#1a1918] mt-1 mb-0">
+                    Chính sách hoàn hủy chi tiết
+                  </h3>
+                  <p className="text-xs text-[#706a62] mt-1 mb-0">
+                    Linh hoạt và minh bạch theo tiêu chuẩn bảo vệ quyền lợi người đặt
+                  </p>
+                </div>
+
+                <div className="space-y-4 text-sm leading-relaxed">
+                  <div className="bg-[#edf6f2] border border-[#bcd8cf] rounded-xl p-4">
+                    <div className="font-bold text-[#08473e] text-sm mb-1">
+                      ✓ Miễn phí hủy trong vòng 48 giờ
+                    </div>
+                    <p className="text-xs text-[#344a44] m-0">
+                      Nếu đặt phòng trước ngày nhận phòng từ 14 ngày trở lên, bạn có 48 giờ để hủy hoàn toàn miễn phí và nhận lại 100% tiền phòng.
+                    </p>
+                  </div>
+
+                  <section className="space-y-2">
+                    <h4 className="font-bold text-[#1a1918] text-sm m-0">Thời gian biểu hoàn tiền</h4>
+                    <div className="space-y-2 text-xs text-[#55504a]">
+                      <div className="flex items-start justify-between p-2.5 rounded-lg bg-[#f8f4ed] border border-[#e8dfd3]">
+                        <div>
+                          <strong className="text-[#1a1918] block">Hủy trước 7 ngày nhận phòng:</strong>
+                          <span>Nhận lại 100% tiền phòng trừ phí dịch vụ xử lý giao dịch.</span>
+                        </div>
+                        <span className="font-bold text-[#0b5f53] shrink-0 text-sm">Hoàn 100%</span>
+                      </div>
+                      <div className="flex items-start justify-between p-2.5 rounded-lg bg-[#f8f4ed] border border-[#e8dfd3]">
+                        <div>
+                          <strong className="text-[#1a1918] block">Hủy từ 48 giờ đến 7 ngày trước nhận phòng:</strong>
+                          <span>Nhận lại 50% tổng số tiền đã thanh toán cho toàn bộ kỳ nghỉ.</span>
+                        </div>
+                        <span className="font-bold text-[#b66d3a] shrink-0 text-sm">Hoàn 50%</span>
+                      </div>
+                      <div className="flex items-start justify-between p-2.5 rounded-lg bg-[#f8f4ed] border border-[#e8dfd3]">
+                        <div>
+                          <strong className="text-[#1a1918] block">Hủy dưới 48 giờ hoặc vắng mặt (No-show):</strong>
+                          <span>Không hoàn tiền đối với các đêm đã đặt nhằm bù đắp chi phí giữ chỗ của chủ nhà.</span>
+                        </div>
+                        <span className="font-bold text-[#9b2c22] shrink-0 text-sm">Không hoàn</span>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </article>
+            )}
+
+            {/* Content for: StayCover */}
+            {activeHelpArticle === 'staycover' && (
+              <article className="space-y-5 text-[#34302c]">
+                <div className="border-b border-[#e8dfd3] pb-4">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#b66d3a]">
+                    Chương trình bảo vệ độc quyền
+                  </span>
+                  <h3 id="helpArticleModalTitle" className="text-2xl font-serif font-bold text-[#1a1918] mt-1 mb-0">
+                    Bảo đảm đặt phòng StayCover
+                  </h3>
+                  <p className="text-xs text-[#706a62] mt-1 mb-0">
+                    Bảo vệ toàn diện được tích hợp miễn phí trong mọi đặt phòng StayHub
+                  </p>
+                </div>
+
+                <div className="space-y-4 text-sm leading-relaxed">
+                  <p className="text-[#423f3b] m-0">
+                    StayCover là cam kết độc quyền của StayHub nhằm đem đến sự an tâm tuyệt đối cho khách lưu trú từ khoảnh khắc xác nhận đến lúc trả phòng:
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="p-3.5 rounded-xl bg-[#f8f4ed] border border-[#e3dcd1]">
+                      <strong className="text-[#1a1918] block mb-1">1. Bảo đảm chủ nhà không hủy bất ngờ</strong>
+                      <p className="text-xs text-[#706a62] m-0">
+                        Nếu chủ nhà hủy phòng trong vòng 30 ngày trước giờ check-in, StayHub sẽ tìm cho bạn một chỗ nghỉ tương đương hoặc tốt hơn, hoặc hoàn lại 100% chi phí.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-[#f8f4ed] border border-[#e3dcd1]">
+                      <strong className="text-[#1a1918] block mb-1">2. Bảo đảm phòng đúng thực tế mô tả</strong>
+                      <p className="text-xs text-[#706a62] m-0">
+                        Nếu nhận phòng và phát hiện cơ sở vật chất bị thiếu hụt nghiêm trọng hoặc sai lệch so với bài đăng, đội ngũ hỗ trợ sẽ can thiệp xử lý trong vòng 2 giờ.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-[#f8f4ed] border border-[#e3dcd1]">
+                      <strong className="text-[#1a1918] block mb-1">3. Đường dây an toàn 24/7</strong>
+                      <p className="text-xs text-[#706a62] m-0">
+                        Luôn có chuyên viên chăm sóc khách hàng túc trực hỗ trợ giải quyết mọi thắc mắc trong suốt chuyến đi.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            )}
+
+            {/* Footer Action */}
+            <div className="mt-6 pt-4 border-t border-[#e8dfd3] flex justify-end">
+              <button
+                type="button"
+                onClick={() => setActiveHelpArticle(null)}
+                className="px-6 py-2.5 rounded-xl bg-[#1a1918] hover:bg-[#34302c] text-white font-semibold text-sm transition-colors cursor-pointer"
+              >
+                Đã hiểu &amp; Đóng bài viết
+              </button>
+            </div>
           </div>
         </div>
       )}

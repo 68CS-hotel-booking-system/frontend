@@ -15,7 +15,7 @@ export function HotelReviewsPage() {
   ]
 
   return (
-    <div className="hotel-reviews-page max-w-5xl">
+    <div className="hotel-reviews-page max-w-5xl mx-auto">
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         kicker="Ý KIẾN KHÁCH HÀNG"

@@ -1,15 +1,30 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
   DeleteOutlined,
+  EyeOutlined,
+  FolderAddOutlined,
+  FolderOutlined,
   PictureOutlined,
   PlusOutlined,
   StarFilled,
   StarOutlined,
+  SwapOutlined,
   UploadOutlined,
 } from '@ant-design/icons'
-import { Button, Image, Popconfirm, Tag, Tooltip, Upload, message } from 'antd'
+import {
+  Button,
+  Image,
+  Input,
+  Modal,
+  Popconfirm,
+  Select,
+  Tag,
+  Tooltip,
+  Upload,
+  message,
+} from 'antd'
 import type { UploadFile } from 'antd'
 import {
   uploadHotelMedia,
@@ -23,6 +38,58 @@ import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { PageLoading } from '@/shared/ui/PageLoading'
 
+export interface AlbumItem {
+  id: string
+  name: string
+  description?: string
+  isSystem?: boolean
+  minPhotos?: number
+}
+
+const SYSTEM_ALBUMS: AlbumItem[] = [
+  {
+    id: 'phong-ngu',
+    name: 'Phòng ngủ',
+    description: 'Giường, bàn trang điểm, không gian nghỉ ngơi chính',
+    isSystem: true,
+    minPhotos: 3,
+  },
+  {
+    id: 'phong-tam',
+    name: 'Phòng tắm',
+    description: 'Vòi sen đứng, bồn tắm, khăn và đồ dùng vệ sinh',
+    isSystem: true,
+    minPhotos: 2,
+  },
+  {
+    id: 'ban-cong',
+    name: 'Ban công & Tầm nhìn',
+    description: 'Tầm nhìn, góc ngắm cảnh, không gian ngoài trời',
+    isSystem: true,
+    minPhotos: 1,
+  },
+  {
+    id: 'khu-vuc-chung',
+    name: 'Khu vực chung',
+    description: 'Sảnh đón tiếp, nhà hàng, quầy bar, hồ bơi',
+    isSystem: true,
+    minPhotos: 2,
+  },
+  {
+    id: 'anh-bo-sung',
+    name: 'Ảnh bổ sung',
+    description: 'Các góc chụp và tiện ích khác',
+    isSystem: true,
+    minPhotos: 1,
+  },
+]
+
+const DEFAULT_ALBUM_KEYS = ['phong-ngu', 'phong-tam', 'ban-cong', 'khu-vuc-chung', 'anh-bo-sung']
+
+function resolvePhotoAlbum(mediaId: string, index: number, map: Record<string, string>): string {
+  return map[mediaId] || DEFAULT_ALBUM_KEYS[index % DEFAULT_ALBUM_KEYS.length]
+}
+
 export function HotelPhotosPage() {
   const { hotel, hotelId } = useHotelWorkspace()
   const { mode } = useDataMode()
@@ -33,6 +100,92 @@ export function HotelPhotosPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [isUpdatingGallery, setIsUpdatingGallery] = useState(false)
 
+  // Album state (persisted per hotel in localStorage)
+  const [customAlbums, setCustomAlbums] = useState<AlbumItem[]>(() => {
+    try {
+      const raw = localStorage.getItem(`stayhub_custom_albums_${hotelId}`)
+      return raw ? (JSON.parse(raw) as AlbumItem[]) : []
+    } catch {
+      return []
+    }
+  })
+
+  const [photoAlbumMap, setPhotoAlbumMap] = useState<Record<string, string>>(() => {
+    try {
+      const raw = localStorage.getItem(`stayhub_photo_albums_${hotelId}`)
+      return raw ? (JSON.parse(raw) as Record<string, string>) : {}
+    } catch {
+      return {}
+    }
+  })
+
+  const [activeAlbumId, setActiveAlbumId] = useState<string>('phong-ngu')
+  const [uploadTarget, setUploadTarget] = useState<string>('phong-ngu')
+
+  // Create album modal
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [newAlbumName, setNewAlbumName] = useState('')
+  const [albumNameError, setAlbumNameError] = useState<string | null>(null)
+
+  const existingImages = useMemo(() => imagesQuery.data ?? [], [imagesQuery.data])
+  const coverImage =
+    existingImages.find((img) => img.cover) || (existingImages.length > 0 ? existingImages[0] : null)
+  const displayCoverUrl = coverImage?.url || hotel?.coverImageUrl
+
+  const writesDisabled = !imagesQuery.canWrite || isUploading || isUpdatingGallery
+
+  // All combined albums
+  const allAlbums = useMemo(() => [...SYSTEM_ALBUMS, ...customAlbums], [customAlbums])
+
+  // Count photos per album
+  const albumCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: existingImages.length }
+    allAlbums.forEach((a) => {
+      counts[a.id] = 0
+    })
+    existingImages.forEach((img, idx) => {
+      const aId = resolvePhotoAlbum(img.mediaId, idx, photoAlbumMap)
+      counts[aId] = (counts[aId] || 0) + 1
+    })
+    return counts
+  }, [existingImages, allAlbums, photoAlbumMap])
+
+  // Filtered images for display
+  const displayedImages = useMemo(() => {
+    if (activeAlbumId === 'all') {
+      return existingImages.map((img, idx) => ({
+        ...img,
+        albumId: resolvePhotoAlbum(img.mediaId, idx, photoAlbumMap),
+        originalIndex: idx,
+      }))
+    }
+    return existingImages
+      .map((img, idx) => ({
+        ...img,
+        albumId: resolvePhotoAlbum(img.mediaId, idx, photoAlbumMap),
+        originalIndex: idx,
+      }))
+      .filter((img) => img.albumId === activeAlbumId)
+  }, [existingImages, activeAlbumId, photoAlbumMap])
+
+  // Preview groups for guest view: only non-empty albums!
+  const previewGroups = useMemo(() => {
+    return allAlbums
+      .map((album) => {
+        const items = existingImages
+          .map((img, idx) => ({
+            ...img,
+            albumId: resolvePhotoAlbum(img.mediaId, idx, photoAlbumMap),
+            originalIndex: idx,
+          }))
+          .filter((img) => img.albumId === album.id)
+        return { album, items }
+      })
+      .filter((group) => group.items.length > 0)
+  }, [allAlbums, existingImages, photoAlbumMap])
+
+  const activeAlbum = allAlbums.find((a) => a.id === activeAlbumId)
+
   if (!hotel) return null
 
   const breadcrumbItems = [
@@ -41,12 +194,7 @@ export function HotelPhotosPage() {
     { label: 'Hình ảnh' },
   ]
 
-  const existingImages = imagesQuery.data ?? []
-  const coverImage = existingImages.find((img) => img.cover) || (existingImages.length > 0 ? existingImages[0] : null)
-  const displayCoverUrl = coverImage?.url || hotel.coverImageUrl
-
-  const writesDisabled = !imagesQuery.canWrite || isUploading || isUpdatingGallery
-
+  // Mutator runner
   const runWrite = async (upload: boolean, operation: () => Promise<unknown>, success: string) => {
     if (activeWrite.current || !imagesQuery.canWrite) return
     activeWrite.current = true
@@ -60,9 +208,13 @@ export function HotelPhotosPage() {
         setFileList([])
       }
     } catch (error) {
-      message.error(error instanceof ApiError && error.status === 409
-        ? 'Dữ liệu ảnh hoặc phiên bản đã thay đổi. Đã yêu cầu tải lại; hãy kiểm tra thư viện rồi thử lại thao tác.'
-        : error instanceof Error ? error.message : 'Không thể lưu thư viện ảnh.')
+      message.error(
+        error instanceof ApiError && error.status === 409
+          ? 'Dữ liệu ảnh hoặc phiên bản đã thay đổi. Đã yêu cầu tải lại; hãy kiểm tra thư viện rồi thử lại thao tác.'
+          : error instanceof Error
+            ? error.message
+            : 'Không thể lưu thư viện ảnh.',
+      )
     } finally {
       activeWrite.current = false
       setIsUploading(false)
@@ -70,287 +222,937 @@ export function HotelPhotosPage() {
     }
   }
 
-  const handleUpload = () => runWrite(true, () => imagesQuery.saveGallery(async (current) => {
-    for (const item of fileList) {
-      const uploadKey = `${hotelId}:${item.uid}`
-      if (!uploadedIds.current.has(uploadKey)) {
-        if (!item.originFileObj) throw new Error(`Không đọc được tệp ${item.name}. Vui lòng chọn lại.`)
-        const uploaded = await uploadHotelMedia({ file: item.originFileObj, hotelId })
-        uploadedIds.current.set(uploadKey, uploaded.id)
-      }
-    }
-    const newIds = fileList.map((item) => uploadedIds.current.get(`${hotelId}:${item.uid}`)!)
-      .filter((id) => !current.some((image) => image.mediaId === id))
-    return [...current, ...newIds.map((mediaId, index) => ({
-      mediaId, sortOrder: 0, cover: !current.some((image) => image.cover) && index === 0,
-    }))].map((image, sortOrder) => ({ ...image, sortOrder }))
-  }), `Đã tải lên và lưu ${fileList.length} hình ảnh vào thư viện!`)
+  // Handle uploading photos to the target album
+  const handleUpload = () => {
+    const targetAlbumName = allAlbums.find((a) => a.id === uploadTarget)?.name || 'album'
+    return runWrite(
+      true,
+      async () => {
+        const uploadedPairs: Array<{ mediaId: string; albumId: string }> = []
+        await imagesQuery.saveGallery(async (current) => {
+          for (const item of fileList) {
+            const uploadKey = `${hotelId}:${item.uid}`
+            if (!uploadedIds.current.has(uploadKey)) {
+              if (!item.originFileObj)
+                throw new Error(`Không đọc được tệp ${item.name}. Vui lòng chọn lại.`)
+              const uploaded = await uploadHotelMedia({ file: item.originFileObj, hotelId })
+              uploadedIds.current.set(uploadKey, uploaded.id)
+            }
+            const mediaId = uploadedIds.current.get(uploadKey)!
+            uploadedPairs.push({ mediaId, albumId: uploadTarget })
+          }
+          const newIds = fileList
+            .map((item) => uploadedIds.current.get(`${hotelId}:${item.uid}`)!)
+            .filter((id) => !current.some((image) => image.mediaId === id))
+          return [
+            ...current,
+            ...newIds.map((mediaId, index) => ({
+              mediaId,
+              sortOrder: 0,
+              cover: !current.some((image) => image.cover) && index === 0,
+            })),
+          ].map((image, sortOrder) => ({ ...image, sortOrder }))
+        })
 
-  const handleSetCover = (targetMediaId: string) => runWrite(false, () => imagesQuery.saveGallery((current) => {
-    if (!current.some((image) => image.mediaId === targetMediaId)) throw new Error('Ảnh đã bị thay đổi. Vui lòng kiểm tra thư viện vừa tải lại.')
-    return current.map((image) => ({ ...image, cover: image.mediaId === targetMediaId }))
-  }), 'Đã cập nhật ảnh bìa đại diện của khách sạn!')
-
-  const handleDeleteImage = (targetMediaId: string) => runWrite(false, () => imagesQuery.saveGallery((current) => {
-    const remaining = current.filter((image) => image.mediaId !== targetMediaId)
-    const hasCover = remaining.some((image) => image.cover)
-    return remaining.map((image, sortOrder) => ({ ...image, sortOrder, cover: image.cover || !hasCover && sortOrder === 0 }))
-  }), 'Đã gỡ ảnh khỏi thư viện!')
-
-  const handleMoveOrder = (index: number, direction: 'left' | 'right') => {
-    const mediaId = existingImages[index]?.mediaId
-    return runWrite(false, () => imagesQuery.saveGallery((current) => {
-      const from = current.findIndex((image) => image.mediaId === mediaId)
-      const to = direction === 'left' ? from - 1 : from + 1
-      if (from < 0 || to < 0 || to >= current.length) throw new Error('Thứ tự ảnh đã thay đổi. Vui lòng kiểm tra thư viện vừa tải lại.')
-      const reordered = [...current]
-      const previous = reordered[from]
-      reordered[from] = reordered[to]
-      reordered[to] = previous
-      return reordered.map((image, sortOrder) => ({ ...image, sortOrder }))
-    }), 'Đã thay đổi thứ tự ảnh!')
+        // Persist photo-to-album mapping
+        setPhotoAlbumMap((prev) => {
+          const next = { ...prev }
+          uploadedPairs.forEach((p) => {
+            next[p.mediaId] = p.albumId
+          })
+          try {
+            localStorage.setItem(`stayhub_photo_albums_${hotelId}`, JSON.stringify(next))
+          } catch {
+            // ignore
+          }
+          return next
+        })
+      },
+      `Đã tải lên và lưu ${fileList.length} hình ảnh vào album "${targetAlbumName}"!`,
+    )
   }
+
+  const handleSetCover = (targetMediaId: string) =>
+    runWrite(
+      false,
+      () =>
+        imagesQuery.saveGallery((current) => {
+          if (!current.some((image) => image.mediaId === targetMediaId))
+            throw new Error('Ảnh đã bị thay đổi. Vui lòng kiểm tra thư viện vừa tải lại.')
+          return current.map((image) => ({ ...image, cover: image.mediaId === targetMediaId }))
+        }),
+      'Đã cập nhật ảnh bìa đại diện của khách sạn!',
+    )
+
+  const handleDeleteImage = (targetMediaId: string) =>
+    runWrite(
+      false,
+      () =>
+        imagesQuery.saveGallery((current) => {
+          const remaining = current.filter((image) => image.mediaId !== targetMediaId)
+          const hasCover = remaining.some((image) => image.cover)
+          return remaining.map((image, sortOrder) => ({
+            ...image,
+            sortOrder,
+            cover: image.cover || (!hasCover && sortOrder === 0),
+          }))
+        }),
+      'Đã gỡ ảnh khỏi thư viện!',
+    )
+
+  const handleMoveOrder = (indexInExisting: number, direction: 'left' | 'right') => {
+    const mediaId = existingImages[indexInExisting]?.mediaId
+    return runWrite(
+      false,
+      () =>
+        imagesQuery.saveGallery((current) => {
+          const from = current.findIndex((image) => image.mediaId === mediaId)
+          const to = direction === 'left' ? from - 1 : from + 1
+          if (from < 0 || to < 0 || to >= current.length)
+            throw new Error('Thứ tự ảnh đã thay đổi. Vui lòng kiểm tra thư viện vừa tải lại.')
+          const reordered = [...current]
+          const previous = reordered[from]
+          reordered[from] = reordered[to]
+          reordered[to] = previous
+          return reordered.map((image, sortOrder) => ({ ...image, sortOrder }))
+        }),
+      'Đã thay đổi thứ tự ảnh!',
+    )
+  }
+
+  const handleReassignPhotoAlbum = (mediaId: string, newAlbumId: string) => {
+    setPhotoAlbumMap((prev) => {
+      const next = { ...prev, [mediaId]: newAlbumId }
+      try {
+        localStorage.setItem(`stayhub_photo_albums_${hotelId}`, JSON.stringify(next))
+      } catch {
+        // ignore
+      }
+      return next
+    })
+    const albumName = allAlbums.find((a) => a.id === newAlbumId)?.name || 'album'
+    message.success(`Đã chuyển ảnh sang album "${albumName}"!`)
+  }
+
+  const handleCreateAlbum = () => {
+    const trimmed = newAlbumName.trim()
+    if (!trimmed) {
+      setAlbumNameError('Vui lòng nhập tên album.')
+      return
+    }
+    if (trimmed.length > 40) {
+      setAlbumNameError('Tên album tối đa 40 ký tự.')
+      return
+    }
+    if (allAlbums.some((a) => a.name.toLowerCase() === trimmed.toLowerCase())) {
+      setAlbumNameError('Tên album này đã tồn tại.')
+      return
+    }
+
+    const newAlbum: AlbumItem = {
+      id: `custom-${Date.now()}`,
+      name: trimmed,
+      description: 'Album tùy chỉnh của khách sạn',
+      isSystem: false,
+      minPhotos: 1,
+    }
+
+    const nextCustom = [...customAlbums, newAlbum]
+    setCustomAlbums(nextCustom)
+    try {
+      localStorage.setItem(`stayhub_custom_albums_${hotelId}`, JSON.stringify(nextCustom))
+    } catch {
+      // ignore
+    }
+
+    setActiveAlbumId(newAlbum.id)
+    setUploadTarget(newAlbum.id)
+    setNewAlbumName('')
+    setAlbumNameError(null)
+    setCreateModalOpen(false)
+    message.success(`Đã tạo album "${trimmed}" thành công!`)
+  }
+
+  const handleDeleteCustomAlbum = (albumId: string) => {
+    const targetAlbum = customAlbums.find((a) => a.id === albumId)
+    if (!targetAlbum) return
+
+    // Reassign photos in this album to anh-bo-sung
+    setPhotoAlbumMap((prev) => {
+      const next = { ...prev }
+      Object.keys(next).forEach((mId) => {
+        if (next[mId] === albumId) {
+          next[mId] = 'anh-bo-sung'
+        }
+      })
+      try {
+        localStorage.setItem(`stayhub_photo_albums_${hotelId}`, JSON.stringify(next))
+      } catch {
+        // ignore
+      }
+      return next
+    })
+
+    const nextCustom = customAlbums.filter((a) => a.id !== albumId)
+    setCustomAlbums(nextCustom)
+    try {
+      localStorage.setItem(`stayhub_custom_albums_${hotelId}`, JSON.stringify(nextCustom))
+    } catch {
+      // ignore
+    }
+
+    if (activeAlbumId === albumId) {
+      setActiveAlbumId('phong-ngu')
+    }
+    if (uploadTarget === albumId) {
+      setUploadTarget('phong-ngu')
+    }
+    message.success(`Đã xóa album "${targetAlbum.name}". Các ảnh đã được chuyển về "Ảnh bổ sung".`)
+  }
+
+  const scrollToUpload = () => {
+    const el = document.getElementById('upload-card-section')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
   return (
-    <div className="hotel-photos-page max-w-5xl space-y-6">
+    <div className="hotel-photos-page max-w-6xl mx-auto space-y-6">
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         kicker="BỘ SƯU TẬP &amp; HÌNH ẢNH"
-        title="Hình ảnh khách sạn"
-        description="Quản lý ảnh bìa đại diện và danh sách hình ảnh thực tế của cơ sở lưu trú. Hình ảnh rõ nét sẽ thu hút khách đặt phòng hơn."
+        title="Hình ảnh khách sạn theo album"
+        description="Quản lý ảnh đại diện và phân bổ hình ảnh vào các album chuyên biệt (Phòng ngủ, Phòng tắm, Tiện ích...). Khách sạn có bộ ảnh rõ ràng, phân loại khoa học sẽ tăng tỷ lệ đặt phòng đến 45%."
         extra={
           <Button
             type="primary"
             icon={<UploadOutlined />}
-            loading={isUploading}
-            disabled={fileList.length === 0 || writesDisabled}
-            onClick={handleUpload}
-            className="!bg-[#0b5f53]"
+            onClick={scrollToUpload}
+            className="!bg-[#0b5f53] !rounded-lg font-medium"
           >
-            Lưu vào album ({fileList.length})
+            Tải ảnh vào album
           </Button>
         }
       />
 
-      {mode === 'mock' && <p role="status">Thư viện ảnh chưa có dữ liệu mẫu. Chuyển sang API để tải và lưu ảnh thật.</p>}
-
-      {/* Ảnh bìa đại diện hiện tại */}
-      <div className="bg-white p-5 rounded-2xl border border-[#dce7e3] shadow-xs">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-[#12211d] m-0 flex items-center gap-2">
-            <PictureOutlined className="text-[#0b5f53]" />
-            <span>Ảnh bìa đại diện hiện tại</span>
-          </h3>
-          {displayCoverUrl && (
-            <Tag color="gold" className="!rounded-md">
-              <StarFilled /> Ảnh bìa
-            </Tag>
-          )}
+      {mode === 'mock' && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+          Chế độ dữ liệu mẫu (Mock). Chuyển sang API để tải và đồng bộ ảnh thực tế lên hệ thống lưu trữ.
         </div>
+      )}
 
-        {displayCoverUrl ? (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-            <div className="relative rounded-xl overflow-hidden w-full sm:w-72 h-44 bg-[#eef8f5] border border-[#dce7e3] shrink-0">
-              <Image
-                src={displayCoverUrl}
-                alt={hotel.name}
-                className="w-full h-full object-cover rounded-xl"
-                rootClassName="w-full h-full"
-              />
-            </div>
-            <div className="text-xs text-[#5f736e] space-y-1.5">
-              <p className="font-semibold text-[#12211d] text-sm mb-1">
-                Ảnh đại diện xuất hiện đầu tiên trên kết quả tìm kiếm và thẻ khách sạn.
-              </p>
-              <p>
-                Để đổi ảnh bìa, bạn hãy chọn một ảnh khác trong thư viện bên dưới và bấm nút{' '}
-                <strong className="text-[#0b5f53]">"Đặt làm ảnh bìa"</strong>.
-              </p>
-              {coverImage && (
-                <div className="text-[11px] text-[#8c9e99] pt-1">
-                  Mã media: {coverImage.mediaId}
+      {/* KHỐI 1: TỔNG QUAN BỘ SƯU TẬP & ẢNH BÌA ĐẠI DIỆN */}
+      <section className="bg-white p-5 rounded-2xl border border-[#dce7e3] shadow-xs">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          {/* Trái: Ảnh bìa đại diện thu gọn + Xem to */}
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="relative w-32 sm:w-36 h-24 rounded-xl overflow-hidden bg-[#eef8f5] border border-[#dce7e3] shrink-0 group">
+              {displayCoverUrl ? (
+                <Image
+                  src={displayCoverUrl}
+                  alt={`Ảnh bìa ${hotel.name}`}
+                  className="w-full h-full object-cover"
+                  rootClassName="w-full h-full"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-xs text-[#8c9e99]">
+                  <PictureOutlined className="text-xl mb-1 text-[#0b5f53]" />
+                  <span>Chưa có bìa</span>
                 </div>
               )}
+              <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#0b5f53] text-white flex items-center gap-1 shadow-xs pointer-events-none">
+                <StarFilled className="text-[9px]" /> Ảnh bìa
+              </span>
+            </div>
+
+            {/* Thông tin nhanh & Chỉ số */}
+            <div className="min-w-0 space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-bold text-[#12211d] m-0 truncate">
+                  Bộ sưu tập {hotel.name}
+                </h2>
+                {coverImage && (
+                  <Tag color="success" className="!rounded-md !bg-[#eef8f5] !text-[#0b5f53] !border-[#bcd8cf] !text-[11px] !m-0">
+                    Đã thiết lập ảnh bìa
+                  </Tag>
+                )}
+              </div>
+
+              <p className="text-xs text-[#5f736e] m-0">
+                Ảnh bìa hiển thị đầu tiên trên kết quả tìm kiếm. Để chọn ảnh bìa mới, bấm nút <strong>"Đặt bìa"</strong> ở bức ảnh mong muốn bên dưới.
+              </p>
+
+              <div className="flex items-center gap-2.5 pt-1 text-xs text-[#5f736e] flex-wrap">
+                <span className="inline-flex items-center gap-1.5 bg-[#f7fbfa] px-2.5 py-1 rounded-lg border border-[#e4e9e7]">
+                  <PictureOutlined className="text-[#0b5f53]" />
+                  <span><strong>{existingImages.length}</strong> ảnh tổng cộng</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 bg-[#f7fbfa] px-2.5 py-1 rounded-lg border border-[#e4e9e7]">
+                  <FolderOutlined className="text-[#0b5f53]" />
+                  <span><strong>{previewGroups.length}</strong> / {allAlbums.length} album có ảnh</span>
+                </span>
+              </div>
             </div>
           </div>
-        ) : (
-          <div className="p-8 text-center bg-[#f7fbfa] rounded-xl border border-dashed border-[#dce7e3] text-xs text-[#5f736e]">
-            Chưa thiết lập ảnh bìa. Hãy chọn ảnh và tải lên ở mục bên dưới để hệ thống tự động gán ảnh bìa đầu tiên.
-          </div>
-        )}
-      </div>
 
-      {/* Thư viện hình ảnh đã lưu trên hệ thống */}
-      <div className="bg-white p-5 rounded-2xl border border-[#dce7e3] shadow-xs">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h3 className="text-sm font-bold text-[#12211d] m-0">
-              Thư viện hình ảnh ({existingImages.length} ảnh)
-            </h3>
-            <p className="text-xs text-[#5f736e] mt-1 mb-0">
-              Nhấp vào ảnh để xem kích thước lớn. Khách sạn cần tối thiểu 5 ảnh để đạt chuẩn hiển thị tốt nhất.
-            </p>
+          {/* Phải: Phím tắt thao tác nhanh */}
+          <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+            <Button
+              icon={<FolderAddOutlined />}
+              onClick={() => {
+                setNewAlbumName('')
+                setAlbumNameError(null)
+                setCreateModalOpen(true)
+              }}
+              className="!rounded-xl text-xs font-medium"
+            >
+              Tạo album mới
+            </Button>
+            <Button
+              type="primary"
+              icon={<UploadOutlined />}
+              onClick={scrollToUpload}
+              className="!bg-[#0b5f53] !rounded-xl text-xs font-medium"
+            >
+              Tải ảnh mới
+            </Button>
           </div>
-          {existingImages.length < 5 && (
-            <Tag color="orange" className="!rounded-md">
-              Cần thêm {5 - existingImages.length} ảnh nữa
-            </Tag>
-          )}
+        </div>
+      </section>
+
+      {/* KHỐI 2: KHÔNG GIAN QUẢN LÝ ALBUM & LƯỚI ẢNH (HỢP NHẤT TRONG 1 THẺ) */}
+      <section className="bg-white rounded-2xl border border-[#dce7e3] shadow-xs overflow-hidden">
+        {/* Hàng A: Thanh chọn Album dạng Chips */}
+        <div className="p-4 sm:p-5 border-b border-[#f2f6f5] bg-[#fafcfb]">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-[#12211d] uppercase tracking-wider flex items-center gap-2">
+              <FolderOutlined className="text-[#0b5f53]" />
+              <span>Phân loại album ảnh</span>
+            </span>
+            <span className="text-[11px] text-[#5f736e]">
+              Bấm vào từng album để lọc ảnh hoặc sắp xếp thứ tự
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Chip Tất cả */}
+            <button
+              type="button"
+              onClick={() => setActiveAlbumId('all')}
+              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border ${
+                activeAlbumId === 'all'
+                  ? 'bg-[#eef8f5] border-[#0b5f53] text-[#0b5f53] font-semibold ring-1 ring-[#0b5f53]/20 shadow-2xs'
+                  : 'bg-white border-[#dce7e3] text-[#5f736e] hover:border-[#bcd8cf] hover:text-[#12211d]'
+              }`}
+            >
+              <span>Tất cả</span>
+              <span
+                className={`text-[11px] px-1.5 py-0.2 rounded-full ${
+                  activeAlbumId === 'all' ? 'bg-[#0b5f53] text-white' : 'bg-[#f4f8f7] text-[#8c9e99]'
+                }`}
+              >
+                {albumCounts.all ?? 0}
+              </span>
+            </button>
+
+            {/* Các album hệ thống và tùy chỉnh */}
+            {allAlbums.map((album) => {
+              const isActive = activeAlbumId === album.id
+              const count = albumCounts[album.id] ?? 0
+              return (
+                <button
+                  key={album.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveAlbumId(album.id)
+                    setUploadTarget(album.id)
+                  }}
+                  className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border ${
+                    isActive
+                      ? 'bg-[#eef8f5] border-[#0b5f53] text-[#0b5f53] font-semibold ring-1 ring-[#0b5f53]/20 shadow-2xs'
+                      : 'bg-white border-[#dce7e3] text-[#5f736e] hover:border-[#bcd8cf] hover:text-[#12211d]'
+                  }`}
+                >
+                  <span>{album.name}</span>
+                  <span
+                    className={`text-[11px] px-1.5 py-0.2 rounded-full ${
+                      isActive ? 'bg-[#0b5f53] text-white' : 'bg-[#f4f8f7] text-[#8c9e99]'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+
+            {/* Nút Tạo album mới */}
+            <button
+              type="button"
+              onClick={() => {
+                setNewAlbumName('')
+                setAlbumNameError(null)
+                setCreateModalOpen(true)
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-dashed border-[#0b5f53]/60 bg-[#f7fbfa] text-[#0b5f53] hover:bg-[#eef8f5] hover:border-[#0b5f53]"
+            >
+              <PlusOutlined className="text-[11px]" />
+              <span>Tạo album mới</span>
+            </button>
+          </div>
         </div>
 
-        {imagesQuery.isPending ? (
-          <PageLoading />
-        ) : imagesQuery.isError ? (
-          <ErrorState
-            error={imagesQuery.error}
-            onRetry={() => void imagesQuery.refetch()}
-          />
-        ) : existingImages.length === 0 ? (
-          <div className="py-8 text-center bg-[#f7fbfa] rounded-xl border border-dashed border-[#dce7e3]">
-            <EmptyState
-              title="Chưa có hình ảnh nào trong thư viện"
-              description="Khách sạn của bạn chưa tải lên bức ảnh nào. Chọn ảnh ở mục bên dưới để tải lên."
+        {/* Hàng B: Header Album đang chọn & Thao tác */}
+        <div className="p-4 sm:px-5 sm:py-3.5 border-b border-[#f2f6f5] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h3 className="text-base font-bold text-[#12211d] m-0">
+              {activeAlbumId === 'all' ? 'Tất cả hình ảnh cơ sở' : activeAlbum?.name}
+            </h3>
+            {activeAlbum && (
+              <>
+                {displayedImages.length >= (activeAlbum.minPhotos || 1) ? (
+                  <Tag color="success" className="!rounded-md !bg-[#eef8f5] !text-[#0b5f53] !border-[#bcd8cf] !m-0">
+                    Đạt yêu cầu ({displayedImages.length} ảnh)
+                  </Tag>
+                ) : (
+                  <Tag color="warning" className="!rounded-md !m-0">
+                    Cần tối thiểu {activeAlbum.minPhotos} ảnh (hiện có {displayedImages.length})
+                  </Tag>
+                )}
+                {activeAlbum.isSystem ? (
+                  <span className="text-[11px] text-[#8c9e99] bg-[#f4f8f7] px-2 py-0.5 rounded-md font-medium">
+                    Mặc định
+                  </span>
+                ) : (
+                  <Popconfirm
+                    title={`Xóa album "${activeAlbum.name}"?`}
+                    description="Các bức ảnh trong album này sẽ được chuyển sang album 'Ảnh bổ sung'."
+                    okText="Xóa album"
+                    cancelText="Hủy"
+                    okButtonProps={{ danger: true }}
+                    onConfirm={() => handleDeleteCustomAlbum(activeAlbum.id)}
+                  >
+                    <Button size="small" danger type="text" icon={<DeleteOutlined />} className="text-xs">
+                      Xóa album này
+                    </Button>
+                  </Popconfirm>
+                )}
+              </>
+            )}
+            {activeAlbum?.description && (
+              <span className="text-xs text-[#5f736e] hidden md:inline-block border-l border-[#dce7e3] pl-2.5 ml-1">
+                {activeAlbum.description}
+              </span>
+            )}
+          </div>
+
+          <Button
+            size="small"
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              if (activeAlbumId !== 'all') {
+                setUploadTarget(activeAlbumId)
+              }
+              scrollToUpload()
+            }}
+            className="!bg-[#0b5f53] !rounded-lg text-xs shrink-0 self-start sm:self-auto font-medium"
+          >
+            Thêm ảnh vào album này
+          </Button>
+        </div>
+
+        {/* Hàng C: Lưới ảnh trong Album */}
+        <div className="p-4 sm:p-5">
+          {imagesQuery.isPending ? (
+            <PageLoading />
+          ) : imagesQuery.isError ? (
+            <ErrorState error={imagesQuery.error} onRetry={() => void imagesQuery.refetch()} />
+          ) : displayedImages.length === 0 ? (
+            <div className="py-10 text-center bg-[#f7fbfa] rounded-xl border border-dashed border-[#dce7e3]">
+              <EmptyState
+                title={`Chưa có ảnh nào trong album ${activeAlbum?.name || ''}`}
+                description="Hãy chọn hoặc kéo thả các tệp ảnh ở phần tải lên bên dưới để đưa ảnh vào album này."
+              />
+              <Button
+                type="primary"
+                size="small"
+                icon={<UploadOutlined />}
+                onClick={() => {
+                  if (activeAlbumId !== 'all') setUploadTarget(activeAlbumId)
+                  scrollToUpload()
+                }}
+                className="mt-4 !bg-[#0b5f53] !rounded-lg"
+              >
+                Tải ảnh vào album ngay
+              </Button>
+            </div>
+          ) : (
+            <Image.PreviewGroup>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {displayedImages.map((img) => {
+                  const isCover = img.cover || (img.originalIndex === 0 && !existingImages.some((i) => i.cover))
+                  const currentImgAlbum = allAlbums.find((a) => a.id === img.albumId)
+
+                  return (
+                    <div
+                      key={img.mediaId}
+                      className={`rounded-xl border overflow-hidden bg-white shadow-xs transition-shadow hover:shadow-md flex flex-col ${
+                        isCover ? 'border-[#0b5f53] ring-2 ring-[#0b5f53]/20' : 'border-[#dce7e3]'
+                      }`}
+                    >
+                      <div className="relative h-40 bg-[#f7fbfa] overflow-hidden group">
+                        {img.url ? (
+                          <Image
+                            src={img.url}
+                            alt={`Ảnh khách sạn ${img.originalIndex + 1}`}
+                            className="w-full h-40 object-cover"
+                            rootClassName="w-full h-full"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-xs text-[#8c9e99] bg-[#eef8f5]">
+                            <PictureOutlined className="text-2xl mb-1 text-[#0b5f53]" />
+                            <span>Ảnh #{img.originalIndex + 1}</span>
+                          </div>
+                        )}
+
+                        {/* Badges góc trên */}
+                        <div className="absolute top-2 left-2 flex gap-1 z-10">
+                          <span className="px-2 py-0.5 rounded-md bg-black/60 text-white text-[11px] font-medium backdrop-blur-xs">
+                            #{img.originalIndex + 1}
+                          </span>
+                          {isCover && (
+                            <span className="px-2 py-0.5 rounded-md bg-[#0b5f53] text-white text-[11px] font-semibold flex items-center gap-1 shadow-xs">
+                              <StarFilled /> Bìa
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Nhãn tên album ở góc dưới ảnh khi xem tất cả */}
+                        {activeAlbumId === 'all' && currentImgAlbum && (
+                          <div className="absolute bottom-2 left-2 z-10">
+                            <span className="px-2 py-0.5 rounded-md bg-white/90 text-[#0b5f53] text-[10px] font-semibold backdrop-blur-xs shadow-xs">
+                              {currentImgAlbum.name}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Menu điều khiển của bức ảnh */}
+                      <div className="p-2.5 bg-white flex flex-col gap-2 border-t border-[#edf4f1] mt-auto">
+                        {/* Hàng chuyển đổi album */}
+                        <div className="flex items-center justify-between gap-1 text-[11px]">
+                          <span className="text-[#8c9e99] flex items-center gap-1 shrink-0">
+                            <SwapOutlined /> Album:
+                          </span>
+                          <Select
+                            size="small"
+                            value={img.albumId}
+                            onChange={(newVal) => handleReassignPhotoAlbum(img.mediaId, newVal)}
+                            className="w-[140px] text-xs"
+                            options={allAlbums.map((a) => ({
+                              value: a.id,
+                              label: a.name,
+                            }))}
+                          />
+                        </div>
+
+                        {/* Hàng thao tác thứ tự & đặt bìa & xóa */}
+                        <div className="flex items-center justify-between gap-1 pt-1 border-t border-[#f4f8f7]">
+                          <div className="flex items-center gap-1">
+                            <Tooltip title="Chuyển về trước">
+                              <Button
+                                size="small"
+                                type="text"
+                                icon={<ArrowLeftOutlined />}
+                                disabled={img.originalIndex === 0 || writesDisabled}
+                                onClick={() => handleMoveOrder(img.originalIndex, 'left')}
+                              />
+                            </Tooltip>
+                            <Tooltip title="Chuyển về sau">
+                              <Button
+                                size="small"
+                                type="text"
+                                icon={<ArrowRightOutlined />}
+                                disabled={img.originalIndex === existingImages.length - 1 || writesDisabled}
+                                onClick={() => handleMoveOrder(img.originalIndex, 'right')}
+                              />
+                            </Tooltip>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            {!isCover && (
+                              <Tooltip title="Đặt làm ảnh bìa">
+                                <Button
+                                  size="small"
+                                  icon={<StarOutlined />}
+                                  disabled={writesDisabled}
+                                  onClick={() => handleSetCover(img.mediaId)}
+                                  className="text-xs"
+                                >
+                                  Đặt bìa
+                                </Button>
+                              </Tooltip>
+                            )}
+                            <Popconfirm
+                              title="Gỡ ảnh này khỏi khách sạn?"
+                              okText="Gỡ"
+                              cancelText="Hủy"
+                              okButtonProps={{ danger: true }}
+                              onConfirm={() => handleDeleteImage(img.mediaId)}
+                            >
+                              <Button
+                                size="small"
+                                type="text"
+                                danger
+                                icon={<DeleteOutlined />}
+                                disabled={writesDisabled}
+                              />
+                            </Popconfirm>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </Image.PreviewGroup>
+          )}
+        </div>
+      </section>
+
+      {/* THẺ 4: Tải lên bộ ảnh mới (#upload-card) */}
+      <section id="upload-card-section" className="bg-white p-5 sm:p-6 rounded-2xl border border-[#e4e9e7] shadow-xs">
+        {/* Card Head matching prototype */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-[#12211d] m-0 flex items-center gap-2">
+              <UploadOutlined className="text-[#0b5f53] text-lg" />
+              <span>Tải lên bộ ảnh mới</span>
+            </h2>
+            <p className="text-xs text-[#6a7a74] mt-1 mb-0">
+              JPG, PNG, WEBP, tối đa 10MB mỗi ảnh.
+            </p>
+          </div>
+
+          {/* Ô chọn Album đích nhận ảnh tải lên */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <span className="text-xs text-[#6a7a74] font-normal">Tải vào album</span>
+            <Select
+              value={uploadTarget}
+              onChange={setUploadTarget}
+              className="w-[170px] sm:w-[190px]"
+              options={allAlbums.map((a) => ({
+                value: a.id,
+                label: a.name,
+              }))}
             />
           </div>
-        ) : (
-          <Image.PreviewGroup>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-              {existingImages.map((img, index) => {
-                const isCover = img.cover || index === 0 && !existingImages.some((i) => i.cover)
+        </div>
+
+        {/* Dropzone container */}
+        <div className="custom-dropzone-uploader">
+          <Upload.Dragger
+            disabled={mode !== 'api' || isUploading || isUpdatingGallery}
+            fileList={fileList}
+            onChange={({ fileList: nextList }) => setFileList(nextList)}
+            beforeUpload={() => false}
+            multiple
+            accept="image/jpeg,image/png,image/webp"
+            showUploadList={false}
+          >
+            <div className="py-7 px-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer">
+              <UploadOutlined className="text-2xl text-[#0b5f53] mb-1" />
+              <strong className="text-sm font-semibold text-[#12211d]">
+                Kéo ảnh vào đây hoặc bấm để chọn
+              </strong>
+              <span className="text-xs text-[#6a7a74]">
+                Hỗ trợ nhiều ảnh cùng lúc · JPG, PNG, WEBP · tối đa 10MB mỗi ảnh
+              </span>
+            </div>
+          </Upload.Dragger>
+        </div>
+
+        {/* Danh sách ảnh chờ tải lên */}
+        {fileList.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-[#e4e9e7]">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wide text-[#344a44]">
+                  Danh sách ảnh chờ tải lên
+                </span>
+                <span className="text-xs text-[#6a7a74]">({fileList.length} ảnh)</span>
+              </div>
+              <Button
+                size="small"
+                type="text"
+                danger
+                onClick={() => setFileList([])}
+                disabled={writesDisabled}
+              >
+                Xóa tất cả
+              </Button>
+            </div>
+
+            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+              {fileList.map((file) => {
+                const previewUrl = file.originFileObj ? URL.createObjectURL(file.originFileObj) : ''
+                const sizeMb = file.size ? (file.size / (1024 * 1024)).toFixed(2) + ' MB' : ''
 
                 return (
                   <div
-                    key={img.mediaId}
-                    className={`rounded-xl border overflow-hidden bg-white shadow-xs transition-shadow hover:shadow-md flex flex-col ${
-                      isCover ? 'border-[#0b5f53] ring-2 ring-[#0b5f53]/20' : 'border-[#dce7e3]'
-                    }`}
+                    key={file.uid}
+                    className="flex items-center justify-between gap-3 p-2 bg-[#fbfcfb] rounded-xl border border-[#e4e9e7]"
                   >
-                    <div className="relative h-40 bg-[#f7fbfa] overflow-hidden">
-                      {img.url ? (
-                        <Image
-                          src={img.url}
-                          alt={`Ảnh khách sạn ${index + 1}`}
-                          className="w-full h-40 object-cover"
-                          rootClassName="w-full h-full"
+                    <div className="flex items-center gap-3 min-w-0">
+                      {previewUrl && (
+                        <img
+                          src={previewUrl}
+                          alt={file.name}
+                          className="w-12 h-10 object-cover rounded-lg shrink-0 bg-[#eef1f0]"
                         />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-xs text-[#8c9e99] bg-[#eef8f5]">
-                          <PictureOutlined className="text-2xl mb-1 text-[#0b5f53]" />
-                          <span>Ảnh #{index + 1}</span>
-                        </div>
                       )}
-
-                      <div className="absolute top-2 left-2 flex gap-1 z-10">
-                        <span className="px-2 py-0.5 rounded-md bg-black/60 text-white text-[11px] font-medium backdrop-blur-xs">
-                          #{index + 1}
-                        </span>
-                        {isCover && (
-                          <span className="px-2 py-0.5 rounded-md bg-[#0b5f53] text-white text-[11px] font-semibold flex items-center gap-1 shadow-xs">
-                            <StarFilled /> Bìa
-                          </span>
-                        )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-[#12211d] truncate m-0">{file.name}</p>
+                        <span className="text-[11px] text-[#6a7a74]">{sizeMb}</span>
                       </div>
                     </div>
 
-                    <div className="p-2.5 bg-white flex items-center justify-between gap-1 border-t border-[#edf4f1] mt-auto">
-                      <div className="flex items-center gap-1">
-                        <Tooltip title="Chuyển về trước">
-                          <Button
-                            size="small"
-                            type="text"
-                            icon={<ArrowLeftOutlined />}
-                            disabled={index === 0 || writesDisabled}
-                            onClick={() => handleMoveOrder(index, 'left')}
-                          />
-                        </Tooltip>
-                        <Tooltip title="Chuyển về sau">
-                          <Button
-                            size="small"
-                            type="text"
-                            icon={<ArrowRightOutlined />}
-                            disabled={index === existingImages.length - 1 || writesDisabled}
-                            onClick={() => handleMoveOrder(index, 'right')}
-                          />
-                        </Tooltip>
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        {!isCover && (
-                          <Tooltip title="Đặt làm ảnh bìa">
-                            <Button
-                              size="small"
-                              icon={<StarOutlined />}
-                              disabled={writesDisabled}
-                              onClick={() => handleSetCover(img.mediaId)}
-                            >
-                              Đặt bìa
-                            </Button>
-                          </Tooltip>
-                        )}
-                        <Popconfirm
-                          title="Gỡ ảnh này khỏi khách sạn?"
-                          okText="Gỡ"
-                          cancelText="Hủy"
-                          okButtonProps={{ danger: true }}
-                          onConfirm={() => handleDeleteImage(img.mediaId)}
-                        >
-                          <Button
-                            size="small"
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                            disabled={writesDisabled}
-                          />
-                        </Popconfirm>
-                      </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[11px] text-[#0b5f53] bg-[#eef8f5] px-2 py-0.5 rounded-md font-medium">
+                        {allAlbums.find((a) => a.id === uploadTarget)?.name}
+                      </span>
+                      <Button
+                        type="text"
+                        danger
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        disabled={writesDisabled}
+                        onClick={() => setFileList((prev) => prev.filter((f) => f.uid !== file.uid))}
+                      />
                     </div>
                   </div>
                 )
               })}
             </div>
-          </Image.PreviewGroup>
-        )}
-      </div>
 
-      {/* Upload Zone */}
-      <div className="bg-white p-5 rounded-2xl border border-[#dce7e3] shadow-xs">
-        <h3 className="text-sm font-bold text-[#12211d] mb-1">Tải lên bộ ảnh mới</h3>
-        <p className="text-xs text-[#5f736e] mb-4">
-          Hỗ trợ định dạng JPG, PNG, WEBP. Dung lượng tối đa 10MB mỗi ảnh. Các ảnh tải lên sẽ tự động lưu vào bộ sưu tập của khách sạn.
-        </p>
+            <div className="mt-4 pt-3 border-t border-[#f2f6f5] flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-[#5f736e]">
+                Sẵn sàng tải <strong>{fileList.length}</strong> hình ảnh vào album{' '}
+                <strong className="text-[#0b5f53]">
+                  "{allAlbums.find((a) => a.id === uploadTarget)?.name}"
+                </strong>
+              </div>
 
-        <Upload
-          disabled={mode !== 'api' || isUploading || isUpdatingGallery}
-          listType="picture-card"
-          fileList={fileList}
-          onChange={({ fileList: nextList }) => setFileList(nextList)}
-          beforeUpload={() => false}
-          multiple
-          accept="image/*"
-        >
-          <div>
-            <PlusOutlined />
-            <div style={{ marginTop: 8 }} className="text-xs">
-              Chọn ảnh
+              <Button
+                type="primary"
+                icon={<UploadOutlined />}
+                loading={isUploading}
+                disabled={writesDisabled}
+                onClick={handleUpload}
+                className="!bg-[#0b5f53] !rounded-lg"
+              >
+                Xác nhận tải lên ({fileList.length} ảnh)
+              </Button>
             </div>
           </div>
-        </Upload>
+        )}
+      </section>
 
-        {fileList.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-[#dce7e3] flex justify-end">
-            <Button
-              type="primary"
-              icon={<UploadOutlined />}
-              loading={isUploading}
-              disabled={writesDisabled}
-              onClick={handleUpload}
-              className="!bg-[#0b5f53]"
-            >
-              Lưu {fileList.length} hình ảnh đã chọn
-            </Button>
+      {/* THẺ 5: Xem trước giao diện khách (Guest Preview) */}
+      <section className="bg-white p-5 rounded-2xl border border-[#e4e9e7] shadow-xs">
+        {/* 1. Card Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-[#12211d] m-0 flex items-center gap-2">
+              <EyeOutlined className="text-[#0f5c4d]" />
+              <span>Xem trước giao diện khách</span>
+            </h2>
+            <p className="text-xs text-[#6a7a74] mt-1 mb-0">
+              Ảnh được nhóm theo album. Album rỗng sẽ không hiển thị ở giao diện khách.
+            </p>
+          </div>
+        </div>
+
+        {previewGroups.length === 0 ? (
+          /* Trạng thái rỗng */
+          <div className="p-8 text-center bg-[#f7fbfa] rounded-xl border border-dashed border-[#e4e9e7]">
+            <p className="text-sm font-bold text-[#12211d] mb-1">Chưa có ảnh nào để hiển thị</p>
+            <p className="text-xs text-[#6a7a74] m-0">Tải ảnh lên album để xem trước giao diện khách.</p>
+          </div>
+        ) : (
+          <div>
+            {/* 2. Album Strip */}
+            <div className="preview-strip" role="navigation" aria-label="Danh sách album xem trước">
+              {previewGroups.map((group) => (
+                <button
+                  key={group.album.id}
+                  type="button"
+                  className="strip-item"
+                  onClick={() => {
+                    const el = document.getElementById(`sec-${group.album.id}`)
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
+                  title={`Cuộn tới album ${group.album.name}`}
+                >
+                  <img
+                    src={group.items[0].url}
+                    alt={group.album.name}
+                    loading="lazy"
+                  />
+                  <span className="strip-name">{group.album.name}</span>
+                  <span className="strip-count">{group.items.length} ảnh</span>
+                </button>
+              ))}
+            </div>
+
+            {/* 3. Danh sách section theo album */}
+            <div className="preview-sections">
+              {previewGroups.map((group) => {
+                const { album, items } = group
+
+                return (
+                  <section key={album.id} id={`sec-${album.id}`} className="preview-sec">
+                    {/* Cột trái 250px */}
+                    <div className="preview-info">
+                      <h4>{album.name}</h4>
+                      {album.description && <p>{album.description}</p>}
+                      <span className="pill-count">{items.length} ảnh</span>
+                    </div>
+
+                    {/* Cột phải: Mosaic ảnh */}
+                    <div className="preview-media">
+                      <Image.PreviewGroup>
+                        {/* Biến thể 1 ảnh */}
+                        {items.length === 1 && (
+                          <div className="mosaic one">
+                            <div className="cell" role="button" tabIndex={0}>
+                              <Image
+                                src={items[0].url}
+                                alt={album.name}
+                                rootClassName="w-full h-full"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Biến thể 2 ảnh */}
+                        {items.length === 2 && (
+                          <div className="mosaic two">
+                            {items.map((item, idx) => (
+                              <div key={item.mediaId} className="cell" role="button" tabIndex={0}>
+                                <Image
+                                  src={item.url}
+                                  alt={`${album.name} ${idx + 1}`}
+                                  rootClassName="w-full h-full"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Mosaic mặc định ≥ 3 ảnh */}
+                        {items.length >= 3 && (
+                          <>
+                            <div className="mosaic">
+                              {/* Ảnh đầu chiếm 2 hàng (ảnh lớn) */}
+                              <div className="cell big" role="button" tabIndex={0}>
+                                <Image
+                                  src={items[0].url}
+                                  alt={`${album.name} 1`}
+                                  rootClassName="w-full h-full"
+                                />
+                              </div>
+                              {/* 2 ảnh nhỏ bên phải */}
+                              <div className="cell" role="button" tabIndex={0}>
+                                <Image
+                                  src={items[1].url}
+                                  alt={`${album.name} 2`}
+                                  rootClassName="w-full h-full"
+                                />
+                              </div>
+                              <div className="cell" role="button" tabIndex={0}>
+                                <Image
+                                  src={items[2].url}
+                                  alt={`${album.name} 3`}
+                                  rootClassName="w-full h-full"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Nếu còn ảnh, thêm hàng 4 cột cao 96px bên dưới */}
+                            {items.length > 3 && (
+                              <div className="mosaic-more">
+                                {items.slice(3).map((item, idx) => (
+                                  <div key={item.mediaId} className="cell" role="button" tabIndex={0}>
+                                    <Image
+                                      src={item.url}
+                                      alt={`${album.name} ${idx + 4}`}
+                                      rootClassName="w-full h-full"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </Image.PreviewGroup>
+                    </div>
+                  </section>
+                )
+              })}
+            </div>
           </div>
         )}
-      </div>
+      </section>
+
+      {/* MODAL TẠO ALBUM MỚI */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#12211d]">
+            <FolderAddOutlined className="text-[#0b5f53]" />
+            <span>Tạo album ảnh mới</span>
+          </div>
+        }
+        open={createModalOpen}
+        onOk={handleCreateAlbum}
+        onCancel={() => {
+          setCreateModalOpen(false)
+          setNewAlbumName('')
+          setAlbumNameError(null)
+        }}
+        okText="Tạo album"
+        cancelText="Hủy"
+        okButtonProps={{ className: '!bg-[#0b5f53]' }}
+      >
+        <div className="py-2 space-y-3">
+          <p className="text-xs text-[#5f736e] leading-relaxed">
+            Nhập tên album chuyên biệt (ví dụ: <em>Hồ bơi vô cực, Quầy bar tầng thượng, Spa &amp; Massage, Phòng hội nghị</em>).
+          </p>
+          <div>
+            <label className="block text-xs font-semibold text-[#12211d] mb-1">
+              Tên album <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Ví dụ: Hồ bơi vô cực, Nhà hàng Skyview..."
+              value={newAlbumName}
+              maxLength={40}
+              onChange={(e) => {
+                setNewAlbumName(e.target.value)
+                if (albumNameError) setAlbumNameError(null)
+              }}
+              onPressEnter={handleCreateAlbum}
+              status={albumNameError ? 'error' : ''}
+              autoFocus
+            />
+            {albumNameError && (
+              <span className="text-xs text-red-500 mt-1 block">{albumNameError}</span>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
-

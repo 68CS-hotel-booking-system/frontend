@@ -25,7 +25,7 @@ export function HotelPricingPage() {
   ]
 
   return (
-    <div className="hotel-pricing-page max-w-5xl">
+    <div className="hotel-pricing-page max-w-5xl mx-auto">
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         kicker="DOANH THU &amp; PHÂN PHỐI"
