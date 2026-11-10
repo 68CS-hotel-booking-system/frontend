@@ -139,7 +139,7 @@ export function HotelRoomsPage() {
   }
 
   return (
-    <div className="hotel-rooms-page max-w-5xl space-y-6">
+    <div className="hotel-rooms-page max-w-5xl mx-auto space-y-6">
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         kicker="QUẢN LÝ PHÒNG &amp; LƯU TRÚ"

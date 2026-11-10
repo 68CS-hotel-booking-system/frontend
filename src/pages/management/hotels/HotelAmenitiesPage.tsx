@@ -13,7 +13,7 @@ export function HotelAmenitiesPage() {
   ]
 
   return (
-    <div className="hotel-amenities-page max-w-5xl">
+    <div className="hotel-amenities-page max-w-5xl mx-auto">
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         kicker="TIỆN NGHI &amp; DỊCH VỤ"

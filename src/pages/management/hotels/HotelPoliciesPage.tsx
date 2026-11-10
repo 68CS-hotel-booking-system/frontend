@@ -16,7 +16,7 @@ export function HotelPoliciesPage() {
   ]
 
   return (
-    <div className="hotel-policies-page max-w-4xl">
+    <div className="hotel-policies-page max-w-4xl mx-auto">
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         kicker="QUY ĐỊNH LƯU TRÚ"
