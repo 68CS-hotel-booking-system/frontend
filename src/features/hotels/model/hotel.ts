@@ -45,6 +45,7 @@ export const managementRoomTypeSummarySchema = z.object({
   maxAdults: z.number().int().min(1),
   maxChildren: z.number().int().min(0),
   isActive: z.boolean(),
+  basePrice: z.number().int().min(0).optional(),
   totalRooms: z.number().int().min(0).optional(),
 })
 export type ManagementRoomTypeSummary = z.infer<typeof managementRoomTypeSummarySchema>
