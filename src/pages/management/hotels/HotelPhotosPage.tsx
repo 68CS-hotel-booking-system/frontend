@@ -30,6 +30,7 @@ import {
   uploadHotelMedia,
   useHotelImagesQuery,
   useHotelWorkspace,
+  useHotelProfileAccess,
   useHotelAlbums,
 } from '@/features/hotels'
 import { ApiError } from '@/shared/api/api-error'
@@ -47,6 +48,7 @@ export interface AlbumItem {
 
 export function HotelPhotosPage() {
   const { hotel, hotelId } = useHotelWorkspace()
+  const { canEditProfile } = useHotelProfileAccess(hotel)
   const albums = useHotelAlbums(hotelId)
   const activeWrite = useRef(false)
   const uploadedIds = useRef(new Map<string, string>())
@@ -70,7 +72,7 @@ export function HotelPhotosPage() {
     existingImages.find((img) => img.cover) || (existingImages.length > 0 ? existingImages[0] : null)
   const displayCoverUrl = coverImage?.url || hotel?.coverImageUrl
 
-  const writesDisabled = !imagesQuery.canWrite || !albums.query.isSuccess || isUploading || isUpdatingGallery || albums.mutation.isPending
+  const writesDisabled = !canEditProfile || !imagesQuery.canWrite || !albums.query.isSuccess || isUploading || isUpdatingGallery || albums.mutation.isPending
 
   // All combined albums
   const allAlbums: AlbumItem[] = useMemo(() => [
@@ -284,6 +286,7 @@ export function HotelPhotosPage() {
   }
 
   const scrollToUpload = () => {
+    if (writesDisabled) return
     const el = document.getElementById('upload-card-section')
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' })
@@ -301,7 +304,7 @@ export function HotelPhotosPage() {
           <Button
             type="primary"
             icon={<UploadOutlined />}
-            onClick={scrollToUpload}
+            disabled={writesDisabled} onClick={scrollToUpload}
             className="!bg-[#0b5f53] !rounded-lg font-medium"
           >
             Tải ảnh vào album
@@ -379,6 +382,7 @@ export function HotelPhotosPage() {
           {/* Phải: Phím tắt thao tác nhanh */}
           <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto justify-start sm:justify-end">
             <Button
+              disabled={writesDisabled}
               icon={<FolderAddOutlined />}
               onClick={() => {
                 setEditingAlbumId(null)
@@ -394,7 +398,7 @@ export function HotelPhotosPage() {
             <Button
               type="primary"
               icon={<UploadOutlined />}
-              onClick={scrollToUpload}
+              disabled={writesDisabled} onClick={scrollToUpload}
               className="!bg-[#0b5f53] !rounded-xl text-xs font-medium"
             >
               Tải ảnh mới
@@ -471,6 +475,7 @@ export function HotelPhotosPage() {
             {/* Nút Tạo album mới */}
             <button
               type="button"
+              disabled={writesDisabled}
               onClick={() => {
                 setEditingAlbumId(null)
                 setAlbumDescription('')
@@ -523,6 +528,7 @@ export function HotelPhotosPage() {
           </div>
 
           <Button
+            disabled={writesDisabled}
             size="small"
             type="primary"
             icon={<PlusOutlined />}
@@ -551,6 +557,7 @@ export function HotelPhotosPage() {
                 description="Hãy chọn hoặc kéo thả các tệp ảnh ở phần tải lên bên dưới để đưa ảnh vào album này."
               />
               <Button
+                disabled={writesDisabled}
                 type="primary"
                 size="small"
                 icon={<UploadOutlined />}
@@ -996,7 +1003,7 @@ export function HotelPhotosPage() {
             <span>{editingAlbumId ? 'Sửa album ảnh' : 'Tạo album ảnh mới'}</span>
           </div>
         }
-        open={createModalOpen}
+        open={canEditProfile && createModalOpen}
         onOk={handleCreateAlbum}
         onCancel={() => {
           setCreateModalOpen(false)

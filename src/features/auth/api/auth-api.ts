@@ -1,5 +1,10 @@
 import { z } from 'zod'
 import { http } from '@/shared/api/http'
+import type { UpdateProfileRequest } from './auth-contracts'
+
+export function updateProfile(payload: UpdateProfileRequest, signal?: AbortSignal) {
+  return http.request('/users/me', { method: 'PUT', body: payload, signal, schema: currentUserSchema })
+}
 import {
   acceptedResponseSchema, authUserSchema, changePasswordResponseSchema,
   currentUserSchema, loginResponseSchema, resetPasswordResponseSchema,

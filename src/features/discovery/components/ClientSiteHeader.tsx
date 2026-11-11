@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router'
-import { Dropdown, type MenuProps } from 'antd'
+import { App, Dropdown, type MenuProps } from 'antd'
 import { DashboardOutlined, LogoutOutlined } from '@ant-design/icons'
-import { useCurrentUser, useSession } from '@/features/auth'
-import { setSession } from '@/shared/api/session'
-import { useQueryClient } from '@tanstack/react-query'
+import { useAuthAction, useCurrentUser, useSession } from '@/features/auth'
+import { errorMessage } from '@/shared/api/api-error'
 import { formatRoleLabel } from '@/shared/lib/format'
 import { ClientIcon } from './ClientSiteIcons'
 
@@ -14,6 +13,7 @@ interface ClientSiteHeaderProps {
   pulseSaved: boolean
   onToggleSaved: () => void
   onOpenMobileMenu: () => void
+  isMobileMenuOpen?: boolean
   onOpenAuthModal?: (mode?: 'login' | 'register') => void
 }
 
@@ -23,10 +23,12 @@ export function ClientSiteHeader({
   pulseSaved,
   onToggleSaved,
   onOpenMobileMenu,
+  isMobileMenuOpen = false,
   onOpenAuthModal,
 }: ClientSiteHeaderProps) {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const logout = useAuthAction('logout')
+  const { message } = App.useApp()
   const session = useSession()
   const { currentUser, isAdmin } = useCurrentUser()
   const [isScrolled, setIsScrolled] = useState(false)
@@ -53,13 +55,21 @@ export function ClientSiteHeader({
       .join('')
       .toUpperCase() || 'SH'
 
-  const handleLogout = () => {
-    setSession(null)
-    queryClient.clear()
-    navigate('/')
+  const handleLogout = async () => {
+    if (logout.isPending) return
+    try {
+      await logout.mutateAsync({})
+      await navigate('/')
+    } catch (error) {
+      void message.error(errorMessage(error))
+    }
   }
 
   const accountMenuItems: MenuProps['items'] = [
+    { key: 'bookings', label: <NavLink to="/my-bookings">Đặt phòng của tôi</NavLink> },
+    { key: 'complaints', label: <NavLink to="/my-complaints">Khiếu nại của tôi</NavLink> },
+    { key: 'profile', label: <NavLink to="/account">Hồ sơ của tôi</NavLink> },
+    { key: 'staff', label: <NavLink to="/staff">Nhân sự khách sạn</NavLink> },
     {
       key: 'user-profile-header',
       label: (
@@ -121,7 +131,7 @@ export function ClientSiteHeader({
       data-od-id="site-header"
     >
       <div className="header-inner">
-        <a className="brand" href="#top" data-od-id="brand-logo" aria-label="StayHub — về đầu trang">
+        <a className="brand" href="/" data-od-id="brand-logo" aria-label="StayHub — về trang chủ">
           <span className="brand-mark">
             <ClientIcon name="compass" />
           </span>
@@ -132,11 +142,11 @@ export function ClientSiteHeader({
         </a>
 
         <nav className="main-nav" aria-label="Điều hướng chính" data-od-id="main-nav">
-          <a href="#top">Khám phá</a>
-          <a href="#destinations">Điểm đến</a>
-          <a href="#stays">Chỗ nghỉ</a>
-          <a href="#journal">Trải nghiệm</a>
-          <a href="#partner">Đối tác</a>
+          <NavLink to="/">Khám phá</NavLink>
+          <NavLink to="/#destinations">Điểm đến</NavLink>
+          <NavLink to="/#stays">Chỗ nghỉ</NavLink>
+          <NavLink to="/#journal">Trải nghiệm</NavLink>
+          <NavLink to="/#partner">Đối tác</NavLink>
           {isAdmin && (
             <NavLink
               to="/admin/users"
@@ -206,7 +216,7 @@ export function ClientSiteHeader({
             id="menu-btn"
             type="button"
             aria-label="Mở menu"
-            aria-expanded="false"
+            aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-menu"
             onClick={onOpenMobileMenu}
           >

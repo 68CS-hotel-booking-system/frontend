@@ -14,8 +14,40 @@ afterEach(() => vi.unstubAllGlobals())
 
 describe('management room API client', () => {
   const hotelId = '11111111-1111-4111-8111-111111111111'
-  const roomId = '22222222-2222-4222-8222-222222222222'
+  const roomId = '47a5fc05-f674-bba7-66ff-c6965488b21b'
   const roomTypeId = '33333333-3333-4333-8333-333333333333'
+
+  // Exact IDs produced by R__seed_demo_data.sql for Demo Huế Hoàng Thành.
+  const demoRoomIds = [
+    '47a5fc05-f674-bba7-66ff-c6965488b21b',
+    'cc006f49-39c6-0e3a-307c-8d63189c1bff',
+    'bd1236e7-9420-1ce2-94ca-aee96f232acd',
+    '22ff682e-fbdf-5dd2-6c3b-f17b575c80b8',
+    'c8fba0af-12d9-9f4a-c1bb-dea01ca989f1',
+  ]
+
+  it('reads all seeded demo rooms even when UUID version/variant bits are not RFC-generated', async () => {
+    respond({
+      content: demoRoomIds.map((id, index) => ({
+        id, roomTypeId, roomNumber: String(101 + index), floor: '1',
+        readiness: 'READY', operationalFrom: '2026-01-01T00:00:00Z',
+      })),
+      totalElements: 5, page: 0, size: 20, totalPages: 1,
+    })
+    const { getManagementRooms } = await import('./room-api')
+    const result = await getManagementRooms(hotelId)
+    expect(result.items.map((room) => room.id)).toEqual(demoRoomIds)
+    expect(result.totalItems).toBe(5)
+  })
+
+  it('still rejects malformed room identifiers', async () => {
+    const { managementRoomSchema } = await import('./room-api')
+    for (const id of ['', 'not-an-id', '47a5fc05-f674-bba7-66ff-c6965488b21z']) {
+      expect(managementRoomSchema.safeParse({
+        id, roomTypeId, roomNumber: '101', readiness: 'READY', operationalFrom: '2026-01-01T00:00:00Z',
+      }).success).toBe(false)
+    }
+  })
 
   it('gets management rooms via GET /management/hotels/{hotelId}/rooms', async () => {
     respond({

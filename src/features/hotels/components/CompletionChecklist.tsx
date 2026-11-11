@@ -1,28 +1,23 @@
 import {
-  App as AntApp,
   Button,
   Progress,
   Tag,
-  Tooltip,
 } from 'antd'
 import {
   ArrowRightOutlined,
   CheckCircleFilled,
-  ClockCircleOutlined,
   PictureOutlined,
   PlusOutlined,
   ProfileOutlined,
-  SendOutlined,
   ShopOutlined,
   TagOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
-import { useCurrentUser } from '@/features/auth'
-import { errorMessage } from '@/shared/api/api-error'
 import type { HotelCompletionStatus } from '../context/hotel-workspace-context'
 import type { ManagementHotelDetail } from '../model/hotel'
 import { HotelStatusBadge } from './HotelStatusBadge'
-import { useApproveHotelMutation } from '../hooks/use-approve-hotel-mutation'
+import { HotelReviewSubmission } from './HotelReviewSubmission'
+import { useHotelProfileAccess } from '../hooks/use-hotel-profile-access'
 
 export interface CompletionChecklistProps {
   hotel: ManagementHotelDetail
@@ -40,11 +35,7 @@ interface ChecklistItemConfig {
 
 export function CompletionChecklist({ hotel, completion }: CompletionChecklistProps) {
   const navigate = useNavigate()
-  const { message } = AntApp.useApp()
-  const { isAdmin } = useCurrentUser()
-  const mode = 'api'
-  const approvalMutation = useApproveHotelMutation()
-  const submitting = approvalMutation.isPending
+  const { canEditProfile } = useHotelProfileAccess(hotel)
 
   const items: ChecklistItemConfig[] = [
     {
@@ -98,31 +89,6 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
     ...(hotel.roomTypes === undefined ? ['rooms'] : []),
     ...(hotel.hasConfiguredRates === undefined ? ['pricing'] : []),
   ])
-  const isDraft = hotel.status === 'DRAFT'
-  const isPendingApproval = hotel.status === 'PENDING_APPROVAL'
-  const isActive = hotel.status === 'ACTIVE'
-
-  const handleSendApproval = async () => {
-    if (!isAdmin || mode !== 'api' || !isDraft || submitting) return
-    try {
-      await approvalMutation.mutateAsync(hotel.id)
-      message.success({
-        content: 'Đã duyệt khách sạn theo kết quả từ máy chủ.',
-        key: 'approval',
-      })
-    } catch (error) {
-      message.error({ content: errorMessage(error), key: 'approval' })
-    }
-  }
-
-  const tooltipReason = !isAdmin
-    ? 'Backend chưa có API gửi hồ sơ kiểm duyệt dành cho chủ khách sạn.'
-    : mode !== 'api'
-      ? 'Phê duyệt chỉ khả dụng với dữ liệu API.'
-      : !isDraft
-      ? `Hồ sơ hiện ở trạng thái: ${hotel.status}`
-      : ''
-
   return (
     <div className="bg-white rounded-2xl border border-[#dce7e3] overflow-hidden shadow-xs">
       {/* Top Banner */}
@@ -221,7 +187,7 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
                       : '!bg-[#0b5f53] hover:!bg-[#08473e]'
                   }`}
                 >
-                  {item.actionLabel}
+                  {canEditProfile ? item.actionLabel : 'Xem nội dung'}
                 </Button>
               </div>
             </div>
@@ -229,45 +195,8 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
         })}
       </div>
 
-      {/* Action Footer */}
-      <div className="p-4 sm:px-6 bg-[#f7fbfa] border-t border-[#eef4f2] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="text-xs text-[#5f736e]">
-          {isDraft && (
-            <span className="text-amber-700 font-medium">
-              {isAdmin ? 'Quản trị viên có thể duyệt khách sạn bản nháp. Các mục chưa có API chưa thể xác minh đầy đủ.' : 'Backend chưa hỗ trợ gửi hồ sơ kiểm duyệt. Khách sạn chỉ mở bán sau khi quản trị viên phê duyệt.'}
-            </span>
-          )}
-          {isPendingApproval && (
-            <span className="text-blue-700 font-medium flex items-center gap-1.5">
-              <ClockCircleOutlined /> Hồ sơ đã được gửi và đang trong hàng đợi phê duyệt của StayHub.
-            </span>
-          )}
-          {isActive && (
-            <span className="text-[#0b5f53] font-medium flex items-center gap-1.5">
-              <CheckCircleFilled /> Cơ sở lưu trú đang mở bán công khai trên StayHub.
-            </span>
-          )}
-        </div>
-
-        <Tooltip title={tooltipReason} placement="topRight">
-          <span>
-            <Button
-              type="primary"
-              size="large"
-              icon={<SendOutlined />}
-              onClick={handleSendApproval}
-              disabled={!isAdmin || mode !== 'api' || !isDraft || submitting}
-              loading={submitting}
-              className={`!rounded-xl font-semibold !px-6 ${
-                isComplete && isDraft
-                  ? '!bg-[#0b5f53] hover:!bg-[#08473e]'
-                  : ''
-              }`}
-            >
-              {isAdmin ? 'Duyệt khách sạn' : 'Gửi kiểm duyệt'}
-            </Button>
-          </span>
-        </Tooltip>
+      <div className="p-4 sm:px-6 bg-[#f7fbfa] border-t border-[#eef4f2]">
+        <HotelReviewSubmission hotel={hotel} />
       </div>
     </div>
   )

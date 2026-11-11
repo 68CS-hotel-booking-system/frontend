@@ -55,3 +55,9 @@ export type VerifyEmailResponse = z.infer<typeof verifyEmailResponseSchema>
 export type ForgotPasswordRequest = z.infer<typeof forgotPasswordRequestSchema>
 export type ResetPasswordRequest = z.infer<typeof resetPasswordRequestSchema>
 export type ChangePasswordRequest = z.infer<typeof changePasswordRequestSchema>
+
+export const profileRequestSchema = z.object({
+  fullName: required.max(100), phone: required.max(30),
+  expectedVersion: z.number().int().nonnegative(),
+})
+export type UpdateProfileRequest = z.infer<typeof profileRequestSchema>

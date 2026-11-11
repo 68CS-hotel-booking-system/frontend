@@ -1,0 +1,17 @@
+.account-workspace { max-width: 1120px; margin: 0 auto; padding: 32px 24px 56px; }
+.account-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; align-items: start; }
+.account-form { min-width: 0; padding: 24px; background: var(--bg-surface, #fff); border: 1px solid var(--border-subtle, #e6e1d6); border-radius: 12px; }
+.account-form > h2 { margin-top: 0; font-size: 22px; }
+.account-form .ant-alert { margin-bottom: 16px; }
+.account-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; margin: 24px 0; }
+.account-toolbar > div { flex: 1; min-width: 220px; }
+.account-toolbar label { display: block; margin-bottom: 8px; font-weight: 600; }
+.account-table { overflow-x: auto; }
+.account-table-hint { display: none; }
+.account-member-id { overflow-wrap: anywhere; font-size: 12px; }
+@media (max-width: 720px) {
+  .account-table-hint { display: block; font-size: 13px; }
+  .account-workspace { padding: 24px 16px 40px; }
+  .account-columns { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .account-form { padding: 20px 16px; }
+}

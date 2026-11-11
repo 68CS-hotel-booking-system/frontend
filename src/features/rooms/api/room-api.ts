@@ -4,8 +4,9 @@ import { managementRoomTypeSchema } from './room-type-api'
 
 export interface RoomPaginationParams { page?: number; size?: number }
 
+// Backend demo room IDs use md5(...)::uuid; validate the UUID shape without RFC version/variant restrictions.
 export const managementRoomSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   roomTypeId: z.string().uuid(),
   roomNumber: z.string(),
   floor: z.string().nullable().optional(),
@@ -30,7 +31,7 @@ export type ManagementRoomPage = z.infer<typeof managementRoomPageSchema>
 
 // PATCH returns RoomResponse without operational dates or version.
 const updatedRoomSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   hotelId: z.string().uuid(),
   roomTypeId: z.string().uuid(),
   roomNumber: z.string(),

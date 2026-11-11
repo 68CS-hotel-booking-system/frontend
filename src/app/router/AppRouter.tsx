@@ -1,12 +1,15 @@
+import { AdminHotelReviewRequestsPage } from '@/pages/admin/AdminHotelReviewRequestsPage'
+import { HotelReviewRequestPage } from '@/pages/management/HotelReviewRequestPage'
+import { HotelSearchPage } from '@/pages/public/HotelSearchPage'
+import { SystemStatusPage } from '@/pages/public/SystemStatusPage'
+import { HotelModulePage } from '@/pages/management/HotelModulePage'
+import { MyBookingsPage } from '@/pages/customer/MyBookingsPage'
+import { MyComplaintsPage } from '@/pages/customer/MyComplaintsPage'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import {
   BarChartOutlined,
-  CalendarOutlined,
-  CloudServerOutlined,
   CreditCardOutlined,
-  FileTextOutlined,
   MessageOutlined,
-  SafetyCertificateOutlined,
   TagOutlined,
   UserOutlined,
 } from '@ant-design/icons'
@@ -14,6 +17,10 @@ import { AppLayout } from '@/app/layouts/AppLayout'
 import { AdminLayout } from '@/app/layouts/AdminLayout'
 import { HotelWorkspaceLayout } from '@/app/layouts/HotelWorkspaceLayout'
 import { AdminRouteGuard } from '@/features/auth'
+import { AccountRouteGuard } from '@/features/auth'
+import { ProfilePage } from '@/pages/customer/ProfilePage'
+import { PaymentReturnPage } from '@/pages/customer/PaymentReturnPage'
+import { HotelStaffPage } from '@/pages/management/HotelStaffPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { AdminLoginPage } from '@/pages/auth/AdminLoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
@@ -62,6 +69,8 @@ export function AppRouter() {
           <Route path="admin" element={<Navigate to="/admin/overview" replace />} />
           <Route path="admin/overview" element={<AdminOverviewPage />} />
           <Route path="admin/users" element={<AdminUsersPage />} />
+          <Route path="admin/hotel-review-requests" element={<AdminHotelReviewRequestsPage />} />
+          <Route path="hotel-review-requests/:requestId" element={<HotelReviewRequestPage />} />
 
           {/* CẤP 1: Danh sách Khách sạn & Thêm mới */}
           <Route path="hotels" element={<HotelManagementListPage />} />
@@ -85,17 +94,7 @@ export function AppRouter() {
           </Route>
 
           {/* CẤP 1: Các phân hệ toàn hệ thống */}
-          <Route
-            path="bookings"
-            element={
-              <ManagementPlaceholderPage
-                kicker="VẬN HÀNH & ĐẶT CHỖ"
-                title="Quản lý Đặt phòng"
-                description="Theo dõi tình trạng đơn đặt phòng, lịch nhận/trả phòng và xử lý các yêu cầu thay đổi phòng của tất cả cơ sở lưu trú."
-                icon={<CalendarOutlined />}
-              />
-            }
-          />
+          <Route path="bookings" element={<HotelModulePage module="bookings" />} />
           <Route
             path="customers"
             element={
@@ -151,39 +150,8 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="contracts"
-            element={
-              <ManagementPlaceholderPage
-                kicker="HỢP ĐỒNG & THỎA THUẬN"
-                title="Hợp đồng lưu trú"
-                description="Quản lý hợp đồng hợp tác, tỷ lệ chiết khấu hoa hồng và các điều khoản pháp lý giữa StayHub và đối tác lưu trú."
-                icon={<FileTextOutlined />}
-              />
-            }
-          />
-          <Route
-            path="financial-access"
-            element={
-              <ManagementPlaceholderPage
-                kicker="PHÂN QUYỀN & TRUY CẬP"
-                title="Phân quyền tài chính"
-                description="Kiểm soát và phân quyền người dùng có thẩm quyền tra cứu dữ liệu doanh thu, đối soát tài chính và giao dịch thanh toán."
-                icon={<SafetyCertificateOutlined />}
-              />
-            }
-          />
-          <Route
-            path="system-status"
-            element={
-              <ManagementPlaceholderPage
-                kicker="GIÁM SÁT HỆ THỐNG"
-                title="Trạng thái máy chủ"
-                description="Theo dõi tình trạng kết nối máy chủ, thời gian phản hồi và hiệu năng của các dịch vụ hệ thống."
-                icon={<CloudServerOutlined />}
-              />
-            }
-          />
+          <Route path="contracts" element={<HotelModulePage module="contracts" />} />
+          <Route path="financial-access" element={<HotelModulePage module="financial-access" />} />
 
           {/* Redirects từ routes cũ */}
           <Route path="management/hotels" element={<Navigate to="/hotels" replace />} />
@@ -200,20 +168,17 @@ export function AppRouter() {
 
         {/* Public / Customer Main Layout Routes */}
         <Route element={<AppLayout />}>
+          <Route element={<AccountRouteGuard />}>
+            <Route path="payment/return" element={<PaymentReturnPage />} />
+            <Route path="account" element={<ProfilePage />} />
+            <Route path="my-bookings" element={<MyBookingsPage />} />
+            <Route path="my-complaints" element={<MyComplaintsPage />} />
+            <Route path="staff" element={<HotelStaffPage />} />
+          </Route>
           <Route index element={<StayVibeHomePage />} />
-          <Route path="explore" element={<StayVibeHomePage />} />
+          <Route path="explore" element={<HotelSearchPage />} />
           <Route path="stays/:hotelId" element={<HotelDetailPage />} />
-          <Route
-            path="system-status"
-            element={
-              <ManagementPlaceholderPage
-                kicker="GIÁM SÁT HỆ THỐNG"
-                title="Trạng thái máy chủ"
-                description="Theo dõi tình trạng kết nối máy chủ, thời gian phản hồi và hiệu năng của các dịch vụ hệ thống."
-                icon={<CloudServerOutlined />}
-              />
-            }
-          />
+          <Route path="system-status" element={<SystemStatusPage />} />
           <Route path="management/live" element={<Navigate to="/" replace />} />
           <Route path="reset-password" element={<ResetPasswordPage />} />
           <Route path="login" element={<LoginPage />} />

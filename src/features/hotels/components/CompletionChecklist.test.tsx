@@ -4,14 +4,15 @@ import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { App as AntApp } from 'antd'
 import { CompletionChecklist } from './CompletionChecklist'
+import { hotelReviewKeys } from '../hooks/use-hotel-reviews'
 import type { ManagementHotelDetail } from '../model/hotel'
 import type { HotelCompletionStatus } from '../context/hotel-workspace-context'
 
-const roles = vi.hoisted(() => ({ isAdmin: false }))
+const roles = vi.hoisted(() => ({ isAdmin: false, isOwner: true, currentUser: { id: 'u101' } }))
 vi.mock('@/features/auth', () => ({ useCurrentUser: () => roles }))
 
 const mockHotel: ManagementHotelDetail = {
-  id: 'h101',
+  id: 'h101', version: 0,
   ownerUserId: 'u101',
   name: 'StayHub Seaside Resort',
   slug: 'stayhub-seaside',
@@ -31,10 +32,16 @@ const mockHotel: ManagementHotelDetail = {
   updatedAt: '2026-11-01T00:00:00Z',
 }
 
+function reviewClient() {
+  const client = new QueryClient()
+  client.setQueryData(hotelReviewKeys.management(mockHotel.id), { content: [] })
+  return client
+}
+
 describe('CompletionChecklist component', () => {
   afterEach(() => { roles.isAdmin = false })
-  it('renders all 5 checklist criteria, progress stats, and disabled approval button when incomplete', () => {
-    const qc = new QueryClient()
+  it('renders checklist progress and allows the Owner to send saved data for server validation', () => {
+    const qc = reviewClient()
     const partialCompletion: HotelCompletionStatus = {
       percent: 40,
       sections: {
@@ -79,12 +86,12 @@ describe('CompletionChecklist component', () => {
     expect(markup).toContain('Đặt giá')
 
     // Submit for approval button present
-    expect(markup).toContain('Gửi kiểm duyệt')
-    expect(markup).toContain('Backend chưa hỗ trợ gửi hồ sơ kiểm duyệt')
+    expect(markup).toContain('Gửi hồ sơ xét duyệt')
+    expect(markup).not.toContain('Backend chưa hỗ trợ gửi hồ sơ kiểm duyệt')
   })
 
-  it('does not enable an unsupported owner submission even when all criteria are complete', () => {
-    const qc = new QueryClient()
+  it('allows Owner submission when the review state is known', () => {
+    const qc = reviewClient()
     const fullCompletion: HotelCompletionStatus = {
       percent: 100,
       sections: {
@@ -111,24 +118,25 @@ describe('CompletionChecklist component', () => {
 
     expect(markup).toContain('100% hoàn tất')
     expect(markup).toContain('Đã hoàn thiện các mục kiểm tra')
-    expect(markup).toContain('Gửi kiểm duyệt')
-    const button = markup.match(/<button\b[^>]*>[\s\S]*?<\/button>/g)?.find((item) => item.includes('Gửi kiểm duyệt'))
-    expect(button).toContain('disabled')
+    expect(markup).toContain('Gửi hồ sơ xét duyệt')
+    const button = markup.match(/<button\b[^>]*>[\s\S]*?<\/button>/g)?.find((item) => item.includes('Gửi hồ sơ xét duyệt'))
+    expect(button).not.toContain('disabled')
   })
 
-  it('allows the real admin approval of a draft without unsupported checklist prerequisites', () => {
+  it('routes Admin to submitted reviews without direct draft approval', () => {
     roles.isAdmin = true
     const completion: HotelCompletionStatus = {
       percent: 0,
       sections: { info: false, photos: false, amenities: false, rooms: false, pricing: false, policies: false, bookings: false, reviews: false },
     }
     const markup = renderToStaticMarkup(
-      <MemoryRouter><QueryClientProvider client={new QueryClient()}><AntApp>
+      <MemoryRouter><QueryClientProvider client={reviewClient()}><AntApp>
         <CompletionChecklist hotel={mockHotel} completion={completion} />
       </AntApp></QueryClientProvider></MemoryRouter>,
     )
-    const button = markup.match(/<button\b[^>]*>[\s\S]*?<\/button>/g)?.find((item) => item.includes('Duyệt khách sạn'))
-    expect(button).toBeDefined()
-    expect(button).not.toContain('disabled')
+    expect(markup).toContain('/admin/hotel-review-requests')
+    expect(markup).toContain('Danh sách chờ xét duyệt')
+    expect(markup).not.toContain('Duyệt khách sạn')
+    expect(markup).not.toContain('Gửi hồ sơ xét duyệt</span>')
   })
 })

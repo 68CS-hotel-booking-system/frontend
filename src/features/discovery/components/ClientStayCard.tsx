@@ -66,8 +66,8 @@ export function ClientStayCard({
 
         <div className="stay-rating">
           <ClientIcon name="star" />
-          <strong>{stay.rating.toFixed(1)}</strong>
-          <span>({stay.reviews} đánh giá)</span>
+          <strong>{stay.source === 'api' ? (stay.starRating ? `${stay.starRating} sao` : 'Chưa xếp hạng') : stay.rating.toFixed(1)}</strong>
+          {stay.source !== 'api' && <span>({stay.reviews} đánh giá)</span>}
           <span className="stay-type">{stay.type}</span>
         </div>
 
@@ -80,7 +80,7 @@ export function ClientStayCard({
               )}
             </div>
             <div className="price-main">
-              <strong>{formatPrice(stay.price)}</strong>
+              <strong>{stay.price > 0 ? formatPrice(stay.price) : 'Chưa có giá'}</strong>
               <span className="price-unit">/ đêm</span>
             </div>
           </div>

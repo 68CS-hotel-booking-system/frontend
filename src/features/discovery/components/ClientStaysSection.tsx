@@ -22,6 +22,7 @@ interface ClientStaysSectionProps {
   onToggleSaved: (id: string) => void
   onOpenStay: (id: string) => void
   onResetAll: () => void
+  sortOptions?: { value: ClientSortOption; label: string }[]
 }
 
 export function ClientStaysSection({
@@ -39,6 +40,7 @@ export function ClientStaysSection({
   onToggleSaved,
   onOpenStay,
   onResetAll,
+  sortOptions,
 }: ClientStaysSectionProps) {
   return (
     <section
@@ -65,7 +67,7 @@ export function ClientStaysSection({
               sáng, hay cảm giác được ở đúng nơi mình thuộc về.
             </p>
             <p className="collection-note" style={{ color: 'var(--muted)', fontSize: '13px' }}>
-              Bộ sưu tập minh họa · {stays.length} chỗ nghỉ đang hiển thị
+              {stays.length} chỗ nghỉ đang mở bán · Giá từ khách sạn
             </p>
           </div>
         </div>
@@ -85,6 +87,8 @@ export function ClientStaysSection({
                   type="button"
                   data-vibe={vibe.key}
                   aria-pressed={isActive}
+                  disabled={vibe.key !== 'all'}
+                  title={vibe.key === 'all' ? undefined : 'Bộ lọc phong cách chưa khả dụng'}
                   onClick={() => onSelectVibe(vibe.key)}
                 >
                   <ClientIcon name={vibe.icon} />
@@ -118,10 +122,10 @@ export function ClientStaysSection({
                 value={selectedSort}
                 onChange={(e) => onSelectSort(e.target.value as ClientSortOption)}
               >
-                <option value="featured">Được yêu thích nhất</option>
+                {sortOptions ? sortOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>) : <><option value="featured">Gợi ý hiện tại</option>
                 <option value="price-asc">Giá: thấp đến cao</option>
                 <option value="price-desc">Giá: cao đến thấp</option>
-                <option value="rating">Đánh giá cao nhất</option>
+                <option value="rating" disabled>Đánh giá — chưa có dữ liệu</option></>}
               </select>
             </div>
           </div>
@@ -175,7 +179,7 @@ export function ClientStaysSection({
 
         <div className="collection-foot">
           <p>
-            Giá hiển thị là giá tham khảo cho một đêm, đã gồm thuế và phí dịch vụ.
+            Giá một phòng mỗi đêm. Kiểm tra phòng trống và báo giá cho kỳ nghỉ trước khi đặt.
           </p>
           <button
             className="text-link"

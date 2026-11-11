@@ -18,7 +18,7 @@ import {
 } from 'antd'
 import dayjs from 'dayjs'
 import { useNavigate, useParams } from 'react-router'
-import { useHotelWorkspace } from '@/features/hotels'
+import { useHotelWorkspace, useHotelProfileAccess } from '@/features/hotels'
 import {
   EditRoomTypeModal,
   buildRoomEditPayload,
@@ -34,6 +34,7 @@ import { PageLoading } from '@/shared/ui/PageLoading'
 
 export function HotelRoomDetailPage() {
   const { hotel, hotelId } = useHotelWorkspace()
+  const { canEditProfile } = useHotelProfileAccess(hotel)
   const { roomId = '' } = useParams<{ roomId: string }>()
   const navigate = useNavigate()
   const { createRoom, updateRoom } = useManagementRoomMutations(hotelId)
@@ -79,6 +80,7 @@ export function HotelRoomDetailPage() {
 
   // Submit thêm phòng vật lý
   const handleCreatePhysicalRoom = async () => {
+    if (!canEditProfile) return
     try {
       const values = await addRoomForm.validateFields()
       setIsSubmittingRoom(true)
@@ -102,6 +104,7 @@ export function HotelRoomDetailPage() {
 
   // Submit sửa phòng vật lý
   const handleSaveRoomEdit = async () => {
+    if (!canEditProfile) return
     if (!editingRoom) return
     try {
       const values = await roomEditForm.validateFields()
@@ -134,7 +137,7 @@ export function HotelRoomDetailPage() {
             </Button>
             <Button
               type="primary"
-              icon={<EditOutlined />}
+              disabled={!canEditProfile} icon={<EditOutlined />}
               onClick={() => setIsEditingType(true)}
               className="!bg-[#0b5f53]"
             >
@@ -194,7 +197,7 @@ export function HotelRoomDetailPage() {
           <Button
             type="primary"
             size="small"
-            icon={<PlusOutlined />}
+            disabled={!canEditProfile} icon={<PlusOutlined />}
             onClick={() => {
               addRoomForm.resetFields()
               addRoomForm.setFieldsValue({
@@ -277,7 +280,7 @@ export function HotelRoomDetailPage() {
                   <div className="flex items-center justify-end gap-1.5">
                     <Button
                       size="small"
-                      icon={<EditOutlined />}
+                      disabled={!canEditProfile} icon={<EditOutlined />}
                       onClick={() => {
                         setEditingRoom(record)
                         roomEditForm.resetFields()
@@ -310,7 +313,7 @@ export function HotelRoomDetailPage() {
 
       {/* Modal chỉnh sửa loại phòng */}
       <EditRoomTypeModal
-        open={isEditingType}
+        open={canEditProfile && isEditingType}
         roomType={roomType}
         hotelId={hotelId}
         onClose={() => setIsEditingType(false)}
@@ -319,7 +322,7 @@ export function HotelRoomDetailPage() {
       {/* MODAL THÊM PHÒNG VẬT LÝ VÀO HẠNG NÀY (HT20) */}
       <Modal
         title={`Thêm số phòng vật lý vào hạng ${roomType?.name || ''}`}
-        open={isAddingRoom}
+        open={canEditProfile && isAddingRoom}
         onCancel={() => setIsAddingRoom(false)}
         onOk={handleCreatePhysicalRoom}
         confirmLoading={isSubmittingRoom}
@@ -359,7 +362,7 @@ export function HotelRoomDetailPage() {
       {/* MODAL SỬA PHÒNG VẬT LÝ (HT21) */}
       <Modal
         title={`Chỉnh sửa phòng ${editingRoom?.roomNumber || ''}`}
-        open={Boolean(editingRoom)}
+        open={canEditProfile && Boolean(editingRoom)}
         onCancel={() => setEditingRoom(null)}
         onOk={handleSaveRoomEdit}
         confirmLoading={isUpdatingRoom}

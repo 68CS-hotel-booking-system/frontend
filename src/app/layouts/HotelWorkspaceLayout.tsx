@@ -12,6 +12,7 @@ import {
   HotelStatusBadge,
   HotelSwitcher,
   HotelWorkspaceProvider,
+  HotelProfileAccessNotice,
   useManagementHotelDetailQuery,
   useHotelImagesQuery,
 } from '@/features/hotels'
@@ -284,6 +285,7 @@ export function HotelWorkspaceLayout() {
         {/* Viewport nội dung trang con - Luôn căn giữa màn hình */}
         <div className="flex-1 min-w-0 p-4 lg:p-6">
           <div className="max-w-6xl mx-auto w-full">
+            <HotelProfileAccessNotice hotel={hotel} />
             <Outlet />
           </div>
         </div>

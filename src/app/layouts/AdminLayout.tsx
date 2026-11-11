@@ -13,10 +13,9 @@ import {
   SettingOutlined,
   UserOutlined,
 } from '@ant-design/icons'
-import { ConfigProvider, Dropdown, Tooltip, type MenuProps } from 'antd'
-import { useQueryClient } from '@tanstack/react-query'
-import { setSession } from '@/shared/api/session'
-import { useCurrentUser } from '@/features/auth'
+import { App, ConfigProvider, Dropdown, Tooltip, type MenuProps } from 'antd'
+import { errorMessage } from '@/shared/api/api-error'
+import { useAuthAction, useCurrentUser } from '@/features/auth'
 import { MAIN_NAV_GROUPS } from '@/config/navigation.config'
 import { formatRoleLabel } from '@/shared/lib/format'
 
@@ -27,7 +26,8 @@ export function AdminLayout() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const logout = useAuthAction('logout')
+  const { message } = App.useApp()
   const { currentUser, isAdmin, isOwner } = useCurrentUser()
 
   const isOwnerOnly = Boolean(
@@ -59,7 +59,11 @@ export function AdminLayout() {
 
   // Derive current page title for breadcrumb
   let currentPageTitle = 'Quản lý'
-  if (location.pathname.includes('/admin/users')) {
+  if (location.pathname.includes('/admin/hotel-review-requests')) {
+    currentPageTitle = 'Xét duyệt khách sạn'
+  } else if (location.pathname.startsWith('/hotel-review-requests/')) {
+    currentPageTitle = 'Hồ sơ xét duyệt'
+  } else if (location.pathname.includes('/admin/users')) {
     currentPageTitle = 'Người dùng & Phân quyền'
   } else if (location.pathname.includes('/admin/overview')) {
     currentPageTitle = 'Tổng quan'
@@ -100,10 +104,14 @@ export function AdminLayout() {
       .join('')
       .toUpperCase() || 'SH'
 
-  const handleLogout = () => {
-    setSession(null)
-    queryClient.clear()
-    navigate('/admin/login', { replace: true })
+  const handleLogout = async () => {
+    if (logout.isPending) return
+    try {
+      await logout.mutateAsync({})
+      await navigate('/admin/login', { replace: true })
+    } catch (error) {
+      void message.error(errorMessage(error))
+    }
   }
 
   // Account dropdown menu items
@@ -133,7 +141,7 @@ export function AdminLayout() {
       key: 'profile-action',
       icon: <UserOutlined />,
       label: isOwnerOnly ? 'Hồ sơ chủ khách sạn' : 'Hồ sơ quản trị',
-      onClick: () => navigate(isAdmin ? '/admin/users' : '/admin/overview'),
+      onClick: () => navigate('/account'),
     },
     {
       key: 'settings-action',

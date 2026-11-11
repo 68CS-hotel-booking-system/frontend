@@ -10,7 +10,7 @@ export function AuthPanel({ initialAction = 'login' }: { initialAction?: AuthAct
   const session = useSession()
   return <ActionWorkbench actions={authActions} initialAction={initialAction} hasSession={Boolean(session)}
     description="Thực hiện các chức năng tài khoản đã có trên máy chủ: đăng ký, xác minh email, đăng nhập và quản lý phiên."
-    notice="Tải lại trang sẽ cần đăng nhập lại. Khi phiên hết hạn, chọn Làm mới phiên."
+    notice="Hệ thống khôi phục phiên đăng nhập khi tải lại trang. Đăng xuất để kết thúc phiên trên thiết bị này."
     toolbar={<Link to="/system-status">Trạng thái hệ thống</Link>}
     renderForm={(action) => <AuthForm key={action.id} actionId={isAuthActionId(action.id) ? action.id : 'login'} token={token} />} />
 }

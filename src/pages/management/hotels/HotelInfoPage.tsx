@@ -1,9 +1,10 @@
-import { useHotelWorkspace, HotelGeneralEditForm, useCitiesQuery } from '@/features/hotels'
+import { useHotelWorkspace, useHotelProfileAccess, HotelProfileReadOnly, HotelGeneralEditForm, useCitiesQuery } from '@/features/hotels'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { PageLoading } from '@/shared/ui/PageLoading'
 
 export function HotelInfoPage() {
   const { hotel, hotelId } = useHotelWorkspace()
+  const { canEditProfile, readOnlyReason } = useHotelProfileAccess(hotel)
   const citiesQuery = useCitiesQuery()
 
   if (!hotel) return null
@@ -29,7 +30,7 @@ export function HotelInfoPage() {
         description="Quản lý thông tin định danh, vị trí địa lý, thời gian nhận trả phòng và mô tả tổng quan cơ sở."
       />
 
-      <HotelGeneralEditForm hotel={hotel} cities={cities} />
+      {canEditProfile ? <HotelGeneralEditForm hotel={hotel} cities={cities} /> : <HotelProfileReadOnly hotel={hotel} reason={readOnlyReason} />}
     </div>
   )
 }

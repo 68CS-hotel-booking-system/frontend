@@ -1,4 +1,12 @@
 import { http } from '@/shared/api/http'
+import type { CreateUserFormValues } from '../model/create-user-form-schema'
+
+export function createAdminUser(values: CreateUserFormValues, signal?: AbortSignal) {
+  return http.request('/admin/users', {
+    method: 'POST', signal, schema: adminUserSchema,
+    body: { fullName: values.fullName, email: values.email, phone: values.phone, roles: [values.role] },
+  })
+}
 import {
   adminUserPageSchema, adminUserSchema, rolesSchema, userRolesSchema,
   verificationRequestSchema, type AdminUsersQuery, type UpdateUserStatusRequest,

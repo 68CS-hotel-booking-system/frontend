@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { message } from 'antd'
+import { message, Tag } from 'antd'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
 import { EmptyState } from '@/shared/ui/EmptyState'
@@ -20,6 +20,7 @@ import { InheritedAmenitiesSection } from './InheritedAmenitiesSection'
 
 export interface HotelAmenitiesManagerProps {
   hotelId: string
+  readOnly?: boolean
   roomId?: string | null
   roomNumber?: string
   roomTypeId?: string
@@ -42,6 +43,7 @@ function ScopedAmenitiesEditor({
   roomNumber,
   roomTypeId,
   roomTypeName,
+  readOnly = false,
 }: HotelAmenitiesManagerProps) {
   const isRoomTypeMode = Boolean(roomTypeId && !roomId)
   const isPhysicalRoomMode = Boolean(roomId)
@@ -125,6 +127,17 @@ function ScopedAmenitiesEditor({
         description="Chưa có tiện ích thuộc nhóm này trong hệ thống."
       />
     )
+  }
+
+  if (readOnly) {
+    const selected = isRoomTypeMode ? roomTypeQuery.data ?? [] : scopedQuery.data?.catalogAmenities ?? []
+    const custom = isRoomTypeMode ? [] : scopedQuery.data?.customAmenities.filter((item) => item.attached) ?? []
+    return <section className="surface-card space-y-3" aria-label="Tiện ích chỉ đọc">
+      <h2 className="text-lg font-bold">Tiện ích đã lưu</h2>
+      <div>{selected.length === 0 ? <p>Chưa chọn tiện ích từ danh mục.</p> : selected.map((item) => <Tag key={item.id}>{item.name}</Tag>)}</div>
+      {custom.map((item) => <p key={item.id}><strong>{item.name}</strong>{item.description && ` — ${item.description}`}</p>)}
+      {isPhysicalRoomMode && <InheritedAmenitiesSection hotelId={hotelId} roomTypeName={roomTypeName} inheritedAmenities={scopedQuery.data?.inheritedAmenities ?? []} />}
+    </section>
   }
 
   // ==========================================

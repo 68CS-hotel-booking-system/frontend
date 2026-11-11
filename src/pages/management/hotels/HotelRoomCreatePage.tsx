@@ -17,7 +17,7 @@ import {
 import { useNavigate, useSearchParams } from 'react-router'
 import { ArrowLeftOutlined, BuildOutlined, AppstoreAddOutlined, SaveOutlined, ReloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
-import { useHotelWorkspace } from '@/features/hotels'
+import { useHotelWorkspace, useHotelProfileAccess, HotelProfileReadOnly } from '@/features/hotels'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import {
   useManagementRoomMutations,
@@ -55,6 +55,7 @@ type CreateRoomTypeFormValues = z.infer<typeof createRoomTypeSchema>
 
 export function HotelRoomCreatePage() {
   const { hotel, hotelId } = useHotelWorkspace()
+  const { canEditProfile, readOnlyReason } = useHotelProfileAccess(hotel)
   const navigate = useNavigate()
   const { createRoom, createRoomType, updateRoomType } = useManagementRoomMutations(hotelId)
   const [searchParams, setSearchParams] = useSearchParams()
@@ -107,6 +108,7 @@ export function HotelRoomCreatePage() {
   }, [roomTypes, roomForm])
 
   if (!hotel) return null
+  if (!canEditProfile) return <HotelProfileReadOnly hotel={hotel} reason={readOnlyReason} />
 
   const breadcrumbItems = [
     { label: 'Khách sạn', to: '/hotels' },

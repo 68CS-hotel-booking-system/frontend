@@ -19,7 +19,7 @@ import {
 } from 'antd'
 import dayjs from 'dayjs'
 import { Link, useNavigate } from 'react-router'
-import { useHotelWorkspace } from '@/features/hotels'
+import { useHotelWorkspace, useHotelProfileAccess } from '@/features/hotels'
 import {
   EditRoomTypeModal,
   buildRoomEditPayload,
@@ -35,6 +35,7 @@ import { PageLoading } from '@/shared/ui/PageLoading'
 
 export function HotelRoomsPage() {
   const { hotel, hotelId } = useHotelWorkspace()
+  const { canEditProfile } = useHotelProfileAccess(hotel)
   const navigate = useNavigate()
   const { updateRoom } = useManagementRoomMutations(hotelId)
   const [activeTab, setActiveTab] = useState<'rooms' | 'types'>('rooms')
@@ -99,6 +100,7 @@ export function HotelRoomsPage() {
 
   // Handle submit Sửa phòng vật lý
   const handleSaveRoomEdit = async () => {
+    if (!canEditProfile) return
     if (!editingRoom) return
     try {
       const values = await roomEditForm.validateFields()
@@ -124,7 +126,7 @@ export function HotelRoomsPage() {
         extra={
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            disabled={!canEditProfile} icon={<PlusOutlined />}
             onClick={() =>
               navigate(
                 `/hotels/${hotelId}/rooms/new?tab=${
@@ -198,7 +200,7 @@ export function HotelRoomsPage() {
                   action={
                     <Button
                       type="primary"
-                      icon={<PlusOutlined />}
+                      disabled={!canEditProfile} icon={<PlusOutlined />}
                       onClick={() => {
                         setActiveTab('types')
                         navigate(`/hotels/${hotelId}/rooms/new?tab=room-type`)
@@ -220,7 +222,7 @@ export function HotelRoomsPage() {
                   action={
                     <Button
                       type="primary"
-                      icon={<PlusOutlined />}
+                      disabled={!canEditProfile} icon={<PlusOutlined />}
                       onClick={() => navigate(`/hotels/${hotelId}/rooms/new?tab=room`)}
                       className="!bg-[#0b5f53] !rounded-xl font-semibold mt-3"
                     >
@@ -292,7 +294,7 @@ export function HotelRoomsPage() {
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
                           size="small"
-                          icon={<EditOutlined />}
+                          disabled={!canEditProfile} icon={<EditOutlined />}
                           onClick={() => {
                             setEditingRoom(record)
                             roomEditForm.resetFields()
@@ -343,7 +345,7 @@ export function HotelRoomsPage() {
                 action={
                   <Button
                     type="primary"
-                    icon={<PlusOutlined />}
+                    disabled={!canEditProfile} icon={<PlusOutlined />}
                     onClick={() => navigate(`/hotels/${hotelId}/rooms/new?tab=room-type`)}
                     className="!bg-[#0b5f53] mt-3"
                   >
@@ -408,7 +410,7 @@ export function HotelRoomsPage() {
                       <div className="flex items-center justify-end gap-2">
                         <Button
                           size="small"
-                          icon={<EditOutlined />}
+                          disabled={!canEditProfile} icon={<EditOutlined />}
                           onClick={() => setEditingRoomType(record)}
                         >
                           Chỉnh sửa
@@ -432,7 +434,7 @@ export function HotelRoomsPage() {
       {/* MODAL SỬA PHÒNG VẬT LÝ (HT21: UpdateRoomRequest) */}
       <Modal
         title={`Chỉnh sửa phòng ${editingRoom?.roomNumber || ''}`}
-        open={Boolean(editingRoom)}
+        open={canEditProfile && Boolean(editingRoom)}
         onCancel={() => setEditingRoom(null)}
         onOk={handleSaveRoomEdit}
         confirmLoading={isUpdatingRoom}
@@ -470,7 +472,7 @@ export function HotelRoomsPage() {
 
       {/* Modal chỉnh sửa loại phòng */}
       <EditRoomTypeModal
-        open={Boolean(editingRoomType)}
+        open={canEditProfile && Boolean(editingRoomType)}
         roomType={editingRoomType}
         hotelId={hotelId}
         onClose={() => setEditingRoomType(null)}

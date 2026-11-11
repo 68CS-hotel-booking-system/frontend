@@ -85,6 +85,15 @@ export async function approveHotel(
   return toManagementHotel(hotel)
 }
 
+export type HotelSalesAction = 'suspend' | 'resume' | 'lock' | 'unlock'
+export async function changeHotelSalesStatus(hotelId: string, action: HotelSalesAction, reason: string, signal?: AbortSignal) {
+  const scope = action === 'lock' || action === 'unlock' ? 'admin' : 'management'
+  const hotel = await http.request(`/${scope}/hotels/${encodeURIComponent(hotelId)}/${action}`, {
+    method: 'POST', body: { reason }, signal, schema: managementHotelResponseSchema,
+  })
+  return toManagementHotel(hotel)
+}
+
 export interface UpdateHotelPayload {
   version: number
   name?: string

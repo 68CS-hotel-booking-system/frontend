@@ -33,7 +33,7 @@ export function ClientSiteFooter({ onToast }: ClientSiteFooterProps) {
     const target = document.getElementById(anchor.replace('#', ''))
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
+    } else { navigate(`/${anchor}`) }
   }
 
   return (
@@ -202,7 +202,7 @@ export function ClientSiteFooter({ onToast }: ClientSiteFooterProps) {
         <div className="footer-bottom">
           <p>© 2026 StayHub. Bộ sưu tập lưu trú được tuyển chọn.</p>
           <p className="preview-note">
-            Bản xem trước giao diện · Dữ liệu chỗ nghỉ là minh họa
+            Giá và tình trạng mở bán được cung cấp bởi khách sạn
           </p>
         </div>
       </div>

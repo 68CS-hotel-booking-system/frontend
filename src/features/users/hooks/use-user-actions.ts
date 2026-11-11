@@ -6,12 +6,15 @@ import { useAbortableMutation } from '@/shared/hooks/use-abortable-mutation'
 import {
   getUserRoles, grantUserRole, listAdminRoles, resendUserVerificationEmail,
   revokeUserRole, updateUserStatus,
+  createAdminUser,
 } from '../api/users-api'
 import type { AdminUser, UserRole } from '../model/user'
+import type { CreateUserFormValues } from '../model/create-user-form-schema'
 import { nextUserStatus } from '../model/admin-user-mapping'
 import { userKeys } from './user-query-keys'
 
 type UserAction =
+  | { kind: 'create'; values: CreateUserFormValues }
   | { kind: 'status'; user: AdminUser }
   | { kind: 'resend'; user: AdminUser }
   | { kind: 'role'; user: AdminUser; role: UserRole }
@@ -69,6 +72,10 @@ async function changePrimaryRole(
 }
 
 async function executeAction(action: UserAction, actorId: string | undefined, signal: AbortSignal): Promise<Outcome> {
+  if (action.kind === 'create') {
+    await createAdminUser(action.values, signal)
+    return { level: 'success', text: 'Đã tạo tài khoản. Người nhận xác minh email, sau đó dùng Quên mật khẩu để đặt mật khẩu riêng.' }
+  }
   if (action.kind === 'role') {
     await changePrimaryRole(action.user, action.role, actorId, signal)
     return { level: 'success', text: 'Đã cập nhật vai trò người dùng.' }

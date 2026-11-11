@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   BankOutlined,
   CompassOutlined,
@@ -14,9 +14,8 @@ import {
   StarOutlined,
   UserOutlined,
 } from '@ant-design/icons'
-import { Button, Drawer, Dropdown, type MenuProps } from 'antd'
+import { App, Button, Drawer, Dropdown, type MenuProps } from 'antd'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import {
   StayVibeFooter,
   STAYVIBE_FOOTER_GROUPS,
@@ -28,11 +27,17 @@ import {
   ClientSiteFooter,
   ClientToast,
 } from '@/features/discovery'
-import { AuthModal, useCurrentUser, useSession } from '@/features/auth'
-import { setSession } from '@/shared/api/session'
+import { AuthModal, useAuthAction, useCurrentUser, useSession } from '@/features/auth'
+import { errorMessage } from '@/shared/api/api-error'
 import { formatRoleLabel } from '@/shared/lib/format'
 
 function ClientHomeLayout() {
+  const { pathname, hash } = useLocation()
+  useEffect(() => {
+    if (!hash) return
+    const frame = requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+    return () => cancelAnimationFrame(frame)
+  }, [pathname, hash])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const {
     savedIds,
@@ -59,6 +64,7 @@ function ClientHomeLayout() {
         pulseSaved={pulseSaved}
         onToggleSaved={toggleSavedOnly}
         onOpenMobileMenu={() => setMobileMenuOpen(true)}
+        isMobileMenuOpen={mobileMenuOpen}
         onOpenAuthModal={(mode) => openAuthModal(mode)}
       />
 
@@ -90,7 +96,8 @@ function ClientHomeLayout() {
 export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const queryClient = useQueryClient()
+  const logout = useAuthAction('logout')
+  const { message } = App.useApp()
   const session = useSession()
   const { currentUser, isAdmin } = useCurrentUser()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -98,6 +105,7 @@ export function AppLayout() {
   const isHomeRoute =
     location.pathname === '/' ||
     location.pathname === '/explore' ||
+    location.pathname.startsWith('/stays/') ||
     location.pathname.startsWith('/hotels')
 
   if (isHomeRoute) {
@@ -124,15 +132,23 @@ export function AppLayout() {
       .join('')
       .toUpperCase() || 'SH'
 
-  const handleLogout = () => {
-    setSession(null)
-    queryClient.clear()
-    closeMenu()
-    navigate('/')
+  const handleLogout = async () => {
+    if (logout.isPending) return
+    try {
+      await logout.mutateAsync({})
+      closeMenu()
+      await navigate('/')
+    } catch (error) {
+      void message.error(errorMessage(error))
+    }
   }
 
   // Account dropdown menu items
   const accountMenuItems: MenuProps['items'] = [
+    { key: 'bookings', label: <NavLink to="/my-bookings">Đặt phòng của tôi</NavLink> },
+    { key: 'complaints', label: <NavLink to="/my-complaints">Khiếu nại của tôi</NavLink> },
+    { key: 'profile', label: <NavLink to="/account">Hồ sơ của tôi</NavLink> },
+    { key: 'staff', label: <NavLink to="/staff">Nhân sự khách sạn</NavLink> },
     {
       key: 'user-profile-header',
       label: (

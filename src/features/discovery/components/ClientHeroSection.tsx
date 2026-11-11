@@ -5,38 +5,49 @@ import {
   type ClientSearchFormValues,
 } from '../model/client-search-schema'
 import { CLIENT_PROOFS, CLIENT_QUICK_CITIES } from '../mocks/client-home-data'
+import { localDate } from '@/features/bookings'
 import { ClientIcon } from './ClientSiteIcons'
 
 interface ClientHeroSectionProps {
   onSearchSubmit: (values: ClientSearchFormValues) => void
   onQuickCity: (city: string) => void
   onOpenStay: (id: string) => void
+  compact?: boolean
+  initialValues?: Partial<ClientSearchFormValues>
+  cities?: string[]
 }
 
 export function ClientHeroSection({
   onSearchSubmit,
   onQuickCity,
   onOpenStay,
+  compact = false,
+  initialValues,
+  cities = CLIENT_QUICK_CITIES,
 }: ClientHeroSectionProps) {
-  const { register, handleSubmit } = useForm<ClientSearchFormValues>({
+  const form = useForm<ClientSearchFormValues>({
     resolver: zodResolver(clientSearchSchema),
-    defaultValues: {
+    resetOptions: { keepDirtyValues: true },
+    values: {
       destination: '',
-      checkIn: '15/11/2026',
-      checkOut: '18/11/2026',
+      checkIn: localDate().split('-').reverse().join('/'),
+      checkOut: localDate(1).split('-').reverse().join('/'),
       guests: '2 khách · 1 phòng',
+      ...initialValues,
     },
   })
+  const { register, handleSubmit, formState: { errors, dirtyFields } } = form
+  void dirtyFields
 
   return (
     <section
-      className="hero"
+      className={`hero${compact ? ' hero--search' : ''}`}
       id="top"
       data-od-id="hero-section"
       aria-labelledby="hero-title"
     >
       <div className="container">
-        <div className="hero-grid">
+        {compact ? <div className="search-page-heading"><h1 id="hero-title">Tìm nơi <em>bạn muốn ở.</em></h1><p>Chọn điểm đến và kỳ nghỉ để khám phá các chỗ nghỉ đang mở bán.</p></div> : <div className="hero-grid">
           <div className="hero-copy">
             <p className="eyebrow">Bộ sưu tập mùa thu 2026</p>
             <h1 id="hero-title" data-od-id="hero-title">
@@ -94,7 +105,7 @@ export function ClientHeroSection({
               </button>
             </div>
           </div>
-        </div>
+        </div>}
 
         <div className="search-wrap">
           <form
@@ -117,10 +128,7 @@ export function ClientHeroSection({
                   {...register('destination')}
                 />
                 <datalist id="destination-list">
-                  <option value="Đà Lạt" />
-                  <option value="Đà Nẵng" />
-                  <option value="Phú Quốc" />
-                  <option value="Sa Pa" />
+                  {cities.map((city) => <option value={city} key={city} />)}
                 </datalist>
               </div>
             </div>
@@ -160,6 +168,7 @@ export function ClientHeroSection({
               <div className="search-field-content">
                 <label htmlFor="guests">Khách &amp; phòng</label>
                 <select id="guests" {...register('guests')}>
+                  {initialValues?.guests && !['2 khách · 1 phòng', '1 khách · 1 phòng', '2 khách · 2 phòng', '4 khách · 2 phòng'].includes(initialValues.guests) && <option value={initialValues.guests}>{initialValues.guests}</option>}
                   <option value="2 khách · 1 phòng">2 khách · 1 phòng</option>
                   <option value="1 khách · 1 phòng">1 khách · 1 phòng</option>
                   <option value="2 khách · 2 phòng">2 khách · 2 phòng</option>
@@ -178,11 +187,12 @@ export function ClientHeroSection({
               <span>Tìm chỗ nghỉ</span>
             </button>
           </form>
+          {Object.values(errors).length > 0 && <p role="alert" className="stay-field-error">{Object.values(errors)[0]?.message}</p>}
 
           <div className="search-hints">
             <div className="quick-row">
               <span>Tìm nhanh</span>
-              {CLIENT_QUICK_CITIES.map((city) => (
+              {cities.slice(0, 6).map((city) => (
                 <button
                   key={city}
                   type="button"
@@ -193,20 +203,20 @@ export function ClientHeroSection({
                 </button>
               ))}
             </div>
-            <span className="search-promise">
+            {!compact && <span className="search-promise">
               <ClientIcon name="check" /> Hủy linh hoạt trong 48 giờ
-            </span>
+            </span>}
           </div>
         </div>
 
-        <div className="proof-strip" data-od-id="proof-strip" aria-label="Cam kết của StayHub">
+        {!compact && <div className="proof-strip" data-od-id="proof-strip" aria-label="Cam kết của StayHub">
           {CLIENT_PROOFS.map((proof) => (
             <div key={proof.label} className="proof-item">
               <strong>{proof.value}</strong>
               <span>{proof.label}</span>
             </div>
           ))}
-        </div>
+        </div>}
       </div>
     </section>
   )

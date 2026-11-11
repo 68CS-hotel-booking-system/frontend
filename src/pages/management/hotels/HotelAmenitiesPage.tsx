@@ -1,8 +1,9 @@
-import { useHotelWorkspace, HotelAmenitiesManager } from '@/features/hotels'
+import { useHotelWorkspace, HotelAmenitiesManager, useHotelProfileAccess } from '@/features/hotels'
 import { PageHeader } from '@/shared/ui/PageHeader'
 
 export function HotelAmenitiesPage() {
   const { hotel, hotelId } = useHotelWorkspace()
+  const { canEditProfile } = useHotelProfileAccess(hotel)
 
   if (!hotel) return null
 
@@ -21,7 +22,7 @@ export function HotelAmenitiesPage() {
         description="Quản lý các tiện ích chung mà khách sạn cung cấp (Hồ bơi, Nhà hàng, Bãi đỗ xe...). Bạn có thể chọn nhanh từ danh mục hệ thống hoặc tự tạo tiện ích riêng chỉ thuộc khách sạn này."
       />
 
-      <HotelAmenitiesManager hotelId={hotelId} />
+      <HotelAmenitiesManager readOnly={!canEditProfile} hotelId={hotelId} />
     </div>
   )
 }

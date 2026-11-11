@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Select } from 'antd'
-import { useHotelWorkspace, HotelAmenitiesManager } from '@/features/hotels'
+import { useHotelWorkspace, HotelAmenitiesManager, useHotelProfileAccess } from '@/features/hotels'
 import { useManagementRoomTypesQuery } from '@/features/rooms'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { PageLoading } from '@/shared/ui/PageLoading'
@@ -9,6 +9,7 @@ import { EmptyState } from '@/shared/ui/EmptyState'
 
 export function HotelRoomAmenitiesPage() {
   const { hotel, hotelId } = useHotelWorkspace()
+  const { canEditProfile } = useHotelProfileAccess(hotel)
   const types = useManagementRoomTypesQuery(hotelId)
   const [selected, setSelected] = useState('')
 
@@ -55,7 +56,7 @@ export function HotelRoomAmenitiesPage() {
         />
       </div>
 
-      <HotelAmenitiesManager
+      <HotelAmenitiesManager readOnly={!canEditProfile}
         hotelId={hotelId}
         roomTypeId={room.id}
         roomTypeName={room.name}

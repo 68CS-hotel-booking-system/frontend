@@ -1,47 +1,26 @@
 import type { ClientDestination, ClientStay } from '../model/client-home'
-import { CLIENT_HOME_DESTINATIONS, CLIENT_HOME_HOTELS } from '../mocks/client-home-data'
-import { getPublicHotels } from '@/features/hotels'
+import { CLIENT_HOME_DESTINATIONS } from '../mocks/client-home-data'
+import { getCities } from '@/features/hotels'
+import { resolveCover, searchHotels, type SearchHotel } from './search-api'
 
 export async function fetchClientStays(signal?: AbortSignal): Promise<ClientStay[]> {
-  try {
-    const page = await getPublicHotels({ page: 0, size: 20 }, signal)
-    if (page && page.content.length > 0) {
-      return page.content.map((h, index) => {
-        const fallback = CLIENT_HOME_HOTELS[index % CLIENT_HOME_HOTELS.length]
-        return {
-          id: h.id,
-          name: h.name,
-          city: h.address.split(',').pop()?.trim() || fallback.city,
-          region: 'Việt Nam',
-          location: h.address,
-          type: 'Khách sạn',
-          rating: h.starRating ? Number(h.starRating) : 5,
-          reviews: 1,
-          price: fallback.price,
-          oldPrice: 0,
-          badge: 'Đã xác minh',
-          badgeClass: 'dark',
-          note: `Nhận phòng ${h.checkInTime.slice(0, 5)} · Trả phòng ${h.checkOutTime.slice(0, 5)}`,
-          amenities: ['Wi-Fi tốc độ cao', 'Máy lạnh', 'Lễ tân 24/7'],
-          vibes: ['all'],
-          image: fallback.image,
-          desc: h.description || fallback.desc,
-        }
-      })
-    }
-  } catch {
-    // Khi Backend chưa có khách sạn Active hoặc chưa kết nối, fallback dữ liệu mẫu
-  }
-
-  return [...CLIENT_HOME_HOTELS]
+  const page = await searchHotels({ page: 0, size: 20 }, signal)
+  return Promise.all(page.content.map(async (hotel) => toClientStay(hotel, await resolveCover(hotel.coverImage?.mediaId, signal))))
 }
-
-export async function fetchClientDestinations(signal?: AbortSignal): Promise<ClientDestination[]> {
-  if (signal?.aborted) {
-    throw new DOMException('Aborted', 'AbortError')
+export function toClientStay(hotel: SearchHotel, image: string): ClientStay {
+  return {
+    id: hotel.id, name: hotel.name, city: hotel.city.name, region: hotel.city.name, location: hotel.address,
+    type: 'Khách sạn', rating: 0, reviews: 0, price: hotel.minNightlyPrice ?? 0, oldPrice: 0,
+    badge: 'Đang mở bán', badgeClass: 'dark' as const, note: 'Kiểm tra giá và phòng trống theo ngày lưu trú',
+    amenities: hotel.amenities.map((item) => item.name), vibes: ['all' as const],
+    image, desc: '', source: 'api' as const, starRating: hotel.starRating,
   }
-
-  await new Promise((resolve) => setTimeout(resolve, 60))
-
-  return [...CLIENT_HOME_DESTINATIONS]
+}
+export async function fetchClientDestinations(signal?: AbortSignal): Promise<ClientDestination[]> {
+  const cities = await getCities(signal)
+  return cities.map((city) => {
+    const editorial = CLIENT_HOME_DESTINATIONS.find((item) => item.city === city.name)
+    return { id: city.id, city: city.name, kicker: city.countryCode, image: editorial?.image ?? '/assets/client/experience.jpg',
+      tag: 'Điểm đến', count: 'Khám phá lưu trú', desc: editorial?.desc ?? `Tìm chỗ nghỉ đang mở bán tại ${city.name}.`, ctaText: `Khám phá ${city.name}` }
+  })
 }

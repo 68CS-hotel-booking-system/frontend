@@ -30,7 +30,6 @@ export function StayVibeHomePage() {
     handleSearchSubmit,
     closeModal,
     showToast,
-    scrollToStays,
   } = useClientHomeContext()
 
   const handleOpenStay = (id: string) => {
@@ -75,10 +74,7 @@ export function StayVibeHomePage() {
       {/* 4. Câu chuyện trải nghiệm (Journal) */}
       <ClientJournalSection
         onJournalCta={() => {
-          selectVibe('wellness')
-          applyCity('all', false)
-          scrollToStays()
-          showToast('Đang xem những chỗ nghỉ dành cho một kỳ nghỉ chậm.')
+          navigate('/explore')
         }}
       />
 

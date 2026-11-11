@@ -1,5 +1,7 @@
 import { useMemo, useState, useCallback, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router'
+import { stayFormSchema } from '@/features/bookings'
 import type {
   ClientFilterState,
   ClientSortOption,
@@ -41,6 +43,7 @@ export function formatPrice(value: number): string {
 }
 
 export function useClientHome() {
+  const navigate = useNavigate()
   const [filterState, setFilterState] = useState<ClientFilterState>({
     vibe: 'all',
     city: 'all',
@@ -49,7 +52,12 @@ export function useClientHome() {
     savedOnly: false,
   })
 
-  const [savedIds, setSavedIds] = useState<Set<string>>(() => new Set())
+  const [savedIds, setSavedIds] = useState<Set<string>>(() => {
+    try {
+      const value: unknown = JSON.parse(localStorage.getItem('stayhub.saved-stays') ?? '[]')
+      return new Set(Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [])
+    } catch { return new Set() }
+  })
   const [pulseSaved, setPulseSaved] = useState(false)
   const [modalStayId, setModalStayId] = useState<string | null>(null)
   const [authModalState, setAuthModalState] = useState<{
@@ -64,6 +72,7 @@ export function useClientHome() {
     data: allStays = [],
     isLoading: isLoadingStays,
     isError: isErrorStays,
+    refetch: refetchStays,
   } = useQuery({
     queryKey: ['discovery', 'stays'],
     queryFn: ({ signal }) => fetchClientStays(signal),
@@ -97,6 +106,11 @@ export function useClientHome() {
   }, [])
 
   const applyCity = useCallback((cityName: string, announce = true) => {
+    if (cityName !== 'all') {
+      const citySlug = normalizeText(cityName).trim().replace(/\s+/g, '-')
+      navigate(`/explore?citySlug=${encodeURIComponent(citySlug)}`)
+      return
+    }
     setFilterState((prev) => {
       const isAlready = prev.city === cityName
       const newCity = isAlready ? 'all' : cityName
@@ -115,7 +129,7 @@ export function useClientHome() {
           : `Đang lọc chỗ nghỉ tại ${cityName}.`,
       )
     }
-  }, [filterState.city, scrollToStays, showToast])
+  }, [filterState.city, scrollToStays, showToast, navigate])
 
   const selectVibe = useCallback((vibe: ClientVibeKey) => {
     setFilterState((prev) => ({
@@ -144,6 +158,7 @@ export function useClientHome() {
         next.add(stayId)
         showToast(stay ? `Đã lưu ${stay.name} vào bộ sưu tập.` : 'Đã lưu chỗ nghỉ.')
       }
+      try { localStorage.setItem('stayhub.saved-stays', JSON.stringify([...next])) } catch { /* Browser storage may be unavailable. */ }
       return next
     })
     setPulseSaved(true)
@@ -171,6 +186,7 @@ export function useClientHome() {
   }, [savedIds.size, scrollToStays, showToast])
 
   const resetAll = useCallback((announce = true) => {
+    void refetchStays()
     setFilterState({
       vibe: 'all',
       city: 'all',
@@ -181,7 +197,7 @@ export function useClientHome() {
     if (announce) {
       showToast('Đã hiển thị lại toàn bộ bộ sưu tập.')
     }
-  }, [showToast])
+  }, [showToast, refetchStays])
 
   const handleSearchSubmit = useCallback((values: ClientSearchFormValues) => {
     const destination = values.destination.trim()
@@ -197,26 +213,15 @@ export function useClientHome() {
       return
     }
 
-    const nights = Math.round((end.getTime() - start.getTime()) / 86400000)
-    const knownCities = Array.from(new Set(allStays.map((s) => s.city)))
-    const matchedCity = knownCities.find((c) => {
-      const cNorm = normalizeText(c)
-      const dNorm = normalizeText(destination)
-      return dNorm && (cNorm.includes(dNorm) || dNorm.includes(cNorm))
-    })
-
-    setFilterState({
-      vibe: 'all',
-      city: matchedCity || 'all',
-      keyword: matchedCity ? '' : destination,
-      sort: 'featured',
-      savedOnly: false,
-    })
-
-    const place = matchedCity || destination || 'toàn bộ bộ sưu tập'
-    showToast(`Đang tìm ${place} · ${nights} đêm · ${values.guests}.`)
-    scrollToStays()
-  }, [allStays, scrollToStays, showToast])
+    const iso = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+    const counts = values.guests.match(/\d+/g)?.map(Number) ?? [1, 1]
+    const stay = { checkIn: iso(start), checkOut: iso(end), adults: counts[0], children: 0, quantity: counts[1] ?? 1 }
+    const valid = stayFormSchema.safeParse(stay)
+    if (!valid.success) { showToast(valid.error.issues[0].message); return }
+    const params = new URLSearchParams({ checkIn: stay.checkIn, checkOut: stay.checkOut, adults: String(stay.adults), quantity: String(stay.quantity) })
+    if (destination) params.set('citySlug', normalizeText(destination).trim().replace(/\s+/g, '-'))
+    navigate(`/explore?${params}`)
+  }, [showToast, navigate])
 
   // Filtered and sorted stays
   const activeStays = useMemo(() => {

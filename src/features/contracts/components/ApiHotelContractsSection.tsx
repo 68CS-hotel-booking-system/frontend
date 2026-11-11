@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import { PlusOutlined, ReloadOutlined, FileTextOutlined } from '@ant-design/icons'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Alert, App as AntApp, Button, Form, Input, InputNumber, Pagination, Select, Space, Tag } from 'antd'
+import { Alert, App as AntApp, Button, Form, Input, InputNumber, Pagination, Popconfirm, Select, Space, Tag } from 'antd'
 import { Controller, useForm } from 'react-hook-form'
 import { useCurrentUser } from '@/features/auth'
 import { errorMessage } from '@/shared/api/api-error'
@@ -9,7 +9,7 @@ import { applyApiFieldErrors } from '@/shared/lib/form-errors'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
-import { useApiHotelContractsQuery, useCreateApiHotelContractMutation } from '../hooks/use-api-hotel-contracts'
+import { useApiHotelContractsQuery, useChangeContractStatus, useCreateApiHotelContractMutation } from '../hooks/use-api-hotel-contracts'
 import { contractStatusValues, type ContractStatus } from '../model/contract'
 import { commissionBasisSchema, createApiContractFormSchema, type CreateApiContractFormValues } from '../model/contract-api-contract'
 
@@ -26,6 +26,7 @@ export function ApiHotelContractsSection({ hotelId, hotelName, ownerUserId = '' 
   const [status, setStatus] = useState<ContractStatus | undefined>()
   const query = useApiHotelContractsQuery(hotelId, { page, size, status })
   const mutation = useCreateApiHotelContractMutation(hotelId)
+  const lifecycle = useChangeContractStatus(hotelId)
   const { control, handleSubmit, reset, setError, formState: { errors } } = useForm<CreateApiContractFormValues>({
     resolver: zodResolver(createApiContractFormSchema),
     defaultValues: { contractCode: '', ownerUserId, commissionRate: 12, commissionBasis: 'AFTER_DISCOUNT', startsAt: '', endsAt: '' },
@@ -62,9 +63,14 @@ export function ApiHotelContractsSection({ hotelId, hotelName, ownerUserId = '' 
           <p className="contract-item-card__terms">Cơ sở tính hoa hồng: {basisLabels[contract.commissionBasis]}</p>
           <div className="contract-item-card__meta"><span>Hiệu lực: <strong>{new Date(contract.startsAt).toLocaleString('vi-VN')}</strong> → <strong>{new Date(contract.endsAt).toLocaleString('vi-VN')}</strong></span></div>
           <p className="muted">Chủ sở hữu: {contract.ownerUserId}</p>
+          {isAdmin && <Space wrap>
+            {contract.status === 'DRAFT' && <Popconfirm title="Kích hoạt hợp đồng này?" onConfirm={() => lifecycle.mutate({ id: contract.id, action: 'activate' })}><Button disabled={lifecycle.isPending}>Kích hoạt hợp đồng</Button></Popconfirm>}
+            {['DRAFT', 'ACTIVE'].includes(contract.status) && <Popconfirm title="Chấm dứt hợp đồng này?" onConfirm={() => lifecycle.mutate({ id: contract.id, action: 'terminate' })}><Button danger disabled={lifecycle.isPending}>Chấm dứt hợp đồng</Button></Popconfirm>}
+          </Space>}
         </article>)}
       </div>}
       {query.data && <Pagination current={page + 1} pageSize={size} total={query.data.totalElements} showSizeChanger onChange={(next, nextSize) => { setPage(nextSize === size ? next - 1 : 0); setSize(nextSize) }} />}
+      {lifecycle.isError && <Alert type="error" showIcon title="Không thể cập nhật hợp đồng" description={errorMessage(lifecycle.error)} />}
     </section>
     <aside className="surface-card" aria-labelledby={`${formId}-create`}>
       <h2 id={`${formId}-create`}>Tạo dự thảo hợp đồng hoa hồng</h2>

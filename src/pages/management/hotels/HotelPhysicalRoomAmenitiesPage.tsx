@@ -1,7 +1,7 @@
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
 import { useNavigate, useParams } from 'react-router'
-import { useHotelWorkspace, HotelAmenitiesManager } from '@/features/hotels'
+import { useHotelWorkspace, HotelAmenitiesManager, useHotelProfileAccess } from '@/features/hotels'
 import {
   useManagementRoomTypesQuery,
   useManagementRoomsQuery,
@@ -12,6 +12,7 @@ import { ErrorState } from '@/shared/ui/ErrorState'
 
 export function HotelPhysicalRoomAmenitiesPage() {
   const { hotel, hotelId } = useHotelWorkspace()
+  const { canEditProfile } = useHotelProfileAccess(hotel)
   const { roomId = '' } = useParams<{ roomId: string }>()
   const navigate = useNavigate()
 
@@ -68,7 +69,7 @@ export function HotelPhysicalRoomAmenitiesPage() {
         }
       />
 
-      <HotelAmenitiesManager
+      <HotelAmenitiesManager readOnly={!canEditProfile}
         hotelId={hotelId}
         roomId={roomId}
         roomNumber={roomDisplayNumber}

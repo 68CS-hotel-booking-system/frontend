@@ -9,12 +9,13 @@ import {
 } from '@ant-design/icons'
 import { Button, Card, Space, Tag } from 'antd'
 import { useNavigate } from 'react-router'
-import { useHotelWorkspace, HotelStatusBadge, CompletionChecklist } from '@/features/hotels'
+import { useHotelWorkspace, HotelStatusBadge, CompletionChecklist, HotelSalesControls, useHotelProfileAccess } from '@/features/hotels'
 import { PageHeader } from '@/shared/ui/PageHeader'
 
 export function HotelOverviewPage() {
   const { hotel, hotelId, completion } = useHotelWorkspace()
   const navigate = useNavigate()
+  const { canEditProfile } = useHotelProfileAccess(hotel)
 
   if (!hotel) return null
 
@@ -26,6 +27,7 @@ export function HotelOverviewPage() {
 
   return (
     <div className="hotel-overview-page max-w-6xl mx-auto space-y-6">
+      <HotelSalesControls hotelId={hotelId} status={hotel.status} />
       {/* 1. Header */}
       <PageHeader
         breadcrumbItems={breadcrumbItems}
@@ -34,12 +36,12 @@ export function HotelOverviewPage() {
         description="Bảng điều khiển cơ sở lưu trú, theo dõi tiến độ hoàn thiện hồ sơ và các chỉ số hoạt động."
         extra={
           <Space>
-            <Button
+            {canEditProfile && <Button
               icon={<EditOutlined />}
               onClick={() => navigate(`/hotels/${hotelId}/info`)}
             >
               Chỉnh sửa hồ sơ
-            </Button>
+            </Button>}
             {hotel.status === 'ACTIVE' && (
               <Button
                 type="primary"
