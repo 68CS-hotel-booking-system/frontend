@@ -30,9 +30,9 @@ import {
   uploadHotelMedia,
   useHotelImagesQuery,
   useHotelWorkspace,
+  useHotelAlbums,
 } from '@/features/hotels'
 import { ApiError } from '@/shared/api/api-error'
-import { useDataMode } from '@/shared/lib/data-mode-context'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageHeader } from '@/shared/ui/PageHeader'
@@ -43,56 +43,11 @@ export interface AlbumItem {
   name: string
   description?: string
   isSystem?: boolean
-  minPhotos?: number
-}
-
-const SYSTEM_ALBUMS: AlbumItem[] = [
-  {
-    id: 'phong-ngu',
-    name: 'Phòng ngủ',
-    description: 'Giường, bàn trang điểm, không gian nghỉ ngơi chính',
-    isSystem: true,
-    minPhotos: 3,
-  },
-  {
-    id: 'phong-tam',
-    name: 'Phòng tắm',
-    description: 'Vòi sen đứng, bồn tắm, khăn và đồ dùng vệ sinh',
-    isSystem: true,
-    minPhotos: 2,
-  },
-  {
-    id: 'ban-cong',
-    name: 'Ban công & Tầm nhìn',
-    description: 'Tầm nhìn, góc ngắm cảnh, không gian ngoài trời',
-    isSystem: true,
-    minPhotos: 1,
-  },
-  {
-    id: 'khu-vuc-chung',
-    name: 'Khu vực chung',
-    description: 'Sảnh đón tiếp, nhà hàng, quầy bar, hồ bơi',
-    isSystem: true,
-    minPhotos: 2,
-  },
-  {
-    id: 'anh-bo-sung',
-    name: 'Ảnh bổ sung',
-    description: 'Các góc chụp và tiện ích khác',
-    isSystem: true,
-    minPhotos: 1,
-  },
-]
-
-const DEFAULT_ALBUM_KEYS = ['phong-ngu', 'phong-tam', 'ban-cong', 'khu-vuc-chung', 'anh-bo-sung']
-
-function resolvePhotoAlbum(mediaId: string, index: number, map: Record<string, string>): string {
-  return map[mediaId] || DEFAULT_ALBUM_KEYS[index % DEFAULT_ALBUM_KEYS.length]
 }
 
 export function HotelPhotosPage() {
   const { hotel, hotelId } = useHotelWorkspace()
-  const { mode } = useDataMode()
+  const albums = useHotelAlbums(hotelId)
   const activeWrite = useRef(false)
   const uploadedIds = useRef(new Map<string, string>())
   const imagesQuery = useHotelImagesQuery(hotelId)
@@ -100,27 +55,10 @@ export function HotelPhotosPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [isUpdatingGallery, setIsUpdatingGallery] = useState(false)
 
-  // Album state (persisted per hotel in localStorage)
-  const [customAlbums, setCustomAlbums] = useState<AlbumItem[]>(() => {
-    try {
-      const raw = localStorage.getItem(`stayhub_custom_albums_${hotelId}`)
-      return raw ? (JSON.parse(raw) as AlbumItem[]) : []
-    } catch {
-      return []
-    }
-  })
-
-  const [photoAlbumMap, setPhotoAlbumMap] = useState<Record<string, string>>(() => {
-    try {
-      const raw = localStorage.getItem(`stayhub_photo_albums_${hotelId}`)
-      return raw ? (JSON.parse(raw) as Record<string, string>) : {}
-    } catch {
-      return {}
-    }
-  })
-
-  const [activeAlbumId, setActiveAlbumId] = useState<string>('phong-ngu')
-  const [uploadTarget, setUploadTarget] = useState<string>('phong-ngu')
+  const [activeAlbumId, setActiveAlbumId] = useState('all')
+  const [selectedUploadTarget, setUploadTarget] = useState('ungrouped')
+  const [editingAlbumId, setEditingAlbumId] = useState<string | null>(null)
+  const [albumDescription, setAlbumDescription] = useState('')
 
   // Create album modal
   const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -132,10 +70,14 @@ export function HotelPhotosPage() {
     existingImages.find((img) => img.cover) || (existingImages.length > 0 ? existingImages[0] : null)
   const displayCoverUrl = coverImage?.url || hotel?.coverImageUrl
 
-  const writesDisabled = !imagesQuery.canWrite || isUploading || isUpdatingGallery
+  const writesDisabled = !imagesQuery.canWrite || !albums.query.isSuccess || isUploading || isUpdatingGallery || albums.mutation.isPending
 
   // All combined albums
-  const allAlbums = useMemo(() => [...SYSTEM_ALBUMS, ...customAlbums], [customAlbums])
+  const allAlbums: AlbumItem[] = useMemo(() => [
+    ...(albums.query.data ?? []).map((album) => ({ ...album, description: album.description ?? undefined })),
+    { id: 'ungrouped', name: 'Chưa phân loại', description: 'Ảnh chưa được gán vào album', isSystem: true },
+  ], [albums.query.data])
+  const uploadTarget = allAlbums.some((album) => album.id === selectedUploadTarget) ? selectedUploadTarget : 'ungrouped'
 
   // Count photos per album
   const albumCounts = useMemo(() => {
@@ -143,30 +85,30 @@ export function HotelPhotosPage() {
     allAlbums.forEach((a) => {
       counts[a.id] = 0
     })
-    existingImages.forEach((img, idx) => {
-      const aId = resolvePhotoAlbum(img.mediaId, idx, photoAlbumMap)
+    existingImages.forEach((img) => {
+      const aId = (img.albumId ?? 'ungrouped')
       counts[aId] = (counts[aId] || 0) + 1
     })
     return counts
-  }, [existingImages, allAlbums, photoAlbumMap])
+  }, [existingImages, allAlbums])
 
   // Filtered images for display
   const displayedImages = useMemo(() => {
     if (activeAlbumId === 'all') {
       return existingImages.map((img, idx) => ({
         ...img,
-        albumId: resolvePhotoAlbum(img.mediaId, idx, photoAlbumMap),
+        albumId: (img.albumId ?? 'ungrouped'),
         originalIndex: idx,
       }))
     }
     return existingImages
       .map((img, idx) => ({
         ...img,
-        albumId: resolvePhotoAlbum(img.mediaId, idx, photoAlbumMap),
+        albumId: (img.albumId ?? 'ungrouped'),
         originalIndex: idx,
       }))
       .filter((img) => img.albumId === activeAlbumId)
-  }, [existingImages, activeAlbumId, photoAlbumMap])
+  }, [existingImages, activeAlbumId])
 
   // Preview groups for guest view: only non-empty albums!
   const previewGroups = useMemo(() => {
@@ -175,14 +117,14 @@ export function HotelPhotosPage() {
         const items = existingImages
           .map((img, idx) => ({
             ...img,
-            albumId: resolvePhotoAlbum(img.mediaId, idx, photoAlbumMap),
+            albumId: (img.albumId ?? 'ungrouped'),
             originalIndex: idx,
           }))
           .filter((img) => img.albumId === album.id)
         return { album, items }
       })
       .filter((group) => group.items.length > 0)
-  }, [allAlbums, existingImages, photoAlbumMap])
+  }, [allAlbums, existingImages])
 
   const activeAlbum = allAlbums.find((a) => a.id === activeAlbumId)
 
@@ -196,7 +138,7 @@ export function HotelPhotosPage() {
 
   // Mutator runner
   const runWrite = async (upload: boolean, operation: () => Promise<unknown>, success: string) => {
-    if (activeWrite.current || !imagesQuery.canWrite) return
+    if (activeWrite.current || writesDisabled) return
     activeWrite.current = true
     if (upload) setIsUploading(true)
     else setIsUpdatingGallery(true)
@@ -228,7 +170,6 @@ export function HotelPhotosPage() {
     return runWrite(
       true,
       async () => {
-        const uploadedPairs: Array<{ mediaId: string; albumId: string }> = []
         await imagesQuery.saveGallery(async (current) => {
           for (const item of fileList) {
             const uploadKey = `${hotelId}:${item.uid}`
@@ -238,8 +179,6 @@ export function HotelPhotosPage() {
               const uploaded = await uploadHotelMedia({ file: item.originFileObj, hotelId })
               uploadedIds.current.set(uploadKey, uploaded.id)
             }
-            const mediaId = uploadedIds.current.get(uploadKey)!
-            uploadedPairs.push({ mediaId, albumId: uploadTarget })
           }
           const newIds = fileList
             .map((item) => uploadedIds.current.get(`${hotelId}:${item.uid}`)!)
@@ -248,25 +187,13 @@ export function HotelPhotosPage() {
             ...current,
             ...newIds.map((mediaId, index) => ({
               mediaId,
+              albumId: uploadTarget === 'ungrouped' ? null : uploadTarget,
               sortOrder: 0,
               cover: !current.some((image) => image.cover) && index === 0,
             })),
           ].map((image, sortOrder) => ({ ...image, sortOrder }))
         })
 
-        // Persist photo-to-album mapping
-        setPhotoAlbumMap((prev) => {
-          const next = { ...prev }
-          uploadedPairs.forEach((p) => {
-            next[p.mediaId] = p.albumId
-          })
-          try {
-            localStorage.setItem(`stayhub_photo_albums_${hotelId}`, JSON.stringify(next))
-          } catch {
-            // ignore
-          }
-          return next
-        })
       },
       `Đã tải lên và lưu ${fileList.length} hình ảnh vào album "${targetAlbumName}"!`,
     )
@@ -320,94 +247,40 @@ export function HotelPhotosPage() {
     )
   }
 
-  const handleReassignPhotoAlbum = (mediaId: string, newAlbumId: string) => {
-    setPhotoAlbumMap((prev) => {
-      const next = { ...prev, [mediaId]: newAlbumId }
-      try {
-        localStorage.setItem(`stayhub_photo_albums_${hotelId}`, JSON.stringify(next))
-      } catch {
-        // ignore
-      }
-      return next
-    })
-    const albumName = allAlbums.find((a) => a.id === newAlbumId)?.name || 'album'
-    message.success(`Đã chuyển ảnh sang album "${albumName}"!`)
-  }
+  const handleReassignPhotoAlbum = (mediaId: string, albumId: string) => runWrite(false, () =>
+    imagesQuery.saveGallery((current) => {
+      if (!current.some((image) => image.mediaId === mediaId)) throw new Error('Ảnh đã thay đổi. Vui lòng tải lại.')
+      return current.map((image) => image.mediaId === mediaId ? { ...image, albumId: albumId === 'ungrouped' ? null : albumId } : image)
+    }), 'Đã lưu phân loại ảnh lên máy chủ.')
 
   const handleCreateAlbum = () => {
-    const trimmed = newAlbumName.trim()
-    if (!trimmed) {
-      setAlbumNameError('Vui lòng nhập tên album.')
-      return
-    }
-    if (trimmed.length > 40) {
-      setAlbumNameError('Tên album tối đa 40 ký tự.')
-      return
-    }
-    if (allAlbums.some((a) => a.name.toLowerCase() === trimmed.toLowerCase())) {
-      setAlbumNameError('Tên album này đã tồn tại.')
-      return
-    }
-
-    const newAlbum: AlbumItem = {
-      id: `custom-${Date.now()}`,
-      name: trimmed,
-      description: 'Album tùy chỉnh của khách sạn',
-      isSystem: false,
-      minPhotos: 1,
-    }
-
-    const nextCustom = [...customAlbums, newAlbum]
-    setCustomAlbums(nextCustom)
-    try {
-      localStorage.setItem(`stayhub_custom_albums_${hotelId}`, JSON.stringify(nextCustom))
-    } catch {
-      // ignore
-    }
-
-    setActiveAlbumId(newAlbum.id)
-    setUploadTarget(newAlbum.id)
-    setNewAlbumName('')
-    setAlbumNameError(null)
-    setCreateModalOpen(false)
-    message.success(`Đã tạo album "${trimmed}" thành công!`)
+    const name = newAlbumName.trim()
+    if (!name || name.length > 100) { setAlbumNameError('Nhập tên album từ 1 đến 100 ký tự.'); return }
+    return runWrite(false, async () => {
+      const result = await albums.mutation.mutateAsync(editingAlbumId
+        ? { kind: 'update', albumId: editingAlbumId, name, description: albumDescription }
+        : { kind: 'create', name, description: albumDescription })
+      if ('id' in result) { setActiveAlbumId(result.id); setUploadTarget(result.id) }
+      setCreateModalOpen(false)
+      setEditingAlbumId(null)
+      setNewAlbumName('')
+      setAlbumDescription('')
+    }, editingAlbumId ? 'Đã cập nhật album.' : 'Đã tạo album.')
   }
 
-  const handleDeleteCustomAlbum = (albumId: string) => {
-    const targetAlbum = customAlbums.find((a) => a.id === albumId)
-    if (!targetAlbum) return
+  const handleDeleteCustomAlbum = (albumId: string) => runWrite(false, async () => {
+    await albums.mutation.mutateAsync({ kind: 'delete', albumId })
+    setActiveAlbumId('all')
+    setUploadTarget('ungrouped')
+  }, 'Đã xóa album. Ảnh được giữ lại trong nhóm Chưa phân loại.')
 
-    // Reassign photos in this album to anh-bo-sung
-    setPhotoAlbumMap((prev) => {
-      const next = { ...prev }
-      Object.keys(next).forEach((mId) => {
-        if (next[mId] === albumId) {
-          next[mId] = 'anh-bo-sung'
-        }
-      })
-      try {
-        localStorage.setItem(`stayhub_photo_albums_${hotelId}`, JSON.stringify(next))
-      } catch {
-        // ignore
-      }
-      return next
-    })
-
-    const nextCustom = customAlbums.filter((a) => a.id !== albumId)
-    setCustomAlbums(nextCustom)
-    try {
-      localStorage.setItem(`stayhub_custom_albums_${hotelId}`, JSON.stringify(nextCustom))
-    } catch {
-      // ignore
-    }
-
-    if (activeAlbumId === albumId) {
-      setActiveAlbumId('phong-ngu')
-    }
-    if (uploadTarget === albumId) {
-      setUploadTarget('phong-ngu')
-    }
-    message.success(`Đã xóa album "${targetAlbum.name}". Các ảnh đã được chuyển về "Ảnh bổ sung".`)
+  const handleMoveAlbum = (direction: -1 | 1) => {
+    const ids = (albums.query.data ?? []).map((album) => album.id)
+    const from = ids.indexOf(activeAlbumId)
+    const to = from + direction
+    if (from < 0 || to < 0 || to >= ids.length) return
+    ;[ids[from], ids[to]] = [ids[to], ids[from]]
+    return runWrite(false, () => albums.mutation.mutateAsync({ kind: 'order', albumIds: ids }), 'Đã lưu thứ tự album.')
   }
 
   const scrollToUpload = () => {
@@ -423,7 +296,7 @@ export function HotelPhotosPage() {
         breadcrumbItems={breadcrumbItems}
         kicker="BỘ SƯU TẬP &amp; HÌNH ẢNH"
         title="Hình ảnh khách sạn theo album"
-        description="Quản lý ảnh đại diện và phân bổ hình ảnh vào các album chuyên biệt (Phòng ngủ, Phòng tắm, Tiện ích...). Khách sạn có bộ ảnh rõ ràng, phân loại khoa học sẽ tăng tỷ lệ đặt phòng đến 45%."
+        description="Quản lý ảnh đại diện và phân bổ hình ảnh vào các album chuyên biệt (Phòng ngủ, Phòng tắm, Tiện ích...). Phân loại ảnh để khách dễ xem thông tin cơ sở lưu trú."
         extra={
           <Button
             type="primary"
@@ -436,17 +309,24 @@ export function HotelPhotosPage() {
         }
       />
 
-      {mode === 'mock' && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
-          Chế độ dữ liệu mẫu (Mock). Chuyển sang API để tải và đồng bộ ảnh thực tế lên hệ thống lưu trữ.
+      {albums.query.isPending && <PageLoading />}
+      {albums.query.isError && <ErrorState error={albums.query.error} onRetry={() => void albums.query.refetch()} />}
+      {activeAlbum && !activeAlbum.isSystem && (
+        <div className="flex flex-wrap gap-2">
+          <Button disabled={writesDisabled} onClick={() => {
+            setEditingAlbumId(activeAlbum.id); setNewAlbumName(activeAlbum.name)
+            setAlbumDescription(activeAlbum.description ?? ''); setCreateModalOpen(true)
+          }}>Sửa tên và mô tả album</Button>
+          <Button disabled={writesDisabled || albums.query.data?.[0]?.id === activeAlbumId} onClick={() => void handleMoveAlbum(-1)}>Album lên trước</Button>
+          <Button disabled={writesDisabled || albums.query.data?.at(-1)?.id === activeAlbumId} onClick={() => void handleMoveAlbum(1)}>Album xuống sau</Button>
         </div>
       )}
 
       {/* KHỐI 1: TỔNG QUAN BỘ SƯU TẬP & ẢNH BÌA ĐẠI DIỆN */}
-      <section className="bg-white p-5 rounded-2xl border border-[#dce7e3] shadow-xs">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+      <section className="bg-white p-5 rounded-2xl border border-[#dce7e3] shadow-xs overflow-hidden">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
           {/* Trái: Ảnh bìa đại diện thu gọn + Xem to */}
-          <div className="flex items-center gap-4 min-w-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 min-w-0 w-full lg:w-auto">
             <div className="relative w-32 sm:w-36 h-24 rounded-xl overflow-hidden bg-[#eef8f5] border border-[#dce7e3] shrink-0 group">
               {displayCoverUrl ? (
                 <Image
@@ -467,9 +347,9 @@ export function HotelPhotosPage() {
             </div>
 
             {/* Thông tin nhanh & Chỉ số */}
-            <div className="min-w-0 space-y-1.5">
+            <div className="min-w-0 flex-1 space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base font-bold text-[#12211d] m-0 truncate">
+                <h2 className="text-base font-bold text-[#12211d] m-0 break-words">
                   Bộ sưu tập {hotel.name}
                 </h2>
                 {coverImage && (
@@ -479,7 +359,7 @@ export function HotelPhotosPage() {
                 )}
               </div>
 
-              <p className="text-xs text-[#5f736e] m-0">
+              <p className="text-xs text-[#5f736e] m-0 leading-relaxed">
                 Ảnh bìa hiển thị đầu tiên trên kết quả tìm kiếm. Để chọn ảnh bìa mới, bấm nút <strong>"Đặt bìa"</strong> ở bức ảnh mong muốn bên dưới.
               </p>
 
@@ -497,10 +377,12 @@ export function HotelPhotosPage() {
           </div>
 
           {/* Phải: Phím tắt thao tác nhanh */}
-          <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto justify-start sm:justify-end">
             <Button
               icon={<FolderAddOutlined />}
               onClick={() => {
+                setEditingAlbumId(null)
+                setAlbumDescription('')
                 setNewAlbumName('')
                 setAlbumNameError(null)
                 setCreateModalOpen(true)
@@ -590,6 +472,8 @@ export function HotelPhotosPage() {
             <button
               type="button"
               onClick={() => {
+                setEditingAlbumId(null)
+                setAlbumDescription('')
                 setNewAlbumName('')
                 setAlbumNameError(null)
                 setCreateModalOpen(true)
@@ -610,15 +494,7 @@ export function HotelPhotosPage() {
             </h3>
             {activeAlbum && (
               <>
-                {displayedImages.length >= (activeAlbum.minPhotos || 1) ? (
-                  <Tag color="success" className="!rounded-md !bg-[#eef8f5] !text-[#0b5f53] !border-[#bcd8cf] !m-0">
-                    Đạt yêu cầu ({displayedImages.length} ảnh)
-                  </Tag>
-                ) : (
-                  <Tag color="warning" className="!rounded-md !m-0">
-                    Cần tối thiểu {activeAlbum.minPhotos} ảnh (hiện có {displayedImages.length})
-                  </Tag>
-                )}
+                <Tag>{displayedImages.length} ảnh</Tag>
                 {activeAlbum.isSystem ? (
                   <span className="text-[11px] text-[#8c9e99] bg-[#f4f8f7] px-2 py-0.5 rounded-md font-medium">
                     Mặc định
@@ -626,13 +502,13 @@ export function HotelPhotosPage() {
                 ) : (
                   <Popconfirm
                     title={`Xóa album "${activeAlbum.name}"?`}
-                    description="Các bức ảnh trong album này sẽ được chuyển sang album 'Ảnh bổ sung'."
+                    description="Ảnh được giữ lại và chuyển về nhóm Chưa phân loại."
                     okText="Xóa album"
                     cancelText="Hủy"
                     okButtonProps={{ danger: true }}
                     onConfirm={() => handleDeleteCustomAlbum(activeAlbum.id)}
                   >
-                    <Button size="small" danger type="text" icon={<DeleteOutlined />} className="text-xs">
+                    <Button disabled={writesDisabled} size="small" danger type="text" icon={<DeleteOutlined />} className="text-xs">
                       Xóa album này
                     </Button>
                   </Popconfirm>
@@ -748,6 +624,7 @@ export function HotelPhotosPage() {
                           <Select
                             size="small"
                             value={img.albumId}
+                            disabled={writesDisabled}
                             onChange={(newVal) => handleReassignPhotoAlbum(img.mediaId, newVal)}
                             className="w-[140px] text-xs"
                             options={allAlbums.map((a) => ({
@@ -767,6 +644,7 @@ export function HotelPhotosPage() {
                                 icon={<ArrowLeftOutlined />}
                                 disabled={img.originalIndex === 0 || writesDisabled}
                                 onClick={() => handleMoveOrder(img.originalIndex, 'left')}
+                                className="!w-8 !h-8 !min-w-[32px] !flex !items-center !justify-center !p-0"
                               />
                             </Tooltip>
                             <Tooltip title="Chuyển về sau">
@@ -776,6 +654,7 @@ export function HotelPhotosPage() {
                                 icon={<ArrowRightOutlined />}
                                 disabled={img.originalIndex === existingImages.length - 1 || writesDisabled}
                                 onClick={() => handleMoveOrder(img.originalIndex, 'right')}
+                                className="!w-8 !h-8 !min-w-[32px] !flex !items-center !justify-center !p-0"
                               />
                             </Tooltip>
                           </div>
@@ -788,7 +667,7 @@ export function HotelPhotosPage() {
                                   icon={<StarOutlined />}
                                   disabled={writesDisabled}
                                   onClick={() => handleSetCover(img.mediaId)}
-                                  className="text-xs"
+                                  className="text-xs !h-8"
                                 >
                                   Đặt bìa
                                 </Button>
@@ -807,6 +686,7 @@ export function HotelPhotosPage() {
                                 danger
                                 icon={<DeleteOutlined />}
                                 disabled={writesDisabled}
+                                className="!w-8 !h-8 !min-w-[32px] !flex !items-center !justify-center !p-0"
                               />
                             </Popconfirm>
                           </div>
@@ -853,7 +733,7 @@ export function HotelPhotosPage() {
         {/* Dropzone container */}
         <div className="custom-dropzone-uploader">
           <Upload.Dragger
-            disabled={mode !== 'api' || isUploading || isUpdatingGallery}
+            disabled={writesDisabled}
             fileList={fileList}
             onChange={({ fileList: nextList }) => setFileList(nextList)}
             beforeUpload={() => false}
@@ -1113,19 +993,21 @@ export function HotelPhotosPage() {
         title={
           <div className="flex items-center gap-2 text-sm font-semibold text-[#12211d]">
             <FolderAddOutlined className="text-[#0b5f53]" />
-            <span>Tạo album ảnh mới</span>
+            <span>{editingAlbumId ? 'Sửa album ảnh' : 'Tạo album ảnh mới'}</span>
           </div>
         }
         open={createModalOpen}
         onOk={handleCreateAlbum}
         onCancel={() => {
           setCreateModalOpen(false)
+          setEditingAlbumId(null)
           setNewAlbumName('')
           setAlbumNameError(null)
         }}
-        okText="Tạo album"
+        okText={editingAlbumId ? 'Lưu album' : 'Tạo album'}
+        confirmLoading={isUpdatingGallery}
+        okButtonProps={{ disabled: writesDisabled, className: '!bg-[#0b5f53]' }}
         cancelText="Hủy"
-        okButtonProps={{ className: '!bg-[#0b5f53]' }}
       >
         <div className="py-2 space-y-3">
           <p className="text-xs text-[#5f736e] leading-relaxed">
@@ -1138,7 +1020,7 @@ export function HotelPhotosPage() {
             <Input
               placeholder="Ví dụ: Hồ bơi vô cực, Nhà hàng Skyview..."
               value={newAlbumName}
-              maxLength={40}
+              maxLength={100}
               onChange={(e) => {
                 setNewAlbumName(e.target.value)
                 if (albumNameError) setAlbumNameError(null)
@@ -1151,6 +1033,9 @@ export function HotelPhotosPage() {
               <span className="text-xs text-red-500 mt-1 block">{albumNameError}</span>
             )}
           </div>
+          <label className="block">Mô tả album
+            <Input.TextArea rows={3} maxLength={2000} value={albumDescription} onChange={(event) => setAlbumDescription(event.target.value)} />
+          </label>
         </div>
       </Modal>
     </div>

@@ -7,6 +7,7 @@ export const hotelStatusValues = [
   'ACTIVE',
   'REJECTED',
   'SUSPENDED',
+  'LOCKED',
 ] as const
 
 export const hotelStatusSchema = z.enum(hotelStatusValues)
@@ -85,6 +86,8 @@ export type ManagementHotelPage = z.infer<typeof managementHotelPageSchema>
 /** HT08: GET /api/v1/management/hotels/{hotelId} */
 export const managementHotelDetailSchema = managementHotelSummarySchema.extend({
   description: z.string().nullable(),
+  contactPhone: z.string().nullable().optional(),
+  contactEmail: z.string().nullable().optional(),
   latitude: z.number().min(-90).max(90).nullable(),
   longitude: z.number().min(-180).max(180).nullable(),
   // These resources are not included in the current backend hotel DTO.

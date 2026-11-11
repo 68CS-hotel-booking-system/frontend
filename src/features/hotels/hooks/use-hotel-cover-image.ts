@@ -1,18 +1,16 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useDataMode } from '@/shared/lib/data-mode-context'
 import { getHotelImages, getMediaAccess } from '../api/hotel-media-api'
 import { hotelManagementKeys } from './hotel-query-keys'
 import type { HotelGalleryImageItem } from './use-hotel-images-query'
 
 export function useHotelCoverImage(hotelId: string, initialUrl?: string | null) {
-  const { mode } = useDataMode()
+  const mode = 'api'
   const queryClient = useQueryClient()
 
   return useQuery<string | null>({
     queryKey: ['hotels', 'cover-image', mode, hotelId] as const,
     queryFn: async ({ signal }) => {
       if (initialUrl) return initialUrl
-      if (mode === 'mock') return null
 
       // Check if full gallery images are already cached for this hotel
       const cachedGallery = queryClient.getQueryData<HotelGalleryImageItem[]>(

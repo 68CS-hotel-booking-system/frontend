@@ -1,13 +1,19 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { App as AntApp } from 'antd'
 import { CreateHotelForm } from './CreateHotelForm'
 
-describe('CreateHotelForm component', () => {
+const auth = vi.hoisted(() => ({
+  currentUser: { id: '22222222-2222-4222-8222-222222222222' },
+  isAdmin: true, isOwner: false, isChecking: false, isAuthorized: true,
+}))
+vi.mock('@/features/auth', () => ({ useCurrentUser: () => auth }))
+
+describe('CreateHotelForm component' , () => {
   it('renders all backend-required fields, photo gallery section, and excludes unsupported fields', () => {
     const qc = new QueryClient()
-    qc.setQueryData(['hotels', 'cities'], [
+    qc.setQueryData(['hotels', 'catalog', 'cities', 'api'], [
       { id: '11111111-1111-4111-8111-111111111101', name: 'Đà Nẵng', slug: 'da-nang', countryCode: 'VN' },
       { id: '11111111-1111-4111-8111-111111111102', name: 'Hà Nội', slug: 'ha-noi', countryCode: 'VN' },
     ])
@@ -37,6 +43,10 @@ describe('CreateHotelForm component', () => {
     expect(markup).toContain('Kinh độ (Longitude)')
     expect(markup).toContain('Giờ nhận phòng (Check-in)')
     expect(markup).toContain('Giờ trả phòng (Check-out)')
+
+    expect(markup).toContain('Chủ sở hữu (Owner User ID)')
+    expect(markup).toContain('HOTEL_OWNER')
+    expect(markup).not.toContain('dữ liệu mẫu')
 
     // Photo upload section present
     expect(markup).toContain('Kéo thả ảnh vào đây hoặc nhấp để chọn tệp')

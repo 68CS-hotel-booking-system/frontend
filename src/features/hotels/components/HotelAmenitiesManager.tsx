@@ -1,205 +1,225 @@
-import { useEffect } from 'react'
-import { CheckCircleFilled, SaveOutlined, UndoOutlined } from '@ant-design/icons'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Alert, App as AntApp, Button, Space, Tag } from 'antd'
-import { useForm, useWatch } from 'react-hook-form'
-import { errorMessage } from '@/shared/api/api-error'
-import { useDataMode } from '@/shared/lib/data-mode-context'
-import { EmptyState } from '@/shared/ui/EmptyState'
+import { useState } from 'react'
+import { message } from 'antd'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
+import { EmptyState } from '@/shared/ui/EmptyState'
 import { useAmenitiesQuery } from '../hooks/use-amenities-query'
-import { useUpdateHotelAmenitiesMutation } from '../hooks/use-update-hotel-amenities-mutation'
-import { type AmenityItem } from '../model/hotel'
-import { updateHotelAmenitiesFormSchema, type UpdateHotelAmenitiesFormValues } from '../model/hotel-form-schemas'
+import {
+  useReplaceCatalogAmenitiesMutation,
+  useReplaceRoomTypeAmenitiesMutation,
+  useRoomTypeAmenitiesQuery,
+  useScopedAmenitiesQuery,
+} from '../hooks/use-scoped-amenities'
+import {
+  getAmenityErrorMessage,
+  type AmenityScope,
+} from '../api/scoped-amenities-api'
+import { CatalogAmenitiesList } from './CatalogAmenitiesList'
+import { CustomAmenitiesList } from './CustomAmenitiesList'
+import { InheritedAmenitiesSection } from './InheritedAmenitiesSection'
 
-interface HotelAmenitiesManagerProps {
+export interface HotelAmenitiesManagerProps {
   hotelId: string
+  roomId?: string | null
+  roomNumber?: string
+  roomTypeId?: string
+  roomTypeName?: string
+  /** @deprecated Kept for backward compatibility, not needed for scoped API */
   initialAmenityIds?: string[]
+  /** @deprecated Kept for backward compatibility, scoped API works on draft hotels */
+  readable?: boolean
 }
 
-export function HotelAmenitiesManager({
+export function HotelAmenitiesManager(props: HotelAmenitiesManagerProps) {
+  // Key uniquely by hotel, physical room, or room type to isolate all state
+  const componentKey = `${props.hotelId}:${props.roomId ?? ''}:${props.roomTypeId ?? ''}`
+  return <ScopedAmenitiesEditor key={componentKey} {...props} />
+}
+
+function ScopedAmenitiesEditor({
   hotelId,
-  initialAmenityIds,
+  roomId,
+  roomNumber,
+  roomTypeId,
+  roomTypeName,
 }: HotelAmenitiesManagerProps) {
-  const { message } = AntApp.useApp()
-  const { mode } = useDataMode()
-  const amenitiesQuery = useAmenitiesQuery()
-  const updateAmenitiesMutation = useUpdateHotelAmenitiesMutation(hotelId)
+  const isRoomTypeMode = Boolean(roomTypeId && !roomId)
+  const isPhysicalRoomMode = Boolean(roomId)
 
-  const {
-    control,
-    setValue,
-    handleSubmit,
-    reset,
-    formState: { isDirty },
-  } = useForm<UpdateHotelAmenitiesFormValues>({
-    resolver: zodResolver(updateHotelAmenitiesFormSchema),
-    defaultValues: {
-      amenityIds: initialAmenityIds,
-    },
-  })
+  // Scope for Hotel or Physical Room
+  const scope: AmenityScope = { hotelId, roomId: roomId ?? undefined }
 
-  useEffect(() => {
-    reset({ amenityIds: initialAmenityIds })
-  }, [initialAmenityIds, reset])
+  // Target label for user notifications and modal guidance
+  const scopeLabel = isPhysicalRoomMode
+    ? `phòng ${roomNumber || roomId}`
+    : isRoomTypeMode
+      ? `hạng phòng ${roomTypeName || roomTypeId}`
+      : 'khách sạn'
 
-  const selectedIds = useWatch({ control, name: 'amenityIds' }) ?? []
+  // Catalog category: ROOM for physical room or room type; HOTEL for hotel
+  const catalogCategory = isPhysicalRoomMode || isRoomTypeMode ? 'ROOM' : 'HOTEL'
+  const catalogQuery = useAmenitiesQuery(catalogCategory)
 
-  function toggleAmenity(amenityId: string) {
-    const exists = selectedIds.includes(amenityId)
-    const next = exists
-      ? selectedIds.filter((id) => id !== amenityId)
-      : [...selectedIds, amenityId]
-    setValue('amenityIds', next, { shouldDirty: true, shouldValidate: true })
-  }
+  // 1. In Room Type mode, query room type amenities
+  const roomTypeQuery = useRoomTypeAmenitiesQuery(
+    hotelId,
+    roomTypeId ?? '',
+  )
+  const replaceRoomTypeMutation = useReplaceRoomTypeAmenitiesMutation(
+    hotelId,
+    roomTypeId ?? '',
+  )
 
-  async function onSubmit(values: UpdateHotelAmenitiesFormValues) {
-    try {
-      const updated = await updateAmenitiesMutation.mutateAsync(values)
-      reset({ amenityIds: updated })
-      void message.success(
-        `Đã lưu ${updated.length} tiện ích cho khách sạn.`,
-      )
-    } catch {
-      // Lỗi hiển thị qua Alert bên dưới
-    }
-  }
+  // 2. In Scoped mode (Hotel or Physical Room), query scoped amenities
+  const scopedQuery = useScopedAmenitiesQuery(scope)
+  const replaceCatalogMutation = useReplaceCatalogAmenitiesMutation(scope)
 
-  if (mode === 'api') {
-    return <Alert type="info" showIcon title="Backend hiện chưa hỗ trợ xem và cập nhật tiện ích khách sạn." />
-  }
+  const [saveError, setSaveError] = useState<string | null>(null)
 
-  if (amenitiesQuery.isPending) {
+  // Loading states
+  if (catalogQuery.isPending) {
     return <PageLoading />
   }
 
-  if (amenitiesQuery.isError) {
+  if (isRoomTypeMode && roomTypeQuery.isPending) {
+    return <PageLoading />
+  }
+
+  if (!isRoomTypeMode && scopedQuery.isPending) {
+    return <PageLoading />
+  }
+
+  // Error states - do not display as empty list when request fails
+  if (catalogQuery.isError) {
     return (
       <ErrorState
-        error={amenitiesQuery.error}
-        retrying={amenitiesQuery.isFetching}
-        onRetry={() => void amenitiesQuery.refetch()}
+        error={catalogQuery.error}
+        onRetry={() => void catalogQuery.refetch()}
       />
     )
   }
 
-  const allAmenities = amenitiesQuery.data
-  if (allAmenities.length === 0) {
+  if (isRoomTypeMode && roomTypeQuery.isError) {
+    return (
+      <ErrorState
+        error={roomTypeQuery.error}
+        onRetry={() => void roomTypeQuery.refetch()}
+      />
+    )
+  }
+
+  if (!isRoomTypeMode && scopedQuery.isError) {
+    return (
+      <ErrorState
+        error={scopedQuery.error}
+        onRetry={() => void scopedQuery.refetch()}
+      />
+    )
+  }
+
+  const catalogOptions = catalogQuery.data ?? []
+  if (catalogOptions.length === 0) {
     return (
       <EmptyState
         title="Danh mục tiện ích đang trống"
-        description="Hiện chưa có tiện ích nào trong danh mục hệ thống."
+        description="Chưa có tiện ích thuộc nhóm này trong hệ thống."
       />
     )
   }
 
-  const hotelCategoryAmenities = allAmenities.filter(
-    (item) => item.category === 'HOTEL',
-  )
-  const roomCategoryAmenities = allAmenities.filter(
-    (item) => item.category === 'ROOM',
-  )
+  // ==========================================
+  // RENDER FOR ROOM TYPE MODE
+  // ==========================================
+  if (isRoomTypeMode) {
+    const savedIds = roomTypeQuery.data?.map((item) => item.id) ?? []
 
-  function renderAmenityGroup(title: string, items: AmenityItem[]) {
+    const handleSaveRoomTypeCatalog = async (amenityIds: string[]) => {
+      setSaveError(null)
+      try {
+        await replaceRoomTypeMutation.mutateAsync(amenityIds)
+        void message.success(
+          `Đã lưu tiện ích cho hạng phòng ${roomTypeName || ''}.`,
+        )
+      } catch (error) {
+        setSaveError(getAmenityErrorMessage(error))
+      }
+    }
+
     return (
-      <div className="amenity-group">
-        <div className="amenity-group__header">
-          <h3>{title}</h3>
-          <Tag color="blue">{items.length} tiện ích</Tag>
-        </div>
-        <div className="amenity-grid">
-          {items.map((amenity) => {
-            const isSelected = selectedIds.includes(amenity.id)
-            return (
-              <button
-                key={amenity.id}
-                type="button"
-                role="checkbox"
-                aria-checked={isSelected}
-                className={`amenity-chip-card ${isSelected ? 'is-selected' : ''}`}
-                onClick={() => toggleAmenity(amenity.id)}
-              >
-                <div className="amenity-chip-card__top">
-                  <span className="amenity-chip-card__name">{amenity.name}</span>
-                  {isSelected && (
-                    <CheckCircleFilled
-                      className="amenity-chip-card__check"
-                      aria-hidden="true"
-                    />
-                  )}
-                </div>
-                <div className="amenity-chip-card__meta">
-                  <span className="muted" style={{ fontSize: 12 }}>
-                    {amenity.category === 'HOTEL'
-                      ? 'Khuôn viên & Dịch vụ'
-                      : 'Tiện nghi trong phòng'}
-                  </span>
-                  <Tag>{isSelected ? 'Đã trang bị' : 'Chưa chọn'}</Tag>
-                </div>
-              </button>
-            )
-          })}
-        </div>
+      <div className="space-y-6">
+        <CatalogAmenitiesList
+          catalogOptions={catalogOptions}
+          savedAmenityIds={savedIds}
+          scopeLabel={scopeLabel}
+          title="Tiện ích có sẵn của hạng phòng"
+          description={`Chọn các tiện nghi chung áp dụng cho tất cả các phòng thuộc hạng ${roomTypeName || ''}.`}
+          isSaving={replaceRoomTypeMutation.isPending}
+          saveError={saveError}
+          onSave={handleSaveRoomTypeCatalog}
+        />
       </div>
     )
   }
 
-  return (
-    <section className="surface-card" aria-labelledby="amenities-mgmt-title">
-      <div className="section-header">
-        <div>
-          <h2 id="amenities-mgmt-title">Quản lý tiện ích khách sạn</h2>
-          <p className="muted">
-            Lựa chọn các tiện ích khuôn viên, ẩm thực, nghỉ dưỡng và trang thiết
-            bị đi kèm cho cơ sở lưu trú.
-          </p>
-        </div>
-        <Tag color="gold">Đã chọn: {selectedIds.length} tiện ích</Tag>
-      </div>
+  // ==========================================
+  // RENDER FOR SCOPED MODE (HOTEL OR PHYSICAL ROOM)
+  // ==========================================
+  const scopedData = scopedQuery.data
+  const savedCatalogIds =
+    scopedData?.catalogAmenities?.map((item) => item.id) ?? []
+  const customAmenities = scopedData?.customAmenities ?? []
+  const inheritedAmenities = scopedData?.inheritedAmenities ?? []
+  const inheritedIds = inheritedAmenities.map((item) => item.id)
 
-      {updateAmenitiesMutation.isError && (
-        <Alert
-          type="error"
-          showIcon
-          style={{ marginBottom: 16 }}
-          title="Không thể cập nhật tiện ích"
-          description={errorMessage(updateAmenitiesMutation.error)}
+  const handleSaveCatalog = async (amenityIds: string[]) => {
+    setSaveError(null)
+    try {
+      await replaceCatalogMutation.mutateAsync(amenityIds)
+      void message.success(`Đã lưu tiện ích có sẵn cho ${scopeLabel}.`)
+    } catch (error) {
+      setSaveError(getAmenityErrorMessage(error))
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* KHU VỰC A (chỉ hiển thị cho phòng vật lý): Tiện ích kế thừa từ hạng phòng */}
+      {isPhysicalRoomMode && (
+        <InheritedAmenitiesSection
+          hotelId={hotelId}
+          roomTypeId={scopedData?.roomId ?? undefined}
+          roomTypeName={roomTypeName}
+          inheritedAmenities={inheritedAmenities}
         />
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        {renderAmenityGroup(
-          'Tiện ích khuôn viên & dịch vụ khách sạn',
-          hotelCategoryAmenities,
-        )}
-        {renderAmenityGroup(
-          'Tiện ích tiêu biểu đi kèm hạng phòng',
-          roomCategoryAmenities,
-        )}
+      {/* KHU VỰC B: Tiện ích có sẵn từ danh mục (HOTEL hoặc ROOM) */}
+      <CatalogAmenitiesList
+        catalogOptions={catalogOptions}
+        savedAmenityIds={savedCatalogIds}
+        inheritedAmenityIds={inheritedIds}
+        scopeLabel={scopeLabel}
+        title={
+          isPhysicalRoomMode
+            ? 'Bổ sung từ danh mục'
+            : 'Tiện ích có sẵn'
+        }
+        description={
+          isPhysicalRoomMode
+            ? `Đánh dấu thêm các tiện nghi từ danh mục chuẩn chỉ dành riêng cho ${scopeLabel}.`
+            : 'Đánh dấu các tiện ích chung mà cơ sở lưu trú của bạn cung cấp.'
+        }
+        isSaving={replaceCatalogMutation.isPending}
+        saveError={saveError}
+        onSave={handleSaveCatalog}
+      />
 
-        <div className="section-footer-actions">
-          <Space>
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<SaveOutlined aria-hidden="true" />}
-              disabled={!isDirty}
-              loading={updateAmenitiesMutation.isPending}
-            >
-              Lưu danh sách tiện ích
-            </Button>
-            <Button
-              htmlType="button"
-              icon={<UndoOutlined aria-hidden="true" />}
-              disabled={!isDirty}
-              onClick={() => reset({ amenityIds: initialAmenityIds })}
-            >
-              Khôi phục ban đầu
-            </Button>
-          </Space>
-        </div>
-      </form>
-    </section>
+      {/* KHU VỰC C: Tiện ích riêng (custom amenities) */}
+      <CustomAmenitiesList
+        customAmenities={customAmenities}
+        scope={scope}
+        scopeLabel={scopeLabel}
+      />
+    </div>
   )
 }

@@ -21,7 +21,7 @@ export function HotelInfoPage() {
   ]
 
   return (
-    <div className="hotel-info-page max-w-5xl mx-auto">
+    <div className="hotel-info-page max-w-6xl mx-auto space-y-6">
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         kicker="HỒ SƠ KHÁCH SẠN"

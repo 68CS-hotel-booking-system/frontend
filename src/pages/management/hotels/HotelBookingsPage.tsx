@@ -34,7 +34,7 @@ export function HotelBookingsPage() {
           type="warning"
           showIcon
           className="mb-6 rounded-xl"
-          message="Khách sạn chưa mở bán"
+          title="Khách sạn chưa mở bán"
           description="Khách sạn hiện đang ở trạng thái Bản nháp (DRAFT). Sau khi được quản trị viên duyệt và kích hoạt mở bán, các đơn đặt phòng từ khách hàng sẽ hiển thị tại đây."
         />
       )}

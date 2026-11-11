@@ -21,4 +21,8 @@ export const hotelManagementKeys = {
   ) => ['hotels', 'room-rates', mode, params] as const,
   publicDetail: (hotelId: string) => ['hotels', 'public-detail', hotelId] as const,
   publicRoomTypes: (hotelId: string) => ['hotels', 'public-room-types', hotelId] as const,
+  scopedAmenities: (hotelId: string, roomId?: string | null) =>
+    ['hotels', 'scoped-amenities', hotelId, roomId ?? 'hotel'] as const,
+  roomTypeAmenities: (hotelId: string, roomTypeId: string) =>
+    ['hotels', 'room-type-amenities', hotelId, roomTypeId] as const,
 }

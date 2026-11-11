@@ -10,6 +10,8 @@ export const hotelResponseSchema = z.object({
   slug: z.string(),
   description: z.string().nullable(),
   address: z.string(),
+  contactPhone: z.string().nullable().optional(),
+  contactEmail: z.string().nullable().optional(),
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
   starRating: z.number().nullable(),

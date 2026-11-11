@@ -1,10 +1,10 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useDataMode } from '@/shared/lib/data-mode-context'
 import { getHotelImages, getMediaAccess, updateHotelGallery, type HotelImageDto } from '../api/hotel-media-api'
 import { hotelManagementKeys } from './hotel-query-keys'
 
 export interface HotelGalleryImageItem {
   mediaId: string
+  albumId?: string | null
   sortOrder: number
   cover: boolean
   url?: string
@@ -12,12 +12,11 @@ export interface HotelGalleryImageItem {
 }
 
 export function useHotelImagesQuery(hotelId: string, enabled = true) {
-  const { mode } = useDataMode()
+  const mode = 'api'
   const queryClient = useQueryClient()
   const query = useQuery<HotelGalleryImageItem[]>({
     queryKey: hotelManagementKeys.images(mode, hotelId),
     queryFn: async ({ signal }) => {
-      if (mode === 'mock') return []
       const images = await getHotelImages(hotelId, signal)
       const resolved = await Promise.all(images.map(async (img) => {
         try {
@@ -44,7 +43,6 @@ export function useHotelImagesQuery(hotelId: string, enabled = true) {
   })
 
   const saveGallery = async (transform: (images: HotelImageDto[]) => HotelImageDto[] | Promise<HotelImageDto[]>) => {
-    if (mode !== 'api') throw new Error('Thư viện ảnh đang ở chế độ dữ liệu mẫu; chưa lưu ảnh lên máy chủ.')
     if (!query.isSuccess) throw new Error('Cần tải thư viện ảnh thành công trước khi thay đổi.')
     return updateHotelGallery(hotelId, transform, () => queryClient.invalidateQueries({ queryKey: hotelManagementKeys.all }))
   }

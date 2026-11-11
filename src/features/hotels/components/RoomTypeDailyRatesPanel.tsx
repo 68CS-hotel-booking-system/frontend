@@ -10,7 +10,6 @@ import { Alert, App as AntApp, Button, Input, InputNumber, Segmented, Space, Tab
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { errorMessage } from '@/shared/api/api-error'
-import { useDataMode } from '@/shared/lib/data-mode-context'
 import { formatCurrencyAmount } from '@/shared/lib/format'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
@@ -63,7 +62,6 @@ export function RoomTypeDailyRatesPanel({
   roomTypes = [],
   hotelStatus = 'ACTIVE',
 }: RoomTypeDailyRatesPanelProps) {
-  const { mode } = useDataMode()
   const { message } = AntApp.useApp()
   const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string>(
     roomTypes[0]?.id ?? '',
@@ -81,7 +79,7 @@ export function RoomTypeDailyRatesPanel({
       ? selectedRoomTypeId
       : (roomTypes[0]?.id ?? '')
   const selectedRoomType = roomTypes.find((rt) => rt.id === activeRoomTypeId)
-  const canReadRates = mode === 'mock' || (hotelStatus === 'ACTIVE' && selectedRoomType?.isActive === true)
+  const canReadRates = hotelStatus !== 'LOCKED' && selectedRoomType?.isActive === true
   const rateMutation = useSetRoomRatesMutation(hotelId, activeRoomTypeId)
   const validRange = roomRatesRangeSchema.safeParse({ startDate, endDate }).success
 
@@ -106,6 +104,19 @@ export function RoomTypeDailyRatesPanel({
         <EmptyState
           title="Khách sạn chưa có hạng phòng nào"
           description="Cần khởi tạo ít nhất 1 hạng phòng trước khi tra cứu bảng giá theo ngày."
+          action={
+            <Button
+              type="primary"
+              className="!bg-[#0b5f53] hover:!bg-[#08473e] !rounded-xl font-semibold mt-2"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.location.href = `/hotels/${hotelId}/rooms`
+                }
+              }}
+            >
+              Đến trang quản lý phòng
+            </Button>
+          }
         />
       </div>
     )
@@ -155,6 +166,7 @@ export function RoomTypeDailyRatesPanel({
             icon={<ReloadOutlined aria-hidden="true" />}
             onClick={() => void ratesQuery.refetch()}
             loading={ratesQuery.isFetching}
+            disabled={!canReadRates || !validRange}
           >
             Làm mới
           </Button>
@@ -190,7 +202,7 @@ export function RoomTypeDailyRatesPanel({
             <InfoCircleOutlined className="rates-room-infobar__icon" aria-hidden="true" />
             <span className="rates-room-infobar__text">
               {selectedRoomType.description ||
-                `Hạng phòng ${selectedRoomType.name} — Cấu hình chuẩn cao cấp.`}
+                `Hạng phòng ${selectedRoomType.name}.`}
             </span>
           </div>
           <div className="rates-room-infobar__tags">
@@ -254,7 +266,7 @@ export function RoomTypeDailyRatesPanel({
         </div>
       </div>
 
-      {mode === 'api' && (
+      {(
         <form onSubmit={handleSubmit(async (values) => {
           try {
             await rateMutation.mutateAsync(values)
@@ -279,7 +291,7 @@ export function RoomTypeDailyRatesPanel({
 
       {/* 5. Vùng hiển thị dữ liệu giá */}
       {!canReadRates ? (
-        <Alert type="info" showIcon title="Backend hiện chỉ hỗ trợ giá cho khách sạn ACTIVE và loại phòng đang mở bán." />
+        <Alert type="info" showIcon title="Khách sạn bị khóa hoặc hạng phòng đã ngừng bán. Vui lòng kiểm tra trạng thái trước khi quản lý giá." />
       ) : !validRange ? (
         <Alert type="warning" showIcon title="Chọn khoảng ngày hợp lệ, tối đa 90 ngày để xem bảng giá." />
       ) : ratesQuery.isPending ? (

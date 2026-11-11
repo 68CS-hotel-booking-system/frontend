@@ -167,16 +167,31 @@ describe('management API compatibility with the implemented backend', () => {
     expect(amenities[0]?.code).toBe('FREE_PARKING')
   })
 
-  it.each([
-    ['hotel update', async () => (await import('./hotel-management-api')).updateManagementHotel(id, {
-      name: 'Test', cityId: hotel.cityId, address: 'Address', starRating: 3,
-      checkInTime: '14:00', checkOutTime: '12:00', description: '', latitude: null, longitude: null, status: 'DRAFT',
-    })],
-    ['hotel amenities', async () => (await import('./hotel-management-api')).updateHotelAmenities(id, { amenityIds: [] })],
-  ] as const)('reports %s as unsupported without sending a request', async (_name, call) => {
-    respond(null)
-    await expect(call()).rejects.toMatchObject({ kind: 'unsupported', code: 'API_NOT_IMPLEMENTED' })
-    expect(fetcher).not.toHaveBeenCalled()
+  it('patches supported hotel fields with the version read by the form', async () => {
+    respond({ ...hotel, name: 'Updated', contactPhone: '+84901234567', version: 4 })
+    const { updateManagementHotel } = await import('./hotel-management-api')
+    const result = await updateManagementHotel(id, { name: 'Updated', contactPhone: '+84901234567', version: 3 })
+    expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/management/hotels/${id}`)
+    expect(fetcher.mock.calls[0][1]?.method).toBe('PATCH')
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({ version: 3, name: 'Updated', contactPhone: '+84901234567' })
+    expect(result).toMatchObject({ name: 'Updated', version: 4, contactPhone: '+84901234567' })
+  })
+
+  it('replaces hotel amenities and maps response objects to selected ids', async () => {
+    const amenityId = '59fe1090-6e67-4d93-b140-232c5e885c27'
+    respond([{ id: amenityId, code: 'PARKING', name: 'Bãi đỗ xe', category: 'HOTEL' }])
+    const { updateHotelAmenities } = await import('./hotel-management-api')
+    await expect(updateHotelAmenities(id, { amenityIds: [amenityId] })).resolves.toEqual([amenityId])
+    expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/management/hotels/${id}/amenities`)
+    expect(fetcher.mock.calls[0][1]?.method).toBe('PUT')
+  })
+
+  it('clears room-type amenities via an explicit empty replacement', async () => {
+    respond([])
+    const { updateRoomTypeAmenities } = await import('./hotel-management-api')
+    await expect(updateRoomTypeAmenities(id, hotel.cityId, { amenityIds: [] })).resolves.toEqual([])
+    expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/management/hotels/${id}/room-types/${hotel.cityId}/amenities`)
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({ amenityIds: [] })
   })
 })
 

@@ -5,15 +5,38 @@ import { invalidateManagementRooms } from '../hooks/use-management-room-mutation
 
 describe('room type edits', () => {
   const original = { name: 'Deluxe', description: '', maxAdults: 2, maxChildren: 0, active: true }
-  it('requires explicit total capacity when changing adult/child limits', () => {
-    expect(() => buildRoomTypeEditPayload(original, { ...original, maxAdults: 4 })).toThrow(/sức chứa/i)
-    expect(buildRoomTypeEditPayload(original, { ...original, maxAdults: 4, maxChildren: 1, maxOccupancy: 5 })).toMatchObject({ maxAdults: 4, maxChildren: 1, maxOccupancy: 5 })
+
+  it('automatically applies approved capacity rule (maxOccupancy = maxAdults + maxChildren) when changing limits', () => {
+    expect(buildRoomTypeEditPayload(original, { ...original, maxAdults: 4 })).toMatchObject({
+      maxAdults: 4,
+      maxChildren: 0,
+      maxOccupancy: 4,
+    })
+    expect(buildRoomTypeEditPayload(original, { ...original, maxAdults: 4, maxChildren: 1 })).toMatchObject({
+      maxAdults: 4,
+      maxChildren: 1,
+      maxOccupancy: 5,
+    })
+    expect(buildRoomTypeEditPayload(original, { ...original, maxAdults: 3, maxChildren: 2, maxOccupancy: 5 })).toMatchObject({
+      maxAdults: 3,
+      maxChildren: 2,
+      maxOccupancy: 5,
+    })
   })
-  it('does not send capacity or invent base price on an unrelated edit', () => {
+
+  it('rejects invalid occupancy when total is less than maxAdults', () => {
+    expect(() =>
+      buildRoomTypeEditPayload(original, { ...original, maxAdults: 4, maxChildren: 0, maxOccupancy: 3 }),
+    ).toThrow(/sức chứa tối đa/i)
+  })
+
+  it('does not send capacity or invent base price on an unrelated edit (e.g. only name)', () => {
     expect(buildRoomTypeEditPayload(original, { ...original, name: 'Suite' })).toEqual({ name: 'Suite' })
   })
-  it('retains explicit zero price and optional unknown fields', () => {
+
+  it('retains explicit zero price and distinguishes from empty/null', () => {
     expect(buildRoomTypeEditPayload(original, { ...original, basePrice: 0 })).toEqual({ basePrice: 0 })
+    expect(buildRoomTypeEditPayload(original, { ...original, basePrice: null })).toEqual({})
   })
 })
 

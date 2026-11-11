@@ -43,12 +43,19 @@ export async function geocodeAddress(address: string, signal?: AbortSignal): Pro
   const res = await fetch(url, { signal })
   if (!res.ok) throw new Error('Không thể kết nối đến máy chủ định vị địa chỉ.')
 
-  const data = await res.json()
+  const data = await res.json() as { features?: Array<{
+    geometry?: { coordinates?: number[] }
+    properties?: Record<string, string | undefined>
+  }> }
   if (!data?.features || data.features.length === 0) return []
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return data.features.map((feat: any) => {
-    const [lng, lat] = feat.geometry?.coordinates ?? [108.202167, 16.054407]
+  return data.features.filter((feat) => {
+    const coords = feat.geometry?.coordinates
+    return Array.isArray(coords) && coords.length >= 2
+      && Number.isFinite(coords[0]) && Number.isFinite(coords[1])
+      && Math.abs(coords[0]) <= 180 && Math.abs(coords[1]) <= 90
+  }).map((feat) => {
+    const [lng, lat] = feat.geometry!.coordinates!
     const props = feat.properties || {}
     const detectedCityName = props.city || props.state || props.county || props.district
     const name = props.name || ''

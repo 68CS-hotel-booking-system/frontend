@@ -133,11 +133,13 @@ export function AdminLayout() {
       key: 'profile-action',
       icon: <UserOutlined />,
       label: isOwnerOnly ? 'Hồ sơ chủ khách sạn' : 'Hồ sơ quản trị',
+      onClick: () => navigate(isAdmin ? '/admin/users' : '/admin/overview'),
     },
     {
       key: 'settings-action',
       icon: <SettingOutlined />,
       label: isOwnerOnly ? 'Cài đặt cổng đối tác' : 'Cài đặt cổng quản trị',
+      onClick: () => navigate(isAdmin ? '/system-status' : '/admin/overview'),
     },
     { type: 'divider' },
     {
@@ -267,7 +269,7 @@ export function AdminLayout() {
           </div>
 
           {/* Navigation Links Scroll Container */}
-          <div className="flex-1 overflow-y-auto px-1 py-1 flex flex-col gap-4">
+          <div className="flex-1 overflow-y-auto px-1 py-1 flex flex-col gap-4 pb-24">
             {navGroups.map((group) => (
               <div key={group.title} className="flex flex-col">
                 {!isCollapsed ? (

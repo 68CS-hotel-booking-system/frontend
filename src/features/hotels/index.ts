@@ -51,3 +51,16 @@ export {
 } from './api/public-hotel-api'
 export { usePublicHotelDetailQuery } from './hooks/use-public-hotel-detail-query'
 export { useApproveHotelMutation } from './hooks/use-approve-hotel-mutation'
+
+export { useHotelAlbums } from './hooks/use-hotel-albums'
+export { useUpdateManagementHotelMutation } from './hooks/use-update-hotel-mutation'
+export { HotelPoliciesForm } from './components/HotelPoliciesForm'
+export * from './model/scoped-amenity-schemas'
+export * from './api/scoped-amenities-api'
+export * from './hooks/use-scoped-amenities'
+export { CatalogAmenitiesList } from './components/CatalogAmenitiesList'
+export { CustomAmenitiesList } from './components/CustomAmenitiesList'
+export { InheritedAmenitiesSection } from './components/InheritedAmenitiesSection'
+export { CustomAmenityCreateModal } from './components/CustomAmenityCreateModal'
+export { CustomAmenityEditModal } from './components/CustomAmenityEditModal'
+

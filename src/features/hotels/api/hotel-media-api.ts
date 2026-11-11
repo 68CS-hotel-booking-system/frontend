@@ -15,6 +15,7 @@ export type MediaDto = z.infer<typeof mediaResponseSchema>
 
 export const hotelImageResponseSchema = z.object({
   mediaId: z.string().uuid(),
+  albumId: z.string().uuid().nullable().optional(),
   sortOrder: z.number(),
   cover: z.boolean(),
 })
@@ -26,6 +27,7 @@ export type HotelImageDto = z.infer<typeof hotelImageResponseSchema>
 export interface ReplaceHotelImagesPayload {
   images: Array<{
     mediaId: string
+    albumId?: string | null
     sortOrder: number
     cover: boolean
   }>
@@ -110,17 +112,22 @@ export async function getMediaAccess(
 
 const galleryWrites = new Map<string, Promise<unknown>>()
 
-/** Read the version BEFORE the gallery: a concurrent gallery change then causes 409.
- * Keep refresh inside the lock, so the next action cannot reuse stale hotel data. */
+export async function withHotelMediaWrite<T>(hotelId: string, write: () => Promise<T>): Promise<T> {
+  const previous = galleryWrites.get(hotelId)
+  const operation = (async () => { await previous?.catch(() => undefined); return write() })()
+  galleryWrites.set(hotelId, operation)
+  try { return await operation } finally {
+    if (galleryWrites.get(hotelId) === operation) galleryWrites.delete(hotelId)
+  }
+}
+
 export async function updateHotelGallery(
   hotelId: string,
   transform: (images: HotelImageDto[]) => HotelImageDto[] | Promise<HotelImageDto[]>,
   refresh: () => Promise<unknown> = async () => undefined,
   signal?: AbortSignal,
 ): Promise<HotelImageDto[]> {
-  const previous = galleryWrites.get(hotelId)
-  const operation = (async () => {
-    await previous?.catch(() => undefined)
+  return withHotelMediaWrite(hotelId, async () => {
     try {
       const hotel = await getManagementHotelDetail(hotelId, signal)
       const version = hotel.version
@@ -130,16 +137,6 @@ export async function updateHotelGallery(
       const current = (await getHotelImages(hotelId, signal)).sort((a, b) => a.sortOrder - b.sortOrder)
       const images = await transform(current)
       return await replaceHotelImages(hotelId, { images, expectedVersion: version }, signal)
-    } finally {
-      // Also refresh after 409 or an uncertain network result. Never retry a PUT.
-      await refresh()
-    }
-  })()
-  galleryWrites.set(hotelId, operation)
-  try {
-    return await operation
-  } finally {
-    if (galleryWrites.get(hotelId) === operation) galleryWrites.delete(hotelId)
-  }
+    } finally { await refresh() }
+  })
 }
-

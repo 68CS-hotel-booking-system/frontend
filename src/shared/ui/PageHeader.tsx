@@ -66,7 +66,7 @@ export function PageHeader({
               {kicker}
             </div>
           )}
-          <h1 className="text-xl md:text-2xl font-bold text-[#12211d] tracking-tight m-0 truncate">
+          <h1 className="text-xl md:text-2xl font-bold text-[#12211d] tracking-tight m-0 break-words">
             {title}
           </h1>
           {description && (

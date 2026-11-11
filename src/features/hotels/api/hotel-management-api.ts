@@ -1,7 +1,9 @@
 import { ApiError } from '@/shared/api/api-error'
 import { http } from '@/shared/api/http'
-import { unsupportedApi } from '@/shared/api/unsupported-api'
-import type { CreateAdminHotelFormValues, UpdateHotelAmenitiesFormValues, UpdateManagementHotelFormValues } from '../model/hotel-form-schemas'
+import { z } from 'zod'
+import { amenitySchema } from '../model/hotel'
+import { validateHotelPatch } from '../model/hotel-update'
+import type { CreateAdminHotelFormValues, UpdateHotelAmenitiesFormValues } from '../model/hotel-form-schemas'
 import type { ManagementHotelDetail, ManagementHotelListQuery, ManagementHotelPage } from '../model/hotel'
 import { managementHotelPageResponseSchema, managementHotelResponseSchema, toManagementHotel } from './hotel-contract'
 
@@ -83,17 +85,39 @@ export async function approveHotel(
   return toManagementHotel(hotel)
 }
 
-// Preserve callers and mock previews without inventing unimplemented endpoints.
-export const updateManagementHotel: (
-  hotelId: string,
-  payload: UpdateManagementHotelFormValues,
-  signal?: AbortSignal,
-) => Promise<ManagementHotelDetail> = () => unsupportedApi('cập nhật hồ sơ khách sạn')
+export interface UpdateHotelPayload {
+  version: number
+  name?: string
+  description?: string
+  address?: string
+  contactPhone?: string
+  contactEmail?: string
+  latitude?: number
+  longitude?: number
+  starRating?: number
+  checkInTime?: string
+  checkOutTime?: string
+}
 
-export const updateHotelAmenities: (
-  hotelId: string,
-  payload: UpdateHotelAmenitiesFormValues,
-  signal?: AbortSignal,
-) => Promise<string[]> = () => unsupportedApi('cập nhật tiện ích khách sạn')
+export async function updateManagementHotel(hotelId: string, payload: UpdateHotelPayload, signal?: AbortSignal): Promise<ManagementHotelDetail> {
+  const result = await http.request(`/management/hotels/${encodeURIComponent(hotelId)}`, {
+    method: 'PATCH', body: validateHotelPatch(payload), signal, schema: managementHotelResponseSchema,
+  })
+  return toManagementHotel(result)
+}
+
+export async function updateHotelAmenities(hotelId: string, payload: UpdateHotelAmenitiesFormValues, signal?: AbortSignal): Promise<string[]> {
+  const result = await http.request(`/management/hotels/${encodeURIComponent(hotelId)}/amenities`, {
+    method: 'PUT', body: payload, signal, schema: z.array(amenitySchema),
+  })
+  return result.map((amenity) => amenity.id)
+}
+
+export async function updateRoomTypeAmenities(hotelId: string, roomTypeId: string, payload: UpdateHotelAmenitiesFormValues, signal?: AbortSignal): Promise<string[]> {
+  const result = await http.request(`/management/hotels/${encodeURIComponent(hotelId)}/room-types/${encodeURIComponent(roomTypeId)}/amenities`, {
+    method: 'PUT', body: payload, signal, schema: z.array(amenitySchema),
+  })
+  return result.map((amenity) => amenity.id)
+}
 
 export { getRoomTypeDailyRates, setRoomTypeDailyRates } from './room-rates-api'
