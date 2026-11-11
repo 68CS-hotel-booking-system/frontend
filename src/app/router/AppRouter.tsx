@@ -33,6 +33,7 @@ import {
   HotelRoomCreatePage,
   HotelRoomDetailPage,
   HotelRoomAmenitiesPage,
+  HotelPhysicalRoomAmenitiesPage,
   HotelPricingPage,
   HotelPoliciesPage,
   HotelBookingsPage,
@@ -75,6 +76,7 @@ export function AppRouter() {
             <Route path="rooms" element={<HotelRoomsPage />} />
             <Route path="rooms/new" element={<HotelRoomCreatePage />} />
             <Route path="rooms/:roomId" element={<HotelRoomDetailPage />} />
+            <Route path="rooms/physical/:roomId/amenities" element={<HotelPhysicalRoomAmenitiesPage />} />
             <Route path="rooms/amenities" element={<HotelRoomAmenitiesPage />} />
             <Route path="pricing" element={<HotelPricingPage />} />
             <Route path="policies" element={<HotelPoliciesPage />} />

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { http } from '@/shared/api/http'
+import type { UpdateRoomTypePayload } from './room-api'
 
 export const managementRoomTypeSchema = z.object({
   id: z.string(),
@@ -47,23 +48,77 @@ export async function createManagementRoomType(
   })
 }
 
+export interface EditRoomTypeValues {
+  name: string
+  description?: string | null
+  maxAdults: number
+  maxChildren: number
+  maxOccupancy?: number | null
+  basePrice?: number | null
+  active: boolean
+}
+
+/**
+ * Xây dựng payload PATCH cho loại phòng:
+ * - Chỉ gửi các trường thực sự thay đổi.
+ * - Sức chứa: Khi maxAdults hoặc maxChildren thay đổi, tự động áp dụng quy tắc đã duyệt
+ *   (maxOccupancy = maxAdults + maxChildren) hoặc giá trị maxOccupancy hợp lệ được truyền vào.
+ * - Khi không đổi sức chứa, không gửi và không làm thay đổi sức chứa đã lưu trên backend.
+ * - Giá cơ bản: Phân biệt rõ ràng giữa giá 0 (gửi 0) và chưa nhập / để trống (không gửi).
+ */
 export function buildRoomTypeEditPayload(
-  original: Pick<ManagementRoomType, 'name' | 'description' | 'maxAdults' | 'maxChildren' | 'active' | 'maxOccupancy' | 'basePrice'>,
-  values: Pick<ManagementRoomType, 'name' | 'description' | 'maxAdults' | 'maxChildren' | 'active' | 'maxOccupancy' | 'basePrice'>,
-) {
-  const payload: import('./room-api').UpdateRoomTypePayload = {}
-  if (values.name.trim() !== original.name) payload.name = values.name.trim()
-  if ((values.description ?? '') !== (original.description ?? '')) payload.description = values.description ?? ''
-  if (values.active !== original.active) payload.active = values.active
-  const capacityChanged = values.maxAdults !== original.maxAdults || values.maxChildren !== original.maxChildren
-  if (capacityChanged || (values.maxOccupancy != null && values.maxOccupancy !== original.maxOccupancy)) {
-    if (!Number.isInteger(values.maxOccupancy) || values.maxOccupancy! < values.maxAdults) {
-      throw new Error('Nhập sức chứa tổng tối đa, ít nhất bằng số người lớn. Backend chưa trả sức chứa trong danh sách.')
+  original: Pick<
+    ManagementRoomType,
+    'name' | 'description' | 'maxAdults' | 'maxChildren' | 'active' | 'maxOccupancy' | 'basePrice'
+  >,
+  values: EditRoomTypeValues,
+): UpdateRoomTypePayload {
+  const payload: UpdateRoomTypePayload = {}
+
+  // 1. Tên loại phòng
+  if (values.name.trim() !== original.name) {
+    payload.name = values.name.trim()
+  }
+
+  // 2. Mô tả loại phòng
+  const originalDesc = original.description ?? ''
+  const newDesc = values.description?.trim() ?? ''
+  if (newDesc !== originalDesc) {
+    payload.description = newDesc
+  }
+
+  // 3. Trạng thái mở bán
+  if (values.active !== original.active) {
+    payload.active = values.active
+  }
+
+  // 4. Sức chứa
+  const capacityChanged =
+    values.maxAdults !== original.maxAdults ||
+    values.maxChildren !== original.maxChildren ||
+    (values.maxOccupancy != null && values.maxOccupancy !== original.maxOccupancy)
+
+  if (capacityChanged) {
+    const totalOccupancy = values.maxOccupancy ?? values.maxAdults + values.maxChildren
+
+    if (!Number.isInteger(totalOccupancy) || totalOccupancy < values.maxAdults) {
+      throw new Error('Sức chứa tối đa phải là số nguyên và ít nhất bằng số người lớn tối đa.')
     }
+    if (totalOccupancy > 32767) {
+      throw new Error('Tổng sức chứa không được vượt quá 32.767 người.')
+    }
+
     payload.maxAdults = values.maxAdults
     payload.maxChildren = values.maxChildren
-    payload.maxOccupancy = values.maxOccupancy
+    payload.maxOccupancy = totalOccupancy
   }
-  if (values.basePrice != null && values.basePrice !== original.basePrice) payload.basePrice = values.basePrice
+
+  // 5. Giá cơ bản mỗi đêm
+  if (values.basePrice !== null && values.basePrice !== undefined) {
+    if (original.basePrice === undefined || values.basePrice !== original.basePrice) {
+      payload.basePrice = values.basePrice
+    }
+  }
+
   return payload
 }

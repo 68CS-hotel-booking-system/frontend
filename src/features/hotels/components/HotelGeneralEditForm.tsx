@@ -16,18 +16,17 @@ import {
   CompassOutlined,
   CopyOutlined,
   EnvironmentOutlined,
-  InfoCircleOutlined,
   LinkOutlined,
   SaveOutlined,
   ShopOutlined,
   UndoOutlined,
   UserOutlined,
 } from '@ant-design/icons'
-import { useQueryClient } from '@tanstack/react-query'
+import { applyApiFieldErrors } from '@/shared/lib/form-errors'
+import { errorMessage } from '@/shared/api/api-error'
+import { buildHotelPatch } from '../model/hotel-update'
+import { useUpdateManagementHotelMutation } from '../hooks/use-update-hotel-mutation'
 import { SectionCard } from '@/shared/ui/SectionCard'
-import { useDataMode } from '@/shared/lib/data-mode-context'
-import { unsupportedApi } from '@/shared/api/unsupported-api'
-import { hotelManagementKeys } from '../hooks/hotel-query-keys'
 import type { CityItem, ManagementHotelDetail } from '../model/hotel'
 import { HotelStatusBadge } from './HotelStatusBadge'
 
@@ -42,9 +41,7 @@ const CHECK_OUT_CHIPS = ['10:00', '11:00', '12:00']
 export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProps) {
   const formId = useId()
   const { message } = AntApp.useApp()
-  const queryClient = useQueryClient()
-  const { mode } = useDataMode()
-  const isApi = mode === 'api'
+  const mutation = useUpdateManagementHotelMutation(hotel.id)
   const [copied, setCopied] = useState(false)
 
   // -------------------------------------------------------------
@@ -56,6 +53,8 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
       starRating: hotel.starRating,
       cityId: hotel.cityId,
       address: hotel.address,
+      contactPhone: hotel.contactPhone ?? '',
+      contactEmail: hotel.contactEmail ?? '',
       latitude: hotel.latitude,
       longitude: hotel.longitude,
       checkInTime: hotel.checkInTime ? hotel.checkInTime.slice(0, 5) : '14:00',
@@ -71,7 +70,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
   })
 
   useEffect(() => {
-    form.reset(defaultValues)
+    form.reset(defaultValues, { keepDirtyValues: true })
   }, [defaultValues, form])
 
   // Cảnh báo người dùng khi reload hoặc đóng tab nếu còn thay đổi chưa lưu
@@ -89,33 +88,15 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
   // Handlers
   // -------------------------------------------------------------
   const handleSaveAll = async (values: typeof defaultValues) => {
+    if (mutation.isPending) return
+    form.clearErrors('root')
     try {
-      if (isApi) return unsupportedApi('cập nhật hồ sơ khách sạn')
-      const updatedPartial: Partial<ManagementHotelDetail> = {
-        name: values.name,
-        starRating: values.starRating,
-        cityId: values.cityId,
-        cityName: cities.find((c) => c.id === values.cityId)?.name ?? hotel.cityName,
-        address: values.address,
-        latitude: values.latitude,
-        longitude: values.longitude,
-        checkInTime: `${values.checkInTime}:00`,
-        checkOutTime: `${values.checkOutTime}:00`,
-        ownerUserId: values.ownerUserId,
-        description: values.description,
-      }
-
-      queryClient.setQueryData(
-        hotelManagementKeys.detail(mode, hotel.id),
-        (prev: ManagementHotelDetail | undefined) => {
-          if (!prev) return prev
-          return { ...prev, ...updatedPartial }
-        },
-      )
-      form.reset(values)
-      message.success('Đã lưu toàn bộ thông tin hồ sơ cơ sở lưu trú!')
-    } catch {
-      message.error('Không thể lưu thông tin khách sạn.')
+      const updated = await mutation.mutateAsync(buildHotelPatch(hotel, values))
+      form.reset({ ...values, name: updated.name, description: updated.description ?? '' })
+      void message.success('Đã lưu hồ sơ khách sạn lên máy chủ.')
+    } catch (error) {
+      applyApiFieldErrors(error, form.setError)
+      form.setError('root', { message: errorMessage(error) })
     }
   }
 
@@ -155,22 +136,11 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
 
   return (
     <div className="hotel-general-edit-form space-y-6">
-      {/* Banner thông báo chế độ API / Chỉ đọc */}
-      {isApi && (
-        <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 flex items-start gap-3 shadow-2xs">
-          <InfoCircleOutlined className="text-slate-500 text-base mt-0.5 shrink-0" />
-          <div className="text-xs text-slate-600 leading-relaxed">
-            <strong className="text-slate-800 font-semibold block mb-0.5">
-              Hồ sơ đang ở chế độ xem thông tin (Chỉ đọc)
-            </strong>
-            Máy chủ phát triển hiện tại chưa hỗ trợ API cập nhật trực tiếp cho thông tin cơ sở và giờ lưu trú. Các dữ liệu hiển thị bên dưới phản ánh chính xác thông tin thực tế từ hệ thống.
-          </div>
-        </div>
-      )}
-
+      {Object.entries(form.formState.errors).map(([field, error]) => <p key={field} role="alert">{error?.message}</p>)}
+      <p className="muted">Thành phố và chủ sở hữu được giữ theo hồ sơ hiện tại. Các giá trị trống không dùng để xóa thông tin đã lưu.</p>
       {/* Form bọc toàn bộ bố cục 2 cột */}
       <form onSubmit={(e) => void form.handleSubmit(handleSaveAll)(e)}>
-        <fieldset disabled={isApi} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+        <fieldset disabled={mutation.isPending} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* ========================================================= */}
             {/* CỘT TRÁI (8 / 12) - THÔNG TIN ĐỊNH DANH & VỊ TRÍ CƠ SỞ     */}
@@ -204,6 +174,14 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                     />
                   </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label>Số điện thoại liên hệ
+                      <Controller name="contactPhone" control={form.control} render={({ field }) => <Input {...field} maxLength={16} aria-label="Số điện thoại liên hệ" />} />
+                    </label>
+                    <label>Email liên hệ
+                      <Controller name="contactEmail" control={form.control} render={({ field }) => <Input {...field} type="email" maxLength={255} aria-label="Email liên hệ" />} />
+                    </label>
+                  </div>
                   {/* Xếp hạng sao */}
                   <div>
                     <label
@@ -301,7 +279,8 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                             size="large"
                             showSearch
                             className="w-full"
-                            placeholder="Chọn tỉnh / thành phố"
+                            disabled
+                            placeholder="Thành phố đã đăng ký"
                             optionFilterProp="label"
                             options={cities.map((c) => ({ value: c.id, label: c.name }))}
                           />
@@ -421,7 +400,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                       <button
                         key={chip}
                         type="button"
-                        disabled={isApi}
+                        disabled={mutation.isPending}
                         onClick={() => form.setValue('checkInTime', chip, { shouldDirty: true })}
                         className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 hover:bg-[#eef8f5] hover:text-[#0b5f53] transition-colors cursor-pointer border-0 text-slate-600 disabled:opacity-60 disabled:cursor-not-allowed"
                       >
@@ -455,7 +434,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                       <button
                         key={chip}
                         type="button"
-                        disabled={isApi}
+                        disabled={mutation.isPending}
                         onClick={() => form.setValue('checkOutTime', chip, { shouldDirty: true })}
                         className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 hover:bg-[#eef8f5] hover:text-[#0b5f53] transition-colors cursor-pointer border-0 text-slate-600 disabled:opacity-60 disabled:cursor-not-allowed"
                       >
@@ -552,7 +531,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
             <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
               <Button
                 icon={<UndoOutlined />}
-                disabled={!form.formState.isDirty || isApi}
+                disabled={!form.formState.isDirty || mutation.isPending}
                 onClick={() => form.reset()}
                 className="!rounded-xl"
               >
@@ -562,7 +541,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                 type="primary"
                 htmlType="submit"
                 icon={<SaveOutlined />}
-                disabled={!form.formState.isDirty || isApi}
+                disabled={!form.formState.isDirty || mutation.isPending}
                 className="!bg-[#0b5f53] hover:!bg-[#08473e] !rounded-xl font-semibold disabled:!bg-[#f0f2f1] disabled:!text-[#8c9e99] disabled:!border-[#dce7e3]"
               >
                 Lưu toàn bộ thay đổi

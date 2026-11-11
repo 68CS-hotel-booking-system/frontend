@@ -131,7 +131,6 @@ function HotelTableCompletion({ hotel }: { hotel: ManagementHotelSummary }) {
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
-import { useDataMode } from '@/shared/lib/data-mode-context'
 
 type ViewMode = 'card' | 'table'
 
@@ -145,7 +144,7 @@ const STATUS_FILTER_OPTIONS: Array<{ label: string; value: HotelStatus | 'ALL' }
 
 export function HotelManagementListPage() {
   const navigate = useNavigate()
-  const { mode } = useDataMode()
+  const mode = 'api'
 
   const [page, setPage] = useState(0)
   const [status, setStatus] = useState<HotelStatus | 'ALL'>('ALL')

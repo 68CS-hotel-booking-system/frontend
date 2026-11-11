@@ -1,22 +1,20 @@
 import { useHotelWorkspace, RoomTypeDailyRatesPanel } from '@/features/hotels'
 import { PageHeader } from '@/shared/ui/PageHeader'
-import { useManagementRoomTypesQuery } from '@/features/rooms'
-import { useDataMode } from '@/shared/lib/data-mode-context'
+import { RoomInventoryPanel, useManagementRoomTypesQuery } from '@/features/rooms'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
 
 export function HotelPricingPage() {
   const { hotel, hotelId } = useHotelWorkspace()
-  const { mode } = useDataMode()
-  const roomTypesQuery = useManagementRoomTypesQuery(hotelId, mode === 'api')
+  const roomTypesQuery = useManagementRoomTypesQuery(hotelId)
 
   if (!hotel) return null
-  if (mode === 'api' && roomTypesQuery.isPending) return <PageLoading />
-  if (mode === 'api' && roomTypesQuery.isError) return <ErrorState error={roomTypesQuery.error} onRetry={() => void roomTypesQuery.refetch()} />
+  if (roomTypesQuery.isPending) return <PageLoading />
+  if (roomTypesQuery.isError) return <ErrorState error={roomTypesQuery.error} onRetry={() => void roomTypesQuery.refetch()} />
 
-  const roomTypes = mode === 'api' ? roomTypesQuery.data?.map((type) => ({
+  const roomTypes = roomTypesQuery.data?.map((type) => ({
     ...type, hotelId, isActive: type.active,
-  })) : hotel.roomTypes
+  }))
 
   const breadcrumbItems = [
     { label: 'Khách sạn', to: '/hotels' },
@@ -38,6 +36,7 @@ export function HotelPricingPage() {
         roomTypes={roomTypes}
         hotelStatus={hotel.status}
       />
+      <RoomInventoryPanel key={hotelId} hotelId={hotelId} hotelStatus={hotel.status} />
     </div>
   )
 }

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useDataMode } from '@/shared/lib/data-mode-context'
 import {
   ArrowLeftOutlined,
   BuildOutlined,
@@ -11,10 +10,8 @@ import {
   DatePicker,
   Form,
   Input,
-  InputNumber,
   Modal,
   Select,
-  Switch,
   Table,
   Tag,
   message,
@@ -23,8 +20,8 @@ import dayjs from 'dayjs'
 import { useNavigate, useParams } from 'react-router'
 import { useHotelWorkspace } from '@/features/hotels'
 import {
+  EditRoomTypeModal,
   buildRoomEditPayload,
-  buildRoomTypeEditPayload,
   useManagementRoomMutations,
   useManagementRoomTypesQuery,
   useManagementRoomsQuery,
@@ -37,25 +34,22 @@ import { PageLoading } from '@/shared/ui/PageLoading'
 
 export function HotelRoomDetailPage() {
   const { hotel, hotelId } = useHotelWorkspace()
-  const { mode } = useDataMode()
   const { roomId = '' } = useParams<{ roomId: string }>()
   const navigate = useNavigate()
-  const { createRoom, updateRoom, updateRoomType } = useManagementRoomMutations(hotelId)
+  const { createRoom, updateRoom } = useManagementRoomMutations(hotelId)
 
-  const roomTypesQuery = useManagementRoomTypesQuery(hotelId, mode === 'api')
+  const roomTypesQuery = useManagementRoomTypesQuery(hotelId)
   const roomType = roomTypesQuery.data?.find((rt) => rt.id === roomId)
 
   const [roomPage, setRoomPage] = useState(0)
   const [roomPageSize, setRoomPageSize] = useState(20)
 
   // Danh sách phòng vật lý thuộc loại này
-  const roomsQuery = useManagementRoomsQuery(hotelId, { roomTypeId: roomId, page: roomPage, size: roomPageSize }, mode === 'api')
+  const roomsQuery = useManagementRoomsQuery(hotelId, { roomTypeId: roomId, page: roomPage, size: roomPageSize })
   const physicalRooms = roomsQuery.data?.items ?? []
 
   // Modal Sửa loại phòng
   const [isEditingType, setIsEditingType] = useState(false)
-  const [isSubmittingType, setIsSubmittingType] = useState(false)
-  const [typeForm] = Form.useForm()
 
   // Modal Thêm phòng vật lý
   const [isAddingRoom, setIsAddingRoom] = useState(false)
@@ -68,7 +62,6 @@ export function HotelRoomDetailPage() {
   const [roomEditForm] = Form.useForm()
 
   if (!hotel) return null
-  if (mode === 'mock') return <EmptyState title="Quản lý phòng dùng API thật" description="Chuyển sang nguồn API để xem và quản lý phòng. Chế độ mẫu chưa mô phỏng các thao tác này." />
 
   if (roomTypesQuery.isPending) {
     return <PageLoading />
@@ -83,23 +76,6 @@ export function HotelRoomDetailPage() {
     { label: 'Phòng', to: `/hotels/${hotelId}/rooms` },
     { label: roomType?.name || 'Chi tiết' },
   ]
-
-  // Submit sửa loại phòng
-  const handleSaveType = async () => {
-    if (!roomType) return
-    try {
-      const values = await typeForm.validateFields()
-      setIsSubmittingType(true)
-      await updateRoomType.mutateAsync({ roomTypeId: roomType.id, payload: buildRoomTypeEditPayload(roomType, values) })
-      message.success('Đã cập nhật thông tin loại phòng!')
-      setIsEditingType(false)
-    } catch (error) {
-      if (error && typeof error === 'object' && 'errorFields' in error) return
-      message.error(error instanceof Error ? error.message : 'Cập nhật thất bại.')
-    } finally {
-      setIsSubmittingType(false)
-    }
-  }
 
   // Submit thêm phòng vật lý
   const handleCreatePhysicalRoom = async () => {
@@ -159,20 +135,7 @@ export function HotelRoomDetailPage() {
             <Button
               type="primary"
               icon={<EditOutlined />}
-              onClick={() => {
-                if (roomType) {
-                  typeForm.setFieldsValue({
-                    name: roomType.name,
-                    description: roomType.description,
-                    maxAdults: roomType.maxAdults,
-                    maxChildren: roomType.maxChildren,
-                    active: roomType.active,
-                    maxOccupancy: roomType.maxOccupancy,
-                    basePrice: roomType.basePrice,
-                  })
-                  setIsEditingType(true)
-                }
-              }}
+              onClick={() => setIsEditingType(true)}
               className="!bg-[#0b5f53]"
             >
               Chỉnh sửa loại phòng
@@ -311,21 +274,33 @@ export function HotelRoomDetailPage() {
                 key: 'action',
                 align: 'right',
                 render: (_, record) => (
-                  <Button
-                    size="small"
-                    icon={<EditOutlined />}
-                    onClick={() => {
-                      setEditingRoom(record)
-                      roomEditForm.resetFields()
-                      roomEditForm.setFieldsValue({
-                        roomNumber: record.roomNumber,
-                        floor: record.floor,
-                        status: record.readiness,
-                      })
-                    }}
-                  >
-                    Sửa
-                  </Button>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Button
+                      size="small"
+                      icon={<EditOutlined />}
+                      onClick={() => {
+                        setEditingRoom(record)
+                        roomEditForm.resetFields()
+                        roomEditForm.setFieldsValue({
+                          roomNumber: record.roomNumber,
+                          floor: record.floor,
+                          status: record.readiness,
+                        })
+                      }}
+                    >
+                      Sửa
+                    </Button>
+                    <Button
+                      size="small"
+                      onClick={() =>
+                        navigate(
+                          `/hotels/${hotelId}/rooms/physical/${record.id}/amenities`,
+                        )
+                      }
+                    >
+                      Tiện ích
+                    </Button>
+                  </div>
                 ),
               },
             ]}
@@ -333,55 +308,13 @@ export function HotelRoomDetailPage() {
         )}
       </div>
 
-      {/* MODAL SỬA LOẠI PHÒNG (HT17) */}
-      <Modal
-        title={`Chỉnh sửa loại phòng ${roomType?.name || ''}`}
+      {/* Modal chỉnh sửa loại phòng */}
+      <EditRoomTypeModal
         open={isEditingType}
-        onCancel={() => setIsEditingType(false)}
-        onOk={handleSaveType}
-        confirmLoading={isSubmittingType}
-        okText="Lưu thay đổi"
-        cancelText="Hủy"
-        okButtonProps={{ className: '!bg-[#0b5f53]' }}
-      >
-        <Form form={typeForm} layout="vertical" className="mt-4">
-          <Form.Item
-            label="Tên loại phòng"
-            name="name"
-            rules={[{ required: true, message: 'Vui lòng nhập tên loại phòng' }]}
-          >
-            <Input maxLength={100} />
-          </Form.Item>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item
-              label="Số người lớn tối đa"
-              name="maxAdults"
-              rules={[{ required: true, message: 'Tối thiểu 1' }]}
-            >
-              <InputNumber min={1} max={10} className="w-full" />
-            </Form.Item>
-
-            <Form.Item label="Số trẻ em tối đa" name="maxChildren">
-              <InputNumber min={0} max={10} className="w-full" />
-            </Form.Item>
-          </div>
-
-          <Form.Item label="Sức chứa tổng tối đa" name="maxOccupancy" help="Bắt buộc khi sửa sức chứa. Danh sách backend chưa trả giá trị hiện tại.">
-            <InputNumber min={1} max={32767} className="w-full" placeholder="Giữ nguyên nếu không sửa sức chứa" />
-          </Form.Item>
-          <Form.Item label="Giá cơ bản mỗi đêm (VND)" name="basePrice" help="Để trống để giữ nguyên; backend chưa trả giá hiện tại trong danh sách.">
-            <InputNumber min={0} precision={0} className="w-full" />
-          </Form.Item>
-          <Form.Item label="Mô tả loại phòng" name="description">
-            <Input.TextArea rows={3} maxLength={500} />
-          </Form.Item>
-
-          <Form.Item label="Trạng thái mở bán" name="active" valuePropName="checked">
-            <Switch checkedChildren="Mở bán" unCheckedChildren="Tạm ngưng" />
-          </Form.Item>
-        </Form>
-      </Modal>
+        roomType={roomType}
+        hotelId={hotelId}
+        onClose={() => setIsEditingType(false)}
+      />
 
       {/* MODAL THÊM PHÒNG VẬT LÝ VÀO HẠNG NÀY (HT20) */}
       <Modal

@@ -1,15 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
-import { useDataMode } from '@/shared/lib/data-mode-context'
 import { getAmenities } from '../api/catalog-api'
-import { getMockAmenities } from '../mocks/hotel-management-mock'
+import type { AmenityCategory } from '../model/hotel'
 import { hotelManagementKeys } from './hotel-query-keys'
 
-export function useAmenitiesQuery() {
-  const { mode } = useDataMode()
+export function useAmenitiesQuery(category?: AmenityCategory) {
   return useQuery({
-    queryKey: hotelManagementKeys.amenities(mode),
-    queryFn: ({ signal }) =>
-      mode === 'mock' ? getMockAmenities() : getAmenities(signal),
+    queryKey: hotelManagementKeys.amenities(category ? `api:${category}` : 'api'),
+    queryFn: ({ signal }) => (category ? getAmenities(category, signal) : getAmenities(signal)),
     retry: false,
+    staleTime: 5 * 60 * 1000,
   })
 }
+

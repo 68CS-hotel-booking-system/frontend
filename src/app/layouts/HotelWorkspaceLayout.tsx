@@ -16,7 +16,6 @@ import {
   useHotelImagesQuery,
 } from '@/features/hotels'
 import { useManagementRoomTypesQuery } from '@/features/rooms'
-import { useDataMode } from '@/shared/lib/data-mode-context'
 import { HOTEL_WORKSPACE_NAV_ITEMS } from '@/config/navigation.config'
 
 interface HotelWorkspaceNavProps {
@@ -188,9 +187,8 @@ export function HotelWorkspaceLayout() {
   const { hotelId = '' } = useParams<{ hotelId: string }>()
   const navigate = useNavigate()
   const detailQuery = useManagementHotelDetailQuery(hotelId)
-  const { mode } = useDataMode()
-  const roomTypesQuery = useManagementRoomTypesQuery(hotelId, mode === 'api' && detailQuery.isSuccess)
-  const imagesQuery = useHotelImagesQuery(hotelId, mode === 'api' && detailQuery.isSuccess)
+  const roomTypesQuery = useManagementRoomTypesQuery(hotelId, detailQuery.isSuccess)
+  const imagesQuery = useHotelImagesQuery(hotelId, detailQuery.isSuccess)
 
   if (detailQuery.isPending) {
     return (
@@ -223,10 +221,10 @@ export function HotelWorkspaceLayout() {
 
   const hotel = {
     ...detailQuery.data,
-    ...(mode === 'api' && roomTypesQuery.isSuccess ? {
+    ...(roomTypesQuery.isSuccess ? {
       roomTypes: roomTypesQuery.data.map((type) => ({ ...type, hotelId, isActive: type.active })),
     } : {}),
-    ...(mode === 'api' && imagesQuery.isSuccess ? {
+    ...(imagesQuery.isSuccess ? {
       imageCount: imagesQuery.data.length,
       coverImageUrl: imagesQuery.data.find((image) => image.cover)?.url ?? imagesQuery.data[0]?.url ?? null,
     } : {}),

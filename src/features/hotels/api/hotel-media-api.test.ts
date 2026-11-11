@@ -39,12 +39,12 @@ describe('hotel media API client', () => {
 
   it('replaces hotel gallery images via PUT /management/hotels/{hotelId}/images', async () => {
     respond([
-      { mediaId, sortOrder: 0, cover: true },
+      { mediaId, albumId: '33333333-3333-4333-8333-333333333333', sortOrder: 0, cover: true },
     ])
 
     const { replaceHotelImages } = await import('./hotel-media-api')
     const result = await replaceHotelImages(hotelId, {
-      images: [{ mediaId, sortOrder: 0, cover: true }],
+      images: [{ mediaId, albumId: '33333333-3333-4333-8333-333333333333', sortOrder: 0, cover: true }],
       expectedVersion: 0,
     })
 
@@ -53,11 +53,13 @@ describe('hotel media API client', () => {
     expect(result).toHaveLength(1)
     expect(result[0].mediaId).toBe(mediaId)
     expect(result[0].cover).toBe(true)
+    expect(result[0].albumId).toBe('33333333-3333-4333-8333-333333333333')
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string).images[0].albumId).toBe(result[0].albumId)
   })
 
   it('gets hotel gallery images via GET /management/hotels/{hotelId}/images', async () => {
     respond([
-      { mediaId, sortOrder: 0, cover: true },
+      { mediaId, albumId: '33333333-3333-4333-8333-333333333333', sortOrder: 0, cover: true },
     ])
 
     const { getHotelImages } = await import('./hotel-media-api')
@@ -110,7 +112,7 @@ it('serializes consecutive writes, reads each fresh version, and refreshes after
     status: 'DRAFT', description: null, latitude: null, longitude: null,
     createdAt: '2026-11-09T00:00:00Z', updatedAt: '2026-11-09T00:00:00Z',
   }
-  const linked = [{ mediaId, sortOrder: 0, cover: true }]
+  const linked = [{ mediaId, albumId: '33333333-3333-4333-8333-333333333333', sortOrder: 0, cover: true }]
   let version = 7
   let releaseRefresh: (() => void) | undefined
   const refreshStarted = new Promise<void>((resolve) => {

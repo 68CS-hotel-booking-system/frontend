@@ -7,14 +7,14 @@ import { hotelManagementKeys } from '../hooks/hotel-query-keys'
 import { localRateDate } from '../model/room-rates'
 
 describe('real room rate rendering', () => {
-  it('renders a missing rate as unset and exposes the real rate action in API mode', () => {
+  it.each(['ACTIVE', 'DRAFT', 'SUSPENDED'])('renders real rates and allows preparing them while hotel is %s', (hotelStatus) => {
     const date = localRateDate()
     const client = new QueryClient()
     client.setQueryData(hotelManagementKeys.rates('api', { hotelId: 'hotel', roomTypeId: 'type', startDate: date, endDate: date }), [
       { roomTypeId: 'type', rateDate: date, amount: null, hasRate: false, currency: 'VND' },
     ])
     const markup = renderToStaticMarkup(<QueryClientProvider client={client}><AntApp>
-      <RoomTypeDailyRatesPanel hotelId="hotel" hotelStatus="ACTIVE" roomTypes={[{ id: 'type', hotelId: 'hotel', name: 'Double', maxAdults: 2, maxChildren: 0, isActive: true }]} />
+      <RoomTypeDailyRatesPanel hotelId="hotel" hotelStatus={hotelStatus} roomTypes={[{ id: 'type', hotelId: 'hotel', name: 'Double', maxAdults: 2, maxChildren: 0, isActive: true }]} />
     </AntApp></QueryClientProvider>)
     expect(markup).toContain('Chưa đặt giá')
     expect(markup).toContain('Lưu giá')

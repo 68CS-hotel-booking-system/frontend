@@ -13,18 +13,15 @@ export function HotelAmenitiesPage() {
   ]
 
   return (
-    <div className="hotel-amenities-page max-w-5xl mx-auto">
+    <div className="hotel-amenities-page max-w-5xl mx-auto space-y-6">
       <PageHeader
         breadcrumbItems={breadcrumbItems}
-        kicker="TIỆN NGHI &amp; DỊCH VỤ"
+        kicker="TIỆN NGHI & DỊCH VỤ"
         title="Tiện ích khách sạn"
-        description="Đánh dấu các tiện ích chung mà cơ sở lưu trú của bạn cung cấp (Hồ bơi, Nhà hàng, Phòng tập gym, Wi-Fi...). Tiện ích đầy đủ sẽ giúp khách tìm kiếm dễ dàng hơn."
+        description="Quản lý các tiện ích chung mà khách sạn cung cấp (Hồ bơi, Nhà hàng, Bãi đỗ xe...). Bạn có thể chọn nhanh từ danh mục hệ thống hoặc tự tạo tiện ích riêng chỉ thuộc khách sạn này."
       />
 
-      <HotelAmenitiesManager
-        hotelId={hotelId}
-        initialAmenityIds={hotel.amenityIds}
-      />
+      <HotelAmenitiesManager hotelId={hotelId} />
     </div>
   )
 }

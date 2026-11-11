@@ -18,7 +18,6 @@ import {
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useCurrentUser } from '@/features/auth'
-import { useDataMode } from '@/shared/lib/data-mode-context'
 import { errorMessage } from '@/shared/api/api-error'
 import type { HotelCompletionStatus } from '../context/hotel-workspace-context'
 import type { ManagementHotelDetail } from '../model/hotel'
@@ -43,7 +42,7 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
   const navigate = useNavigate()
   const { message } = AntApp.useApp()
   const { isAdmin } = useCurrentUser()
-  const { mode } = useDataMode()
+  const mode = 'api'
   const approvalMutation = useApproveHotelMutation()
   const submitting = approvalMutation.isPending
 

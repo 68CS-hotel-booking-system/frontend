@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { isCityMatch, normalizeCityName } from './geocoding-api'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { geocodeAddress, isCityMatch, normalizeCityName } from './geocoding-api'
 
 describe('geocoding-api utilities', () => {
   it('normalizes Vietnamese city names correctly', () => {
@@ -18,4 +18,17 @@ describe('geocoding-api utilities', () => {
     expect(isCityMatch('Hồ Chí Minh', 'Hà Nội')).toBe(false)
     expect(isCityMatch(undefined, 'Đà Nẵng')).toBe(true)
   })
+})
+
+afterEach(() => vi.unstubAllGlobals())
+
+it('ignores geocoding results without valid coordinates instead of inventing a hotel location', async () => {
+  vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ features: [
+    { geometry: {}, properties: { name: 'Missing coordinates' } },
+    { geometry: { coordinates: [181, 20] } },
+    { geometry: { coordinates: [105.12345678, 21.12345678] }, properties: { city: 'Hà Nội' } },
+  ] }))))
+  const result = await geocodeAddress('12 Nguyễn Văn Linh')
+  expect(result).toHaveLength(1)
+  expect(result[0]).toMatchObject({ lat: 21.123457, lng: 105.123457, detectedCityName: 'Hà Nội' })
 })

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { http } from '@/shared/api/http'
+import { amenitySchema } from '../model/hotel'
 
 export const publicHotelResponseSchema = z.object({
   id: z.string().uuid(),
@@ -13,6 +14,7 @@ export const publicHotelResponseSchema = z.object({
   starRating: z.number().nullable(),
   checkInTime: z.string(),
   checkOutTime: z.string(),
+  amenities: z.array(amenitySchema).optional(),
 })
 
 export type PublicHotel = z.infer<typeof publicHotelResponseSchema>
@@ -23,6 +25,7 @@ export const publicRoomTypeSchema = z.object({
   description: z.string().nullable(),
   maxAdults: z.number(),
   maxChildren: z.number(),
+  amenities: z.array(amenitySchema).optional(),
 })
 
 export type PublicRoomType = z.infer<typeof publicRoomTypeSchema>
