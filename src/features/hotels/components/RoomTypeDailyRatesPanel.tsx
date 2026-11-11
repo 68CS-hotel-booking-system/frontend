@@ -106,6 +106,19 @@ export function RoomTypeDailyRatesPanel({
         <EmptyState
           title="Khách sạn chưa có hạng phòng nào"
           description="Cần khởi tạo ít nhất 1 hạng phòng trước khi tra cứu bảng giá theo ngày."
+          action={
+            <Button
+              type="primary"
+              className="!bg-[#0b5f53] hover:!bg-[#08473e] !rounded-xl font-semibold mt-2"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.location.href = `/hotels/${hotelId}/rooms`
+                }
+              }}
+            >
+              Đến trang quản lý phòng
+            </Button>
+          }
         />
       </div>
     )

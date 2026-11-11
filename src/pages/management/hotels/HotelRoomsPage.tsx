@@ -150,11 +150,23 @@ export function HotelRoomsPage() {
             type="primary"
             icon={<PlusOutlined />}
             onClick={() =>
-              navigate(`/hotels/${hotelId}/rooms/new?tab=${activeTab === 'rooms' ? 'room' : 'room-type'}`)
+              navigate(
+                `/hotels/${hotelId}/rooms/new?tab=${
+                  activeTab === 'rooms'
+                    ? roomTypes.length === 0
+                      ? 'room-type'
+                      : 'room'
+                    : 'room-type'
+                }`
+              )
             }
-            className="!bg-[#0b5f53]"
+            className="!bg-[#0b5f53] !rounded-xl font-semibold"
           >
-            {activeTab === 'rooms' ? 'Thêm phòng vật lý mới' : 'Thêm loại phòng mới'}
+            {activeTab === 'rooms'
+              ? roomTypes.length === 0
+                ? 'Thêm loại phòng trước'
+                : 'Thêm phòng vật lý mới'
+              : 'Thêm loại phòng mới'}
           </Button>
         }
       />
@@ -203,24 +215,44 @@ export function HotelRoomsPage() {
             />
           ) : physicalRooms.length === 0 ? (
             <div className="bg-white p-8 rounded-2xl border border-[#dce7e3] text-center shadow-xs">
-              <EmptyState
-                title="Chưa có phòng vật lý nào"
-                description={
-                  selectedRoomTypeId
-                    ? 'Không có phòng nào thuộc loại phòng đã chọn.'
-                    : 'Hãy tạo các số phòng vật lý thực tế của khách sạn (ví dụ: Phòng 101, 102...) để đưa vào vận hành đón khách.'
-                }
-                action={
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => navigate(`/hotels/${hotelId}/rooms/new?tab=room`)}
-                    className="!bg-[#0b5f53] mt-3"
-                  >
-                    Thêm phòng vật lý mới
-                  </Button>
-                }
-              />
+              {roomTypes.length === 0 ? (
+                <EmptyState
+                  title="Chưa có loại phòng nào"
+                  description="Khách sạn cần có ít nhất 1 loại phòng (hạng phòng như Standard, Deluxe...) trước khi có thể khởi tạo các số phòng vật lý thực tế."
+                  action={
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => {
+                        setActiveTab('types')
+                        navigate(`/hotels/${hotelId}/rooms/new?tab=room-type`)
+                      }}
+                      className="!bg-[#0b5f53] !rounded-xl font-semibold mt-3"
+                    >
+                      Thêm loại phòng đầu tiên
+                    </Button>
+                  }
+                />
+              ) : (
+                <EmptyState
+                  title="Chưa có phòng vật lý nào"
+                  description={
+                    selectedRoomTypeId
+                      ? 'Không có phòng nào thuộc loại phòng đã chọn.'
+                      : 'Hãy tạo các số phòng vật lý thực tế của khách sạn (ví dụ: Phòng 101, 102...) để đưa vào vận hành đón khách.'
+                  }
+                  action={
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => navigate(`/hotels/${hotelId}/rooms/new?tab=room`)}
+                      className="!bg-[#0b5f53] !rounded-xl font-semibold mt-3"
+                    >
+                      Thêm phòng vật lý mới
+                    </Button>
+                  }
+                />
+              )}
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-[#dce7e3] overflow-hidden shadow-xs">

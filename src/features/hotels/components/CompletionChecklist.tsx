@@ -169,7 +169,7 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
           return (
             <div
               key={item.id}
-              className="p-4 sm:px-6 flex items-center justify-between gap-4 hover:bg-[#fafcfb] transition-colors"
+              className="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 hover:bg-[#fafcfb] transition-colors"
             >
               <div className="flex items-start sm:items-center gap-3 min-w-0">
                 <div
@@ -187,36 +187,44 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
                   )}
                 </div>
 
-                <div className="min-w-0">
-                  <div className="text-xs font-bold text-[#12211d] flex items-center gap-2">
-                    <Icon className="text-[#5f736e] text-xs" />
-                    <span>{item.title}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold text-[#12211d] flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Icon className="text-[#5f736e] text-xs" />
+                      <span>{item.title}</span>
+                    </span>
                     {done && (
                       <Tag color="success" className="!text-[10px] !leading-4 !px-1.5 !m-0 !rounded-md">
                         Đã xong
                       </Tag>
                     )}
-                    {!done && unknownSections.has(item.id) && <Tag>Chưa xác minh từ API</Tag>}
+                    {!done && unknownSections.has(item.id) && (
+                      <Tag className="!text-[10px] !leading-4 !px-1.5 !m-0 !rounded-md text-[#5f736e]">
+                        Chưa xác minh từ API
+                      </Tag>
+                    )}
                   </div>
-                  <div className="text-[11px] text-[#5f736e] truncate mt-0.5">
+                  <div className="text-[11px] text-[#5f736e] mt-0.5">
                     {item.description}
                   </div>
                 </div>
               </div>
 
-              <Button
-                size="small"
-                type={done ? 'default' : 'primary'}
-                onClick={() => navigate(item.to)}
-                icon={<ArrowRightOutlined />}
-                className={`shrink-0 !rounded-lg text-xs font-semibold ${
-                  done
-                    ? '!text-[#344a44] hover:!text-[#0b5f53]'
-                    : '!bg-[#0b5f53] hover:!bg-[#08473e]'
-                }`}
-              >
-                {item.actionLabel}
-              </Button>
+              <div className="flex justify-end sm:shrink-0 w-full sm:w-auto pl-10 sm:pl-0">
+                <Button
+                  size="small"
+                  type={done ? 'default' : 'primary'}
+                  onClick={() => navigate(item.to)}
+                  icon={<ArrowRightOutlined />}
+                  className={`w-full sm:w-auto !rounded-lg text-xs font-semibold ${
+                    done
+                      ? '!text-[#344a44] hover:!text-[#0b5f53]'
+                      : '!bg-[#0b5f53] hover:!bg-[#08473e]'
+                  }`}
+                >
+                  {item.actionLabel}
+                </Button>
+              </div>
             </div>
           )
         })}

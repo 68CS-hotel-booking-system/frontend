@@ -48,7 +48,7 @@ export function SectionCard({
 
       {/* Footer */}
       {footer && (
-        <div className="px-5 md:px-6 py-3.5 bg-[#f7fbfa] border-t border-[#eef4f2] flex items-center justify-between gap-3">
+        <div className="px-5 md:px-6 py-3.5 bg-[#f7fbfa] border-t border-[#eef4f2] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {footer}
         </div>
       )}

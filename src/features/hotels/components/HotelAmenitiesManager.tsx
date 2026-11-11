@@ -66,10 +66,6 @@ export function HotelAmenitiesManager({
     }
   }
 
-  if (mode === 'api') {
-    return <Alert type="info" showIcon title="Backend hiện chưa hỗ trợ xem và cập nhật tiện ích khách sạn." />
-  }
-
   if (amenitiesQuery.isPending) {
     return <PageLoading />
   }
@@ -158,6 +154,16 @@ export function HotelAmenitiesManager({
         <Tag color="gold">Đã chọn: {selectedIds.length} tiện ích</Tag>
       </div>
 
+      {mode === 'api' && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          title="Chế độ tra cứu tiện ích"
+          description="Backend hiện chưa hỗ trợ API lưu tiện ích trực tiếp cho khách sạn. Danh mục bên dưới hiển thị các tiện ích khả dụng trong hệ thống để tham khảo."
+        />
+      )}
+
       {updateAmenitiesMutation.isError && (
         <Alert
           type="error"
@@ -184,8 +190,9 @@ export function HotelAmenitiesManager({
               type="primary"
               htmlType="submit"
               icon={<SaveOutlined aria-hidden="true" />}
-              disabled={!isDirty}
+              disabled={mode === 'api' || !isDirty}
               loading={updateAmenitiesMutation.isPending}
+              className="disabled:!bg-[#f0f2f1] disabled:!text-[#8c9e99] disabled:!border-[#dce7e3]"
             >
               Lưu danh sách tiện ích
             </Button>

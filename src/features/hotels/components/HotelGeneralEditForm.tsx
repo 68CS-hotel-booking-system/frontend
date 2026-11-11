@@ -267,7 +267,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                   size="middle"
                   icon={<SaveOutlined />}
                   disabled={!formIdentity.formState.isDirty}
-                  className="!bg-[#0b5f53] hover:!bg-[#08473e] !rounded-lg font-semibold"
+                  className="disabled:!bg-[#f0f2f1] disabled:!text-[#8c9e99] disabled:!border-[#dce7e3] !bg-[#0b5f53] hover:!bg-[#08473e] !rounded-lg font-semibold"
                 >
                   Lưu thông tin chung
                 </Button>
@@ -435,7 +435,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                   size="middle"
                   icon={<SaveOutlined />}
                   disabled={!formPolicies.formState.isDirty}
-                  className="!bg-[#0b5f53] hover:!bg-[#08473e] !rounded-lg font-semibold"
+                  className="disabled:!bg-[#f0f2f1] disabled:!text-[#8c9e99] disabled:!border-[#dce7e3] !bg-[#0b5f53] hover:!bg-[#08473e] !rounded-lg font-semibold"
                 >
                   Lưu giờ lưu trú
                 </Button>
@@ -541,7 +541,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                   size="middle"
                   icon={<SaveOutlined />}
                   disabled={!formOwner.formState.isDirty}
-                  className="!bg-[#0b5f53] hover:!bg-[#08473e] !rounded-lg font-semibold"
+                  className="disabled:!bg-[#f0f2f1] disabled:!text-[#8c9e99] disabled:!border-[#dce7e3] !bg-[#0b5f53] hover:!bg-[#08473e] !rounded-lg font-semibold"
                 >
                   Lưu chủ sở hữu
                 </Button>
@@ -615,7 +615,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                   size="middle"
                   icon={<SaveOutlined />}
                   disabled={!formDescription.formState.isDirty}
-                  className="!bg-[#0b5f53] hover:!bg-[#08473e] !rounded-lg font-semibold"
+                  className="disabled:!bg-[#f0f2f1] disabled:!text-[#8c9e99] disabled:!border-[#dce7e3] !bg-[#0b5f53] hover:!bg-[#08473e] !rounded-lg font-semibold"
                 >
                   Lưu mô tả
                 </Button>

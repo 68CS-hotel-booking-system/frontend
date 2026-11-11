@@ -9,7 +9,6 @@ import type { HotelCompletionStatus } from '../context/hotel-workspace-context'
 
 const roles = vi.hoisted(() => ({ isAdmin: false }))
 vi.mock('@/features/auth', () => ({ useCurrentUser: () => roles }))
-afterEach(() => { roles.isAdmin = false })
 
 const mockHotel: ManagementHotelDetail = {
   id: 'h101',
@@ -33,6 +32,7 @@ const mockHotel: ManagementHotelDetail = {
 }
 
 describe('CompletionChecklist component', () => {
+  afterEach(() => { roles.isAdmin = false })
   it('renders all 5 checklist criteria, progress stats, and disabled approval button when incomplete', () => {
     const qc = new QueryClient()
     const partialCompletion: HotelCompletionStatus = {

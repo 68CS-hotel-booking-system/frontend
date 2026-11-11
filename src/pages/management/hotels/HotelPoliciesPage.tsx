@@ -27,7 +27,7 @@ export function HotelPoliciesPage() {
             type="primary"
             icon={<SaveOutlined />}
             disabled
-            className="!bg-[#0b5f53]"
+            className="!bg-[#0b5f53] disabled:!bg-[#f0f2f1] disabled:!text-[#8c9e99] disabled:!border-[#dce7e3] !rounded-xl font-semibold"
           >
             Lưu chính sách
           </Button>

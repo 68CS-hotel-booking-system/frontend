@@ -443,10 +443,10 @@ export function HotelPhotosPage() {
       )}
 
       {/* KHỐI 1: TỔNG QUAN BỘ SƯU TẬP & ẢNH BÌA ĐẠI DIỆN */}
-      <section className="bg-white p-5 rounded-2xl border border-[#dce7e3] shadow-xs">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+      <section className="bg-white p-5 rounded-2xl border border-[#dce7e3] shadow-xs overflow-hidden">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
           {/* Trái: Ảnh bìa đại diện thu gọn + Xem to */}
-          <div className="flex items-center gap-4 min-w-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 min-w-0 w-full lg:w-auto">
             <div className="relative w-32 sm:w-36 h-24 rounded-xl overflow-hidden bg-[#eef8f5] border border-[#dce7e3] shrink-0 group">
               {displayCoverUrl ? (
                 <Image
@@ -467,9 +467,9 @@ export function HotelPhotosPage() {
             </div>
 
             {/* Thông tin nhanh & Chỉ số */}
-            <div className="min-w-0 space-y-1.5">
+            <div className="min-w-0 flex-1 space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base font-bold text-[#12211d] m-0 truncate">
+                <h2 className="text-base font-bold text-[#12211d] m-0 break-words">
                   Bộ sưu tập {hotel.name}
                 </h2>
                 {coverImage && (
@@ -479,7 +479,7 @@ export function HotelPhotosPage() {
                 )}
               </div>
 
-              <p className="text-xs text-[#5f736e] m-0">
+              <p className="text-xs text-[#5f736e] m-0 leading-relaxed">
                 Ảnh bìa hiển thị đầu tiên trên kết quả tìm kiếm. Để chọn ảnh bìa mới, bấm nút <strong>"Đặt bìa"</strong> ở bức ảnh mong muốn bên dưới.
               </p>
 
@@ -497,7 +497,7 @@ export function HotelPhotosPage() {
           </div>
 
           {/* Phải: Phím tắt thao tác nhanh */}
-          <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto justify-start sm:justify-end">
             <Button
               icon={<FolderAddOutlined />}
               onClick={() => {
@@ -767,6 +767,7 @@ export function HotelPhotosPage() {
                                 icon={<ArrowLeftOutlined />}
                                 disabled={img.originalIndex === 0 || writesDisabled}
                                 onClick={() => handleMoveOrder(img.originalIndex, 'left')}
+                                className="!w-8 !h-8 !min-w-[32px] !flex !items-center !justify-center !p-0"
                               />
                             </Tooltip>
                             <Tooltip title="Chuyển về sau">
@@ -776,6 +777,7 @@ export function HotelPhotosPage() {
                                 icon={<ArrowRightOutlined />}
                                 disabled={img.originalIndex === existingImages.length - 1 || writesDisabled}
                                 onClick={() => handleMoveOrder(img.originalIndex, 'right')}
+                                className="!w-8 !h-8 !min-w-[32px] !flex !items-center !justify-center !p-0"
                               />
                             </Tooltip>
                           </div>
@@ -788,7 +790,7 @@ export function HotelPhotosPage() {
                                   icon={<StarOutlined />}
                                   disabled={writesDisabled}
                                   onClick={() => handleSetCover(img.mediaId)}
-                                  className="text-xs"
+                                  className="text-xs !h-8"
                                 >
                                   Đặt bìa
                                 </Button>
@@ -807,6 +809,7 @@ export function HotelPhotosPage() {
                                 danger
                                 icon={<DeleteOutlined />}
                                 disabled={writesDisabled}
+                                className="!w-8 !h-8 !min-w-[32px] !flex !items-center !justify-center !p-0"
                               />
                             </Popconfirm>
                           </div>
