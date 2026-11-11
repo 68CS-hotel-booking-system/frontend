@@ -1,17 +1,30 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { setRoomTypeDailyRates } from '../api/room-rates-api'
-import { exclusiveRateEndDate, setRoomRatesFormSchema, type SetRoomRatesFormValues } from '../model/room-rates'
+import { exclusiveRateEndDate, type SetRoomRatesFormValues } from '../model/room-rates'
 import { hotelManagementKeys } from './hotel-query-keys'
 import type { ManagementHotelDetail } from '../model/hotel'
+
+export interface SetRoomRateMutationInput {
+  startDate: string
+  endDate?: string
+  amount: number
+  currency?: string
+}
 
 export function useSetRoomRatesMutation(hotelId: string, roomTypeId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     retry: false,
-    mutationFn: async (values: SetRoomRatesFormValues) => {
-      const parsed = setRoomRatesFormSchema.parse(values)
+    mutationFn: async (values: SetRoomRatesFormValues | SetRoomRateMutationInput) => {
+      let endDateExclusive: string | undefined = undefined
+      if (values.endDate && values.endDate !== values.startDate) {
+        endDateExclusive = exclusiveRateEndDate(values.endDate)
+      }
       return setRoomTypeDailyRates({ hotelId, roomTypeId }, {
-        startDate: parsed.startDate, endDateExclusive: exclusiveRateEndDate(parsed.endDate), amount: parsed.amount,
+        startDate: values.startDate,
+        endDateExclusive,
+        amount: values.amount,
+        currency: ('currency' in values && values.currency) ? values.currency : 'VND',
       })
     },
     onSuccess: async () => {

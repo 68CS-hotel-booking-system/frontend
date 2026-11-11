@@ -23,7 +23,7 @@ export function HotelPricingPage() {
   ]
 
   return (
-    <div className="hotel-pricing-page max-w-5xl mx-auto">
+    <div className="hotel-pricing-page max-w-5xl mx-auto space-y-8 pb-12">
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         kicker="DOANH THU &amp; PHÂN PHỐI"
