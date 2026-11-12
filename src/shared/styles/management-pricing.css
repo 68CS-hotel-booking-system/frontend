@@ -1,0 +1,30 @@
+/* Chỉ áp dụng cho hai màn cấu hình hạng phòng / lịch giá. */
+.hotel-pricing-panel .ant-btn,
+.hotel-room-create-page .ant-btn,
+.hotel-pricing-panel .ant-input-number,
+.hotel-room-create-page .ant-input-number,
+.hotel-pricing-panel .ant-picker,
+.hotel-room-create-page .ant-input {
+  border-radius: 12px;
+}
+.hotel-room-create-page .ant-input-number { width: 100%; }
+.hotel-pricing-panel input::placeholder,
+.hotel-room-create-page input::placeholder,
+.hotel-room-create-page textarea::placeholder { color: #63766f !important; opacity: 1; }
+.hotel-room-create-page .ant-form-item-explain:not(.ant-form-item-explain-error),
+.hotel-room-create-page .ant-input-data-count,
+.hotel-room-create-page .ant-breadcrumb,
+.hotel-room-create-page .ant-breadcrumb a,
+.hotel-room-create-page .ant-breadcrumb-separator { color: #526760; }
+.hotel-room-create-page .ant-breadcrumb a { display: inline-flex; align-items: center; min-height: 32px; }
+.hotel-room-create-page .page-header-container h1 { font-size: 24px; }
+.hotel-room-create-page .page-header-container .uppercase { font-size: 12px; }
+.hotel-pricing-panel .ant-tag { max-width: 100%; white-space: normal; }
+.hotel-pricing-panel .ant-input-number-input,
+.hotel-room-create-page .ant-input-number-input { font-variant-numeric: tabular-nums; }
+.hotel-pricing-panel ::-webkit-scrollbar,
+.hotel-room-create-page ::-webkit-scrollbar { width: 4px; height: 4px; }
+.hotel-pricing-panel ::-webkit-scrollbar-thumb,
+.hotel-room-create-page ::-webkit-scrollbar-thumb { border-radius: 999px; background: transparent; }
+.hotel-pricing-panel :hover::-webkit-scrollbar-thumb,
+.hotel-room-create-page :hover::-webkit-scrollbar-thumb { background: #b4c4be; }

@@ -1,41 +1,17 @@
-import { useMemo, useState } from 'react'
-import {
-  AppstoreOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  EditOutlined,
-  InfoCircleOutlined,
-  ReloadOutlined,
-  TableOutlined,
-} from '@ant-design/icons'
-import {
-  Alert,
-  App as AntApp,
-  Button,
-  Form,
-  Input,
-  InputNumber,
-  Modal,
-  Segmented,
-  Table,
-  Tag,
-  Tooltip,
-} from 'antd'
+import { useState } from 'react'
+import '@/shared/styles/management-pricing.css'
+import { AppstoreOutlined, EditOutlined, ReloadOutlined, TableOutlined } from '@ant-design/icons'
+import { Alert, App as AntApp, Button, DatePicker, Form, InputNumber, Modal, Segmented, Select, Table, Tag } from 'antd'
+import dayjs from 'dayjs'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { errorMessage } from '@/shared/api/api-error'
 import { formatCurrencyAmount } from '@/shared/lib/format'
 import { EmptyState } from '@/shared/ui/EmptyState'
-import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
 import { useRoomTypeDailyRatesQuery } from '../hooks/use-room-type-daily-rates-query'
 import { useSetRoomRatesMutation } from '../hooks/use-set-room-rates-mutation'
-import {
-  localRateDate,
-  roomRatesRangeSchema,
-  setRoomRatesFormSchema,
-  type SetRoomRatesFormValues,
-} from '../model/room-rates'
+import { localRateDate, rateRangeEnd, roomRatesRangeSchema, setRoomRatesFormSchema, type SetRoomRatesFormValues } from '../model/room-rates'
 import type { DailyRoomRate, ManagementRoomTypeSummary } from '../model/hotel'
 
 interface RoomTypeDailyRatesPanelProps {
@@ -45,773 +21,222 @@ interface RoomTypeDailyRatesPanelProps {
   hotelStatus?: string
 }
 
-type RateViewMode = 'grid' | 'table'
+const sourceLabels = { RATE: 'Giá riêng', BASE: 'Giá cơ bản', NONE: 'Chưa có giá hợp lệ' } as const
+const displayDate = (date: string) => dayjs(date).format('DD/MM/YYYY')
+const money = (amount: number | null) => amount === null ? '—' : formatCurrencyAmount(amount, 'VND')
 
-function getWeekdayName(isoDate: string): string {
-  const date = new Date(`${isoDate}T00:00:00Z`)
-  const day = date.getUTCDay()
-  const names = [
-    'Chủ nhật',
-    'Thứ 2',
-    'Thứ 3',
-    'Thứ 4',
-    'Thứ 5',
-    'Thứ 6',
-    'Thứ 7',
-  ]
-  return names[day] ?? ''
+function PriceSourceTag({ source }: { source: DailyRoomRate['source'] }) {
+  return <Tag className={`!m-0 !rounded-lg !text-xs ${source === 'RATE' ? '!bg-[#e2f2ee] !text-[#085c50] !border-transparent' : source === 'NONE' ? '!bg-[#fff4dc] !text-[#805100] !border-transparent' : '!bg-[#f1f4f3] !text-[#435b52] !border-transparent'}`}>
+    {sourceLabels[source]}
+  </Tag>
 }
 
-function isWeekendDate(isoDate: string): boolean {
-  const weekday = getWeekdayName(isoDate)
-  return weekday === 'Thứ 6' || weekday === 'Thứ 7'
-}
-
-function formatDisplayDate(isoDate: string): string {
-  const parts = isoDate.split('-')
-  if (parts.length === 3) {
-    return `${parts[2]}/${parts[1]}/${parts[0]}`
-  }
-  return isoDate
-}
-
-function calculateNights(startIso: string, endIso: string): number {
-  if (!startIso || !endIso) return 0
-  const start = new Date(`${startIso}T00:00:00Z`).getTime()
-  const end = new Date(`${endIso}T00:00:00Z`).getTime()
-  if (isNaN(start) || isNaN(end) || end < start) return 0
-  return Math.round((end - start) / 86400000) + 1
-}
-
-export function RoomTypeDailyRatesPanel({
-  hotelId,
-  hotelName,
-  roomTypes = [],
-  hotelStatus = 'ACTIVE',
-}: RoomTypeDailyRatesPanelProps) {
+export function RoomTypeDailyRatesPanel({ hotelId, hotelName, roomTypes = [], hotelStatus = 'ACTIVE' }: RoomTypeDailyRatesPanelProps) {
   const { message } = AntApp.useApp()
-  const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string>(
-    roomTypes[0]?.id ?? '',
-  )
-
-  // Default range: localRateDate()
-  const defaultDate = localRateDate()
-
-  const {
-    control,
-    setValue,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<SetRoomRatesFormValues>({
+  const [selectedId, setSelectedId] = useState(roomTypes[0]?.id ?? '')
+  const roomTypeId = roomTypes.some((room) => room.id === selectedId) ? selectedId : roomTypes[0]?.id ?? ''
+  const selectedRoom = roomTypes.find((room) => room.id === roomTypeId)
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
+  const [editingRate, setEditingRate] = useState<DailyRoomRate | null>(null)
+  const [singleAmount, setSingleAmount] = useState<number | null>(null)
+  const [singleError, setSingleError] = useState<string | null>(null)
+  const today = localRateDate()
+  const { control, setValue, clearErrors, handleSubmit, formState: { errors } } = useForm<SetRoomRatesFormValues>({
     resolver: zodResolver(setRoomRatesFormSchema),
-    defaultValues: {
-      startDate: defaultDate,
-      endDate: defaultDate,
-      amount: 0,
-    },
+    defaultValues: { startDate: today, endDate: rateRangeEnd(today, 7), amount: 0 },
   })
-
-  const startDate = useWatch({ control, name: 'startDate' }) ?? defaultDate
-  const endDate = useWatch({ control, name: 'endDate' }) ?? defaultDate
-  const [viewMode, setViewMode] = useState<RateViewMode>('grid')
-
-  // Modal chỉnh sửa 1 đêm lẻ
-  const [editingSingleRate, setEditingSingleRate] = useState<DailyRoomRate | null>(null)
-  const [singleNightAmount, setSingleNightAmount] = useState<number | null>(null)
-  const [isSavingSingle, setIsSavingSingle] = useState(false)
-
-  const activeRoomTypeId =
-    roomTypes.some((rt) => rt.id === selectedRoomTypeId)
-      ? selectedRoomTypeId
-      : (roomTypes[0]?.id ?? '')
-  const selectedRoomType = roomTypes.find((rt) => rt.id === activeRoomTypeId)
-  const canReadRates = hotelStatus !== 'LOCKED' && selectedRoomType?.isActive === true
-  const rateMutation = useSetRoomRatesMutation(hotelId, activeRoomTypeId)
+  const startDate = useWatch({ control, name: 'startDate' }) ?? today
+  const endDate = useWatch({ control, name: 'endDate' }) ?? today
   const validRange = roomRatesRangeSchema.safeParse({ startDate, endDate }).success
-  const nightsCount = calculateNights(startDate, endDate)
+  const canRead = hotelStatus !== 'LOCKED' && selectedRoom?.isActive === true
+  const ratesQuery = useRoomTypeDailyRatesQuery({ hotelId, roomTypeId, startDate, endDate }, canRead)
+  const mutation = useSetRoomRatesMutation(hotelId, roomTypeId)
+  const rates = ratesQuery.data ?? []
+  const canWrite = canRead && validRange && ratesQuery.isSuccess && !ratesQuery.isError && !ratesQuery.isFetching && !mutation.isPending
+  const baseCount = rates.filter((rate) => rate.source === 'BASE').length
+  const customCount = rates.filter((rate) => rate.source === 'RATE').length
+  const missingCount = rates.filter((rate) => rate.source === 'NONE').length
+  // Chỉ tổng hợp dữ liệu giá hiệu lực do Pricing trả về; không chọn giá hoặc tính tiền đặt phòng.
+  const amounts = rates.flatMap((rate) => rate.effectivePrice === null ? [] : [rate.effectivePrice])
+  const minPrice = amounts.length ? Math.min(...amounts) : null
+  const maxPrice = amounts.length ? Math.max(...amounts) : null
+  const periodDays = validRange ? dayjs(endDate).diff(dayjs(startDate), 'day') + 1 : 0
 
-  const ratesQuery = useRoomTypeDailyRatesQuery(
-    {
-      hotelId,
-      roomTypeId: activeRoomTypeId,
-      startDate,
-      endDate,
-    },
-    canReadRates,
-  )
-
-  // Phát hiện các hạng phòng bị trùng tên để hiển thị phân biệt
-  const duplicateNameCount = useMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const rt of roomTypes) {
-      counts[rt.name] = (counts[rt.name] ?? 0) + 1
-    }
-    return counts
-  }, [roomTypes])
-
-  function applyPresetRange(startIso: string, days: number) {
-    const start = new Date(`${startIso}T00:00:00Z`)
-    const end = new Date(start)
-    end.setUTCDate(start.getUTCDate() + (days - 1))
-    setValue('startDate', start.toISOString().slice(0, 10))
-    setValue('endDate', end.toISOString().slice(0, 10))
+  function changeRange(start: string, end: string) {
+    setValue('startDate', start)
+    setValue('endDate', end)
+    clearErrors()
+    setEditingRate(null)
   }
 
-  // Mở modal sửa 1 đêm lẻ
-  const handleOpenSingleNightEdit = (rate: DailyRoomRate) => {
-    setEditingSingleRate(rate)
-    setSingleNightAmount(rate.amount ?? (selectedRoomType?.basePrice || 0))
+  function openDay(rate: DailyRoomRate) {
+    if (!canWrite || rate.rateDate < localRateDate()) return
+    setEditingRate(rate)
+    setSingleAmount(rate.effectivePrice)
+    setSingleError(null)
   }
 
-  // Lưu giá cho 1 đêm lẻ
-  const handleSaveSingleNight = async () => {
-    if (!editingSingleRate) return
-    if (!singleNightAmount || singleNightAmount <= 0) {
-      void message.error('Vui lòng nhập mức giá phòng lớn hơn 0.')
+  async function saveSingleDay() {
+    if (!editingRate || !canWrite) return
+    if (editingRate.rateDate < localRateDate()) {
+      setSingleError('Không thể sửa giá cho ngày trong quá khứ.')
       return
     }
-
+    if (singleAmount === null || !Number.isSafeInteger(singleAmount) || singleAmount <= 0) {
+      setSingleError('Nhập giá nguyên dương hợp lệ bằng VND.')
+      return
+    }
     try {
-      setIsSavingSingle(true)
-      await rateMutation.mutateAsync({
-        startDate: editingSingleRate.rateDate,
-        amount: singleNightAmount,
-      })
-      void message.success(
-        `Đã lưu giá đêm ${formatDisplayDate(editingSingleRate.rateDate)} thành công!`,
-      )
-      setEditingSingleRate(null)
-      void ratesQuery.refetch()
+      setSingleError(null)
+      await mutation.mutateAsync({ startDate: editingRate.rateDate, amount: singleAmount })
+      message.success(`Đã lưu giá riêng ngày ${displayDate(editingRate.rateDate)}.`)
+      setEditingRate(null)
     } catch (error) {
-      void message.error(errorMessage(error))
-    } finally {
-      setIsSavingSingle(false)
+      setSingleError(errorMessage(error))
     }
   }
 
-  if (roomTypes.length === 0) {
-    return (
-      <div className="bg-white p-8 rounded-2xl border border-[#dce7e3] text-center shadow-xs">
-        <EmptyState
-          title="Khách sạn chưa có hạng phòng nào"
-          description="Cần khởi tạo ít nhất 1 hạng phòng trước khi tra cứu và thiết lập biểu giá theo ngày."
-          action={
-            <Button
-              type="primary"
-              className="!bg-[#0b5f53] hover:!bg-[#08473e] !rounded-xl font-semibold mt-3"
-              onClick={() => {
-                if (typeof window !== 'undefined') {
-                  window.location.href = `/hotels/${hotelId}/rooms`
-                }
-              }}
-            >
-              Đến trang quản lý phòng
-            </Button>
-          }
-        />
+  if (!roomTypes.length) return <section className="rounded-2xl border border-[#dce7e3] bg-white p-6">
+    <EmptyState title="Chưa có hạng phòng" description="Tạo hạng phòng và thiết lập giá cơ bản trước khi quản lý giá theo ngày."
+      action={<Button href={`/hotels/${hotelId}/rooms/new?tab=room-type`}>Tạo hạng phòng</Button>} />
+  </section>
+
+  return <section className="hotel-pricing-panel min-w-0 rounded-2xl border border-[#dce7e3] bg-white text-[#12211d]" aria-labelledby="daily-rates-title">
+    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#dce7e3] px-4 py-4 sm:px-6">
+      <div>
+        <h2 id="daily-rates-title" className="m-0 !text-lg font-semibold">{hotelName ?? 'Lịch giá hạng phòng'}</h2>
+        <p className="m-0 mt-1 text-sm text-[#5f736e]">Giá cơ bản và giá riêng theo ngày.</p>
       </div>
-    )
-  }
+      <Button icon={<ReloadOutlined />} onClick={() => void ratesQuery.refetch()} loading={ratesQuery.isFetching}
+        disabled={!canRead || !validRange || mutation.isPending}>Làm mới</Button>
+    </header>
 
-  const rates = ratesQuery.data ?? []
-  const currency = rates[0]?.currency ?? 'VND'
-  const knownAmounts = rates.flatMap((rate) =>
-    rate.amount === null ? [] : [rate.amount],
-  )
-  const minAmount = knownAmounts.length > 0 ? Math.min(...knownAmounts) : null
-  const maxAmount = knownAmounts.length > 0 ? Math.max(...knownAmounts) : null
-  const configuredCount = rates.filter((r) => r.hasRate && r.amount !== null).length
-  const todayIso = localRateDate()
-
-  return (
-    <section
-      className="bg-white rounded-2xl border border-[#dce7e3] p-6 shadow-xs space-y-6"
-      aria-labelledby="daily-rates-title"
-    >
-      {/* 1. Header tinh gọn của bảng giá */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#dce7e3]">
-        <div>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#0b5f53]">
-            BIỂU GIÁ PHÒNG THEO NGÀY
-          </span>
-          <h2
-            id="daily-rates-title"
-            className="text-xl sm:text-2xl font-bold text-[#12211d] mt-0.5 mb-1"
-          >
-            {hotelName ? hotelName : 'Chi tiết giá phòng theo đêm'}
-          </h2>
-          <p className="text-xs text-[#5f736e] m-0">
-            Xem lịch giá từng đêm, chỉnh sửa linh hoạt cho 1 đêm lẻ hoặc thiết lập đồng loạt cho cả khoảng thời gian.
-          </p>
+    <div className="space-y-5 p-4 sm:p-6">
+      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="min-w-0">
+          <label htmlFor="pricing-room-type" className="mb-2 block text-sm font-medium">Hạng phòng</label>
+          <Select id="pricing-room-type" aria-label="Hạng phòng" className="w-full" value={roomTypeId}
+            disabled={mutation.isPending}
+            onChange={(value) => { setSelectedId(value); setEditingRate(null); setValue('amount', 0); clearErrors() }}
+            options={roomTypes.map((room) => ({ value: room.id, label: `${room.name}${roomTypes.filter((other) => other.name === room.name).length > 1 ? ` · …${room.id.slice(-4)}` : ''}${room.isActive ? '' : ' · Tạm ngưng'}` }))} />
+          <p className="mb-0 mt-2 text-xs text-[#5f736e]">Tối đa {selectedRoom?.maxAdults} người lớn · {selectedRoom?.maxChildren ?? 0} trẻ em</p>
         </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <Segmented<RateViewMode>
-            value={viewMode}
-            onChange={setViewMode}
-            aria-label="Chọn kiểu hiển thị bảng giá"
-            options={[
-              {
-                value: 'grid',
-                label: 'Lưới lịch',
-                icon: <AppstoreOutlined aria-hidden="true" />,
-              },
-              {
-                value: 'table',
-                label: 'Bảng đối chiếu',
-                icon: <TableOutlined aria-hidden="true" />,
-              },
-            ]}
-          />
-          <Tooltip title="Tải lại dữ liệu giá">
-            <Button
-              icon={<ReloadOutlined aria-hidden="true" />}
-              onClick={() => void ratesQuery.refetch()}
-              loading={ratesQuery.isFetching}
-              disabled={!canReadRates || !validRange}
-            >
-              Làm mới
-            </Button>
-          </Tooltip>
+        <div className="min-w-0 rounded-xl bg-[#f4f8f7] p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-sm font-medium">Giá cơ bản / phòng / đêm</span>
+            <Button type="link" href={`/hotels/${hotelId}/rooms`} className="!p-0">Sửa hạng phòng</Button>
+          </div>
+          <div className="mt-1 break-words text-xl font-semibold tabular-nums">
+            {(selectedRoom?.basePrice ?? 0) > 0 ? money(selectedRoom!.basePrice!) : 'Chưa có giá cơ bản'}
+          </div>
+          <p className="mb-0 mt-1 text-xs leading-relaxed text-[#5f736e]">Ngày chưa có giá riêng sẽ dùng giá cơ bản. Giá riêng thay thế giá cơ bản của ngày đó.</p>
         </div>
       </div>
 
-      {/* 2. Bộ chọn Hạng phòng (Phân biệt rõ ràng nếu trùng tên) */}
-      <div className="space-y-2">
-        <div className="text-xs font-semibold uppercase tracking-wider text-[#5f736e]">
-          Chọn loại phòng:
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0 w-full sm:w-auto">
+          <label htmlFor="pricing-date-range" className="mb-2 block text-sm font-medium">Khoảng ngày hiển thị</label>
+          <DatePicker.RangePicker id={{ start: 'pricing-date-range', end: 'pricing-date-range-end' }}
+            value={[dayjs(startDate), dayjs(endDate)]} format="DD/MM/YYYY" allowClear={false}
+            disabled={mutation.isPending} className="w-full sm:w-auto"
+            onChange={(dates) => { if (dates?.[0] && dates[1]) changeRange(dates[0].format('YYYY-MM-DD'), dates[1].format('YYYY-MM-DD')) }} />
         </div>
-        <div
-          className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin"
-          role="tablist"
-          aria-label="Chọn hạng phòng"
-        >
-          {roomTypes.map((rt) => {
-            const isCurrent = rt.id === activeRoomTypeId
-            const isDuplicate = (duplicateNameCount[rt.name] ?? 0) > 1
+        <div className="flex flex-wrap items-center gap-2" aria-label="Chu kỳ hiển thị">
+          {[7, 14, 30].map((days) => <Button key={days} aria-pressed={periodDays === days}
+            type={periodDays === days ? 'primary' : 'default'} disabled={mutation.isPending}
+            onClick={() => changeRange(startDate, rateRangeEnd(startDate, days))}>{days} ngày</Button>)}
+        </div>
+      </div>
 
-            return (
-              <button
-                key={rt.id}
-                type="button"
-                role="tab"
-                aria-selected={isCurrent}
-                onClick={() => setSelectedRoomTypeId(rt.id)}
-                className={`flex flex-col items-start px-4 py-2.5 rounded-xl border text-left transition-all shrink-0 cursor-pointer ${
-                  isCurrent
-                    ? 'border-[#0b5f53] bg-[#f0fdf9] text-[#0b5f53] shadow-xs'
-                    : 'border-[#dce7e3] bg-white text-[#12211d] hover:border-[#83b0a7] hover:bg-[#fafdfc]'
-                }`}
-              >
-                <div className="flex items-center gap-1.5 w-full">
-                  <span className="font-bold text-sm leading-tight">{rt.name}</span>
-                  {isDuplicate && (
-                    <Tag className="!text-[10px] !px-1 !py-0 !m-0 !rounded-md bg-gray-100 text-gray-600 border-gray-300">
-                      Mã: ...{rt.id.slice(-4)}
-                    </Tag>
-                  )}
-                  {isCurrent && (
-                    <CheckCircleOutlined className="text-[#0b5f53] text-xs ml-auto" />
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 mt-1 text-[11px] text-[#5f736e]">
-                  <span>
-                    Tối đa {rt.maxAdults} người lớn
-                    {(rt.maxChildren ?? 0) > 0 && ` · ${rt.maxChildren} trẻ`}
-                  </span>
-                  {!rt.isActive && (
-                    <Tag color="default" className="!text-[10px] !px-1 !py-0 !m-0">
-                      Tạm ngưng
-                    </Tag>
-                  )}
-                </div>
+      {!canRead ? <Alert type="info" showIcon title={hotelStatus === 'LOCKED' ? 'Khách sạn đang bị khóa' : 'Hạng phòng đã tạm ngưng mở bán'}
+        description="Kiểm tra trạng thái trước khi quản lý giá theo ngày." />
+        : !validRange ? <Alert type="warning" showIcon title="Chọn khoảng ngày hợp lệ, tối đa 90 ngày để xem lịch giá." />
+        : ratesQuery.isPending ? <PageLoading />
+        : ratesQuery.isError ? <div role="alert">
+          <Alert type="error" showIcon title="Không thể tải lịch giá" description={errorMessage(ratesQuery.error)} />
+          <Button className="mt-3" onClick={() => void ratesQuery.refetch()} loading={ratesQuery.isFetching}>Thử lại</Button>
+        </div>
+        : <>
+          <dl className="m-0 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-[#dce7e3] py-4 lg:grid-cols-5" aria-label="Tóm tắt cấu hình giá">
+            {[
+              ['Dùng giá cơ bản', `${baseCount} ngày`], ['Có giá riêng', `${customCount} ngày`],
+              ['Thiếu giá hợp lệ', `${missingCount} ngày`], ['Giá thấp nhất', money(minPrice)], ['Giá cao nhất', money(maxPrice)],
+            ].map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs text-[#5f736e]">{label}</dt>
+              <dd className="m-0 mt-1 break-words text-base font-semibold tabular-nums">{value}</dd></div>)}
+          </dl>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="m-0 text-sm text-[#5f736e]">Chọn ngày để chỉnh giá riêng.</p>
+            <Segmented value={viewMode} onChange={(value) => setViewMode(value as 'grid' | 'table')} aria-label="Kiểu hiển thị lịch giá"
+              options={[{ value: 'grid', label: 'Lưới lịch', icon: <AppstoreOutlined /> }, { value: 'table', label: 'Bảng giá', icon: <TableOutlined /> }]} />
+          </div>
+          {viewMode === 'grid' ? <div className="grid grid-cols-[repeat(auto-fit,minmax(136px,1fr))] gap-3" aria-label="Lưới giá theo ngày" aria-busy={ratesQuery.isFetching}>
+            {rates.map((rate) => {
+              const past = rate.rateDate < today
+              const weekday = dayjs(rate.rateDate).day()
+              const weekend = weekday === 0 || weekday === 6
+              return <button type="button" key={rate.rateDate} onClick={() => openDay(rate)} disabled={past || !canWrite}
+                aria-label={`${displayDate(rate.rateDate)}: ${rate.effectivePrice === null ? sourceLabels.NONE : money(rate.effectivePrice)}, ${sourceLabels[rate.source]}${past ? ', chỉ xem' : ''}`}
+                className={`flex min-w-0 flex-col items-start rounded-xl border p-3 text-left transition-colors disabled:cursor-default ${rate.source === 'RATE' ? 'border-[#8dbdb5] bg-[#f0f8f6]' : 'border-[#dce7e3] bg-white'} ${!past && canWrite ? 'cursor-pointer hover:bg-[#edf5f2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b5f53]' : ''}`}>
+                <span className={`text-sm font-medium ${weekend ? 'text-[#8a5a00]' : 'text-[#344a44]'}`}>
+                  {['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'][weekday]}
+                </span>
+                <span className="mt-1 text-xs text-[#5f736e]">{dayjs(rate.rateDate).format('DD/MM')}{rate.rateDate === today ? ' · Hôm nay' : ''}</span>
+                <span className="my-3 w-full break-words text-base font-semibold tabular-nums">{money(rate.effectivePrice)}</span>
+                <PriceSourceTag source={rate.source} />
+                <span className="mt-3 inline-flex items-center gap-1 text-xs text-[#0b5f53]">
+                  {!past && <EditOutlined />}{past ? 'Chỉ xem' : 'Chỉnh giá riêng'}
+                </span>
               </button>
-            )
-          })}
+            })}
+          </div> : <Table<DailyRoomRate> rowKey="rateDate" size="middle" dataSource={rates} scroll={{ x: 620 }}
+            pagination={{ pageSize: 14, showSizeChanger: false, hideOnSinglePage: true }} columns={[
+              { title: 'Ngày', dataIndex: 'rateDate', render: (value: string) => displayDate(value) },
+              { title: 'Giá áp dụng', dataIndex: 'effectivePrice', render: (value: number | null) => money(value) },
+              { title: 'Nguồn giá', dataIndex: 'source', render: (source: DailyRoomRate['source']) => <PriceSourceTag source={source} /> },
+              { title: 'Thao tác', key: 'action', render: (_, rate) => rate.rateDate < today ? 'Chỉ xem' : <Button size="small" disabled={!canWrite} onClick={() => openDay(rate)}>Chỉnh giá riêng</Button> },
+            ]} />}
+        </>}
+
+      <form className="border-t border-[#dce7e3] pt-5" onSubmit={handleSubmit(async (values) => {
+        if (!canWrite || values.startDate < localRateDate()) return
+        try {
+          await mutation.mutateAsync(values)
+          message.success(`Đã đặt giá riêng cho ${periodDays} ngày.`)
+        } catch (error) { message.error(errorMessage(error)) }
+      })}>
+        <h3 className="m-0 text-sm font-semibold">Đặt giá riêng cho khoảng ngày</h3>
+        <p className="mb-3 mt-1 text-xs leading-relaxed text-[#5f736e]">Ghi đè giá riêng từ {displayDate(startDate)} đến {displayDate(endDate)}. Không thay đổi giá cơ bản.</p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <Form.Item className="!mb-0 sm:w-64" label="Giá riêng mỗi đêm (VND)" htmlFor="bulk-night-price" layout="vertical"
+            validateStatus={errors.amount ? 'error' : undefined} help={errors.amount?.message}>
+            <Controller name="amount" control={control} render={({ field }) => <InputNumber controls={false} keyboard={false} changeOnWheel={false} inputMode="numeric" id="bulk-night-price" className="!w-full"
+              min={1} max={Number.MAX_SAFE_INTEGER} precision={0} value={field.value || null} onChange={(value) => field.onChange(value ?? 0)}
+              placeholder="Nhập số tiền" disabled={!canWrite} />} />
+          </Form.Item>
+          <Button type="primary" htmlType="submit" loading={mutation.isPending} disabled={!canWrite || startDate < today}>
+            Áp dụng {periodDays} ngày
+          </Button>
         </div>
-      </div>
+        {startDate < today && <p className="mb-0 mt-2 text-xs text-[#8a5a00]">Ngày quá khứ chỉ được xem. Chọn khoảng từ hôm nay để đặt giá riêng.</p>}
+      </form>
+    </div>
 
-      {/* 3. Dải tóm tắt thông tin hạng phòng đang chọn */}
-      {selectedRoomType && (
-        <div className="bg-[#f7fbfa] p-3.5 rounded-xl border border-[#dce7e3] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
-          <div className="flex items-center gap-2 text-[#344a44]">
-            <InfoCircleOutlined className="text-[#0b5f53] shrink-0" />
-            <span>
-              {selectedRoomType.description ||
-                `Hạng phòng "${selectedRoomType.name}".`}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {selectedRoomType.basePrice !== undefined && selectedRoomType.basePrice > 0 && (
-              <span className="text-[#5f736e]">
-                Giá cơ bản:{' '}
-                <strong className="text-[#12211d]">
-                  {formatCurrencyAmount(selectedRoomType.basePrice, 'VND')}
-                </strong>
-                /đêm
-              </span>
-            )}
-            <Tag color={selectedRoomType.isActive ? 'green' : 'default'} className="!m-0">
-              {selectedRoomType.isActive ? 'Đang mở bán' : 'Tạm ngưng bán'}
-            </Tag>
-          </div>
-        </div>
-      )}
-
-      {/* 4. Toolbar Khoảng ngày & Form thiết lập giá hàng loạt */}
-      <div className="bg-[#fafdfc] p-4 rounded-xl border border-[#dce7e3] space-y-4">
-        {/* Hàng 1: Chọn khoảng ngày & xem nhanh */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#e6f0ed]">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#12211d] whitespace-nowrap">
-              Khoảng ngày khảo sát:
-            </span>
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 w-full sm:w-auto">
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setValue('startDate', e.target.value)}
-                aria-label="Từ ngày"
-                className="flex-1 sm:w-36 min-w-[130px] !rounded-lg text-xs"
-              />
-              <span className="text-[#5f736e] font-semibold">→</span>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setValue('endDate', e.target.value)}
-                aria-label="Đến ngày"
-                className="flex-1 sm:w-36 min-w-[130px] !rounded-lg text-xs"
-              />
-            </div>
-            {nightsCount > 0 && (
-              <Tag color="cyan" className="!rounded-md text-xs !m-0">
-                {nightsCount} đêm
-              </Tag>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-[#5f736e] whitespace-nowrap">Xem nhanh:</span>
-            <Button
-              size="small"
-              onClick={() => applyPresetRange(localRateDate(), 7)}
-              className="!rounded-lg text-xs"
-            >
-              7 đêm
-            </Button>
-            <Button
-              size="small"
-              onClick={() => applyPresetRange(localRateDate(), 14)}
-              className="!rounded-lg text-xs"
-            >
-              14 đêm
-            </Button>
-            <Button
-              size="small"
-              onClick={() => applyPresetRange(localRateDate(), 30)}
-              className="!rounded-lg text-xs"
-            >
-              30 đêm
-            </Button>
-          </div>
-        </div>
-
-        {/* Hàng 2: Form áp dụng giá cho toàn bộ khoảng ngày (Batch apply) */}
-        <form
-          onSubmit={handleSubmit(async (values) => {
-            try {
-              await rateMutation.mutateAsync({
-                startDate: values.startDate,
-                endDate: values.endDate,
-                amount: values.amount,
-              })
-              void message.success(
-                `Đã áp dụng mức giá ${formatCurrencyAmount(values.amount, 'VND')} cho ${nightsCount} đêm thành công!`,
-              )
-              void ratesQuery.refetch()
-            } catch (error) {
-              void message.error(errorMessage(error))
-            }
-          })}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1">
-            <span className="text-xs font-semibold text-[#12211d] whitespace-nowrap">
-              Áp dụng một giá cho toàn bộ khoảng ngày:
-            </span>
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
-              <Controller
-                name="amount"
-                control={control}
-                render={({ field }) => (
-                  <InputNumber
-                    min={1}
-                    precision={0}
-                    value={field.value || null}
-                    onChange={(value) => field.onChange(value ?? 0)}
-                    aria-label="Giá mỗi đêm"
-                    placeholder="VD: 500,000"
-                    suffix="VND"
-                    className="w-full sm:w-48 !rounded-lg"
-                    disabled={!canReadRates || rateMutation.isPending}
-                  />
-                )}
-              />
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={rateMutation.isPending}
-                disabled={!canReadRates || !validRange || startDate < localRateDate()}
-                className="w-full sm:w-auto !bg-[#0b5f53] hover:!bg-[#08473e] !rounded-lg font-semibold"
-              >
-                Lưu giá
-              </Button>
-            </div>
-          </div>
-
-          <div className="text-[11px] text-[#5f736e]">
-            * Hoặc click trực tiếp vào từng ô ngày bên dưới để chỉnh giá riêng cho 1 đêm.
-          </div>
-        </form>
-
-        {errors.amount && (
-          <p role="alert" className="text-xs text-red-500 m-0">
-            {errors.amount.message}
-          </p>
-        )}
-      </div>
-
-      {/* 5. Vùng hiển thị dữ liệu giá */}
-      {!canReadRates ? (
-        <Alert
-          type="info"
-          showIcon
-          title="Khách sạn bị khóa hoặc hạng phòng đã ngừng bán. Vui lòng kiểm tra trạng thái trước khi quản lý giá."
-        />
-      ) : !validRange ? (
-        <Alert
-          type="warning"
-          showIcon
-          title="Chọn khoảng ngày hợp lệ, tối đa 90 ngày để xem bảng giá."
-        />
-      ) : ratesQuery.isPending ? (
-        <PageLoading />
-      ) : ratesQuery.isError ? (
-        <ErrorState
-          error={ratesQuery.error}
-          retrying={ratesQuery.isFetching}
-          onRetry={() => void ratesQuery.refetch()}
-        />
-      ) : rates.length === 0 ? (
-        <EmptyState
-          title="Không có dữ liệu giá trong khoảng ngày đã chọn"
-          description="Vui lòng chọn khoảng thời gian khác hoặc kiểm tra lại cấu hình giá phòng."
-        />
-      ) : (
-        <>
-          {/* Dải số liệu KPI tổng quan tinh gọn, đúng bản chất dữ liệu */}
-          <div
-            className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#f7fbfa] p-3.5 rounded-xl border border-[#dce7e3]"
-            role="region"
-            aria-label="Tổng quan khoảng giá"
-          >
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-[#5f736e]">
-                Chu kỳ theo dõi
-              </div>
-              <div className="text-base font-bold text-[#12211d] mt-0.5">
-                {rates.length} đêm
-              </div>
-            </div>
-
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-[#5f736e]">
-                Đã đặt giá
-              </div>
-              <div className="text-base font-bold text-[#0b5f53] mt-0.5">
-                {configuredCount} / {rates.length} đêm
-              </div>
-            </div>
-
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-[#5f736e]">
-                Mức giá thấp nhất
-              </div>
-              <div className="text-base font-bold text-[#12211d] mt-0.5">
-                {minAmount !== null ? formatCurrencyAmount(minAmount, currency) : '—'}
-              </div>
-            </div>
-
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-[#5f736e]">
-                Mức giá cao nhất
-              </div>
-              <div className="text-base font-bold text-[#12211d] mt-0.5">
-                {maxAmount !== null ? formatCurrencyAmount(maxAmount, currency) : '—'}
-              </div>
-            </div>
-          </div>
-
-          {/* Dạng 1: Lưới lịch ngày trực quan */}
-          {viewMode === 'grid' ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-[#5f736e]">
-                <span>Nhấn vào từng ô ngày để chỉnh sửa mức giá cho riêng đêm đó:</span>
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
-                    Hôm nay
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
-                    Cuối tuần
-                  </span>
-                </div>
-              </div>
-
-              <div
-                className={`grid gap-2.5 ${
-                  rates.length <= 4
-                    ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4 max-w-3xl'
-                    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7'
-                }`}
-                role="list"
-                aria-label="Lưới lịch giá từng ngày"
-              >
-                {rates.map((rate) => {
-                  const weekday = getWeekdayName(rate.rateDate)
-                  const isWeekend = isWeekendDate(rate.rateDate)
-                  const isToday = rate.rateDate === todayIso
-                  const isSelected = editingSingleRate?.rateDate === rate.rateDate
-
-                  return (
-                    <article
-                      key={`${rate.roomTypeId}-${rate.rateDate}`}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => handleOpenSingleNightEdit(rate)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          handleOpenSingleNightEdit(rate)
-                        }
-                      }}
-                      aria-label={`Giá đêm ${formatDisplayDate(rate.rateDate)}: ${
-                        rate.amount !== null ? formatCurrencyAmount(rate.amount, rate.currency) : 'Chưa đặt giá'
-                      }`}
-                      className={`group relative rounded-xl p-3 border text-left transition-all cursor-pointer select-none ${
-                        isSelected
-                          ? 'border-2 border-[#0b5f53] bg-[#f0fdf9] shadow-md ring-2 ring-[#0b5f53]/20'
-                          : isToday
-                          ? 'border-blue-400 bg-blue-50/20 hover:border-[#0b5f53] hover:shadow-sm'
-                          : isWeekend
-                          ? 'border-amber-200 bg-amber-50/25 hover:border-[#0b5f53] hover:shadow-sm'
-                          : 'border-[#dce7e3] bg-white hover:border-[#0b5f53] hover:shadow-sm'
-                      }`}
-                    >
-                      {/* Top: Weekday & Date */}
-                      <div className="flex items-center justify-between gap-1 mb-1.5">
-                        <span
-                          className={`text-xs font-bold leading-tight ${
-                            isWeekend ? 'text-amber-800' : 'text-[#12211d]'
-                          }`}
-                        >
-                          {weekday}
-                        </span>
-                        <span className="text-[11px] text-[#5f736e] font-mono">
-                          {formatDisplayDate(rate.rateDate)}
-                        </span>
-                      </div>
-
-                      {/* Badges: Hôm nay / Cuối tuần */}
-                      <div className="flex items-center gap-1 mb-2 min-h-[18px]">
-                        {isToday && (
-                          <Tag color="blue" className="!text-[10px] !px-1 !py-0 !m-0 !rounded">
-                            Hôm nay
-                          </Tag>
-                        )}
-                        {isWeekend && (
-                          <Tag color="gold" className="!text-[10px] !px-1 !py-0 !m-0 !rounded">
-                            Cuối tuần
-                          </Tag>
-                        )}
-                      </div>
-
-                      {/* Price */}
-                      <div className="my-1">
-                        {rate.amount !== null ? (
-                          <div className="text-base font-bold text-[#12211d] font-sans tracking-tight">
-                            {formatCurrencyAmount(rate.amount, rate.currency)}
-                          </div>
-                        ) : (
-                          <div className="text-xs text-amber-700 italic border border-dashed border-amber-300 rounded px-1.5 py-0.5 inline-block">
-                            Chưa đặt giá
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Action cue */}
-                      <div className="mt-2 pt-1.5 border-t border-gray-100 flex items-center justify-between text-[11px] text-[#0b5f53] font-medium opacity-70 group-hover:opacity-100 transition-opacity">
-                        <span className="flex items-center gap-1">
-                          <EditOutlined className="text-[10px]" /> Sửa giá
-                        </span>
-                      </div>
-                    </article>
-                  )
-                })}
-              </div>
-            </div>
-          ) : (
-            /* Dạng 2: Bảng đối chiếu chi tiết */
-            <div className="border border-[#dce7e3] rounded-xl overflow-hidden shadow-xs">
-              <Table<DailyRoomRate>
-                rowKey={(record) => `${record.roomTypeId}-${record.rateDate}`}
-                dataSource={rates}
-                pagination={{ pageSize: 14, showSizeChanger: false }}
-                columns={[
-                  {
-                    title: 'Ngày lưu trú',
-                    dataIndex: 'rateDate',
-                    key: 'rateDate',
-                    render: (value: string) => (
-                      <span className="font-semibold text-sm text-[#12211d]">
-                        <CalendarOutlined aria-hidden="true" className="mr-1.5 text-[#0b5f53]" />
-                        {formatDisplayDate(value)}
-                        {value === todayIso && (
-                          <Tag color="blue" className="ml-2 !text-[10px] !px-1.5 !py-0 !m-0">
-                            Hôm nay
-                          </Tag>
-                        )}
-                      </span>
-                    ),
-                  },
-                  {
-                    title: 'Thứ',
-                    key: 'weekday',
-                    render: (_, record) => {
-                      const weekday = getWeekdayName(record.rateDate)
-                      const weekend = isWeekendDate(record.rateDate)
-                      return (
-                        <Tag color={weekend ? 'gold' : 'default'} className="!rounded-md text-xs">
-                          {weekday}
-                        </Tag>
-                      )
-                    },
-                  },
-                  {
-                    title: 'Phân loại',
-                    key: 'category',
-                    render: (_, record) => {
-                      const weekend = isWeekendDate(record.rateDate)
-                      return (
-                        <span className="text-xs text-[#5f736e]">
-                          {weekend ? 'Cuối tuần' : 'Ngày trong tuần'}
-                        </span>
-                      )
-                    },
-                  },
-                  {
-                    title: 'Mức giá niêm yết',
-                    dataIndex: 'amount',
-                    key: 'amount',
-                    align: 'right',
-                    render: (amount: number | null, record) => (
-                      <span className="font-bold text-sm text-[#12211d]">
-                        {amount === null ? (
-                          <span className="text-xs text-amber-700 italic font-normal">
-                            Chưa đặt giá
-                          </span>
-                        ) : (
-                          formatCurrencyAmount(amount, record.currency)
-                        )}
-                      </span>
-                    ),
-                  },
-                  {
-                    title: 'Thao tác',
-                    key: 'action',
-                    align: 'center',
-                    render: (_, record) => (
-                      <Button
-                        size="small"
-                        icon={<EditOutlined />}
-                        onClick={() => handleOpenSingleNightEdit(record)}
-                        className="text-xs"
-                      >
-                        Sửa giá
-                      </Button>
-                    ),
-                  },
-                ]}
-              />
-            </div>
-          )}
-        </>
-      )}
-
-      {/* 6. Modal Chỉnh sửa giá cho 1 đêm lẻ */}
-      <Modal
-        title={
-          editingSingleRate
-            ? `Chỉnh sửa giá đêm ${formatDisplayDate(editingSingleRate.rateDate)} (${getWeekdayName(
-                editingSingleRate.rateDate,
-              )})`
-            : 'Chỉnh sửa giá đêm'
-        }
-        open={Boolean(editingSingleRate)}
-        onCancel={() => setEditingSingleRate(null)}
-        onOk={handleSaveSingleNight}
-        confirmLoading={isSavingSingle}
-        okText="Lưu giá"
-        cancelText="Hủy"
-        okButtonProps={{ className: '!bg-[#0b5f53]' }}
-      >
-        {editingSingleRate && (
-          <div className="space-y-4 pt-2">
-            <div className="bg-[#f7fbfa] p-3 rounded-xl border border-[#dce7e3] text-xs space-y-1.5">
-              <div>
-                <span className="text-[#5f736e]">Hạng phòng:</span>{' '}
-                <strong className="text-[#12211d]">{selectedRoomType?.name}</strong>
-              </div>
-              <div>
-                <span className="text-[#5f736e]">Ngày lưu trú:</span>{' '}
-                <strong className="text-[#12211d]">
-                  {formatDisplayDate(editingSingleRate.rateDate)} ({getWeekdayName(editingSingleRate.rateDate)})
-                </strong>
-              </div>
-              <div>
-                <span className="text-[#5f736e]">Giá đang áp dụng:</span>{' '}
-                <strong className="text-[#12211d]">
-                  {editingSingleRate.amount !== null
-                    ? formatCurrencyAmount(editingSingleRate.amount, editingSingleRate.currency)
-                    : 'Chưa đặt giá (áp dụng giá mặc định)'}
-                </strong>
-              </div>
-            </div>
-
-            <Form layout="vertical">
-              <Form.Item
-                label="Mức giá mới cho đêm này (VND)"
-                required
-                help="Giá này chỉ áp dụng riêng cho đêm đã chọn, không thay đổi các đêm khác."
-              >
-                <InputNumber
-                  min={1}
-                  precision={0}
-                  value={singleNightAmount}
-                  onChange={(val) => setSingleNightAmount(val)}
-                  suffix="VND"
-                  className="w-full !rounded-lg"
-                  placeholder="Nhập giá phòng"
-                  autoFocus
-                />
-              </Form.Item>
-            </Form>
-          </div>
-        )}
-      </Modal>
-    </section>
-  )
+    <Modal title={editingRate ? `Đặt giá riêng · ${displayDate(editingRate.rateDate)}` : 'Đặt giá riêng'} open={editingRate !== null}
+      onCancel={() => { if (!mutation.isPending) setEditingRate(null) }} onOk={() => void saveSingleDay()}
+      okText="Lưu giá riêng" cancelText="Hủy" confirmLoading={mutation.isPending} closable={!mutation.isPending}
+      mask={{ closable: !mutation.isPending }} cancelButtonProps={{ disabled: mutation.isPending }}
+      okButtonProps={{ disabled: !canWrite || singleAmount === null || !Number.isSafeInteger(singleAmount) || singleAmount <= 0 }}>
+      <p className="mb-4 text-sm text-[#5f736e]">{selectedRoom?.name}</p>
+      <dl className="mb-5 grid grid-cols-2 gap-3 rounded-xl bg-[#f4f8f7] p-3 text-sm">
+        <div><dt className="text-xs text-[#5f736e]">Giá cơ bản</dt><dd className="m-0 mt-1 font-medium">{(selectedRoom?.basePrice ?? 0) > 0 ? money(selectedRoom!.basePrice!) : 'Chưa thiết lập'}</dd></div>
+        <div><dt className="text-xs text-[#5f736e]">Giá đang áp dụng</dt><dd className="m-0 mt-1 font-medium">{editingRate ? money(editingRate.effectivePrice) : '—'}{editingRate && <div className="mt-1"><PriceSourceTag source={editingRate.source} /></div>}</dd></div>
+      </dl>
+      <Form.Item label="Giá riêng mới (VND / phòng / đêm)" htmlFor="single-night-price" layout="vertical"
+        validateStatus={singleError ? 'error' : undefined} help={singleError}>
+        <InputNumber controls={false} keyboard={false} changeOnWheel={false} inputMode="numeric" id="single-night-price" className="!w-full" min={1} max={Number.MAX_SAFE_INTEGER} precision={0}
+          value={singleAmount} onChange={(value) => { setSingleAmount(value); setSingleError(null) }} disabled={mutation.isPending} placeholder="Nhập số tiền" />
+      </Form.Item>
+      <p className="mb-0 text-xs leading-relaxed text-[#5f736e]">Chỉ thay đổi ngày được chọn. Giá cơ bản và các ngày khác giữ nguyên.</p>
+    </Modal>
+  </section>
 }

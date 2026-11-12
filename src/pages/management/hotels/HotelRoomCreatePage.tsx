@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import '@/shared/styles/management-pricing.css'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,16 +10,17 @@ import {
   Form,
   Input,
   InputNumber,
-  Radio,
+  Segmented,
   Select,
   Switch,
   message,
 } from 'antd'
 import { useNavigate, useSearchParams } from 'react-router'
-import { ArrowLeftOutlined, BuildOutlined, AppstoreAddOutlined, SaveOutlined, ReloadOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, BuildOutlined, AppstoreAddOutlined, SaveOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useHotelWorkspace } from '@/features/hotels'
 import { PageHeader } from '@/shared/ui/PageHeader'
+import { formatCurrencyAmount } from '@/shared/lib/format'
 import {
   useManagementRoomMutations,
   useManagementRoomTypesQuery,
@@ -44,6 +46,7 @@ const createRoomTypeSchema = z.object({
   maxChildren: z.number({ message: 'Vui lòng nhập số trẻ em' }).int().min(0, 'Số trẻ em không được âm').max(32767, 'Vượt quá giới hạn cho phép'),
   basePrice: z
     .number()
+    .int('Giá cơ bản phải là số nguyên')
     .min(0, 'Giá cơ bản không được âm')
     .max(Number.MAX_SAFE_INTEGER, 'Giá quá lớn')
     .nullable()
@@ -98,6 +101,8 @@ export function HotelRoomCreatePage() {
   const watchedAdults = useWatch({ control: roomTypeForm.control, name: 'maxAdults' }) ?? 2
   const watchedChildren = useWatch({ control: roomTypeForm.control, name: 'maxChildren' }) ?? 0
   const totalOccupancy = watchedAdults + watchedChildren
+  const watchedBasePrice = useWatch({ control: roomTypeForm.control, name: 'basePrice' })
+  const watchedActive = useWatch({ control: roomTypeForm.control, name: 'active' })
 
   // Tự động gán roomTypeId mặc định cho form phòng vật lý khi danh sách loại phòng tải xong
   useEffect(() => {
@@ -109,10 +114,8 @@ export function HotelRoomCreatePage() {
   if (!hotel) return null
 
   const breadcrumbItems = [
-    { label: 'Khách sạn', to: '/hotels' },
-    { label: hotel.name, to: `/hotels/${hotelId}` },
     { label: 'Phòng', to: `/hotels/${hotelId}/rooms` },
-    { label: activeTab === 'room' ? 'Thêm phòng vật lý mới' : 'Thêm loại phòng mới' },
+    { label: activeTab === 'room' ? 'Thêm phòng vật lý' : 'Tạo hạng phòng' },
   ]
 
   // Submit tạo phòng vật lý
@@ -158,6 +161,8 @@ export function HotelRoomCreatePage() {
 
       // BƯỚC 2: Gọi PATCH cấu hình bổ sung (sức chứa tổng đã duyệt, trạng thái mở bán, giá cơ bản nếu có)
       const patchPayload: UpdateRoomTypePayload = {
+        name: values.name.trim(),
+        description: values.description?.trim() || undefined,
         maxAdults: values.maxAdults,
         maxChildren: values.maxChildren,
         maxOccupancy: totalOccupancy,
@@ -193,7 +198,7 @@ export function HotelRoomCreatePage() {
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         kicker="QUẢN LÝ PHÒNG &amp; HẠNG PHÒNG"
-        title={activeTab === 'room' ? 'Thêm số phòng vật lý mới' : 'Thêm hạng / loại phòng mới'}
+        title={activeTab === 'room' ? 'Thêm phòng vật lý' : 'Tạo hạng phòng'}
         description={
           activeTab === 'room'
             ? 'Khởi tạo các số phòng thực tế (ví dụ: 101, 102...) và gán vào một hạng phòng đã có trong khách sạn.'
@@ -210,28 +215,14 @@ export function HotelRoomCreatePage() {
         }
       />
 
-      {/* Switcher Tab: Phòng vật lý vs Loại phòng */}
-      <div className="bg-white p-3 rounded-2xl border border-[#dce7e3] shadow-xs flex items-center justify-between">
-        <Radio.Group
-          value={activeTab}
-          onChange={(e) => {
-            setActiveTab(e.target.value)
-            setSearchParams({ tab: e.target.value })
-          }}
-          buttonStyle="solid"
-          size="middle"
-        >
-          <Radio.Button value="room" className="!rounded-l-lg">
-            <BuildOutlined className="mr-1.5" /> Thêm phòng vật lý
-          </Radio.Button>
-          <Radio.Button value="room-type" className="!rounded-r-lg">
-            <AppstoreAddOutlined className="mr-1.5" /> Thêm loại phòng mới
-          </Radio.Button>
-        </Radio.Group>
+      <div className="max-w-md">
+        <Segmented block value={activeTab} disabled={isSubmittingRoomType || roomForm.formState.isSubmitting}
+          onChange={(value) => { setActiveTab(value as 'room' | 'room-type'); setSearchParams({ tab: value }) }}
+          options={[{ label: 'Phòng vật lý', value: 'room', icon: <BuildOutlined /> }, { label: 'Hạng phòng', value: 'room-type', icon: <AppstoreAddOutlined /> }]} />
       </div>
 
       {activeTab === 'room' ? (
-        <div className="bg-white p-6 rounded-2xl border border-[#dce7e3] shadow-xs">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#dce7e3]">
           {roomTypes.length === 0 ? (
             <div className="py-8 text-center bg-[#f7fbfa] rounded-xl border border-dashed border-[#dce7e3]">
               <p className="text-sm font-semibold text-[#12211d] mb-1">
@@ -348,7 +339,7 @@ export function HotelRoomCreatePage() {
                 </Form.Item>
               </div>
 
-              <div className="pt-4 border-t border-[#dce7e3] flex justify-end gap-3">
+              <div className="pt-4 border-t border-[#dce7e3] flex flex-wrap justify-end gap-3">
                 <Button onClick={() => navigate(`/hotels/${hotelId}/rooms`)}>
                   Hủy
                 </Button>
@@ -367,22 +358,23 @@ export function HotelRoomCreatePage() {
           )}
         </div>
       ) : (
-        <div className="bg-white p-6 rounded-2xl border border-[#dce7e3] shadow-xs">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#dce7e3]">
           {roomTypeError && (
             <Alert
               type="error"
               showIcon
               closable
               onClose={() => setRoomTypeError(null)}
-              message="Thao tác chưa hoàn tất"
+              title="Hạng phòng chưa hoàn tất cấu hình"
               description={roomTypeError}
               className="mb-4"
             />
           )}
 
-          <Form layout="vertical" onFinish={roomTypeForm.handleSubmit(onSubmitRoomType)}>
+          <Form layout="vertical" onFinish={roomTypeForm.handleSubmit(onSubmitRoomType)} aria-busy={isSubmittingRoomType}>
+            <h2 className="mb-4 !text-base font-semibold text-[#12211d]">Thông tin & sức chứa</h2>
             <Form.Item
-              label="Tên loại phòng"
+              label="Tên hạng phòng" htmlFor="create-room-type-name"
               required
               validateStatus={roomTypeForm.formState.errors.name ? 'error' : undefined}
               help={roomTypeForm.formState.errors.name?.message}
@@ -393,7 +385,9 @@ export function HotelRoomCreatePage() {
                 render={({ field }) => (
                   <Input
                     {...field}
-                    placeholder="VD: Phòng Deluxe Hướng Biển, Phòng Suite Tổng Thống..."
+                    placeholder="Ví dụ: Deluxe hướng biển"
+                    id="create-room-type-name"
+                    aria-label="Tên hạng phòng"
                     maxLength={100}
                     disabled={isSubmittingRoomType}
                   />
@@ -403,7 +397,7 @@ export function HotelRoomCreatePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Form.Item
-                label="Số người lớn tối đa"
+                label="Số người lớn tối đa" htmlFor="create-room-type-adults"
                 required
                 validateStatus={roomTypeForm.formState.errors.maxAdults ? 'error' : undefined}
                 help={roomTypeForm.formState.errors.maxAdults?.message}
@@ -413,6 +407,7 @@ export function HotelRoomCreatePage() {
                   name="maxAdults"
                   render={({ field }) => (
                     <InputNumber
+                      id="create-room-type-adults"
                       min={1}
                       max={32767}
                       className="w-full"
@@ -425,7 +420,7 @@ export function HotelRoomCreatePage() {
               </Form.Item>
 
               <Form.Item
-                label="Số trẻ em tối đa"
+                label="Số trẻ em tối đa" htmlFor="create-room-type-children"
                 required
                 validateStatus={roomTypeForm.formState.errors.maxChildren ? 'error' : undefined}
                 help={roomTypeForm.formState.errors.maxChildren?.message}
@@ -435,6 +430,7 @@ export function HotelRoomCreatePage() {
                   name="maxChildren"
                   render={({ field }) => (
                     <InputNumber
+                      id="create-room-type-children"
                       min={0}
                       max={32767}
                       className="w-full"
@@ -448,17 +444,20 @@ export function HotelRoomCreatePage() {
             </div>
 
             {/* Dòng tóm tắt sức chứa tự động theo quy tắc đã được duyệt */}
-            <div className="mb-4 text-xs text-[#0b5f53] bg-[#f0f9f6] p-2.5 rounded-xl border border-[#cce3dc]">
+            <div className="mb-6 text-sm text-[#5f736e]">
               Tối đa <strong>{watchedAdults} người lớn</strong> và <strong>{watchedChildren} trẻ em</strong> (Sức chứa tổng: {totalOccupancy} khách)
             </div>
 
+            <div className="mb-5 border-t border-[#dce7e3] pt-5">
+              <h2 className="mb-1 !text-base font-semibold text-[#12211d]">Giá cơ bản & trạng thái</h2>
+              <p className="mb-4 text-sm leading-relaxed text-[#5f736e]">Giá cho một phòng mỗi đêm. Các ngày chưa đặt giá riêng sẽ dùng mức giá này.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Form.Item
-                label="Giá cơ bản mỗi đêm"
+                label="Giá cơ bản (VND / phòng / đêm)" htmlFor="create-room-type-base-price"
                 validateStatus={roomTypeForm.formState.errors.basePrice ? 'error' : undefined}
                 help={
                   roomTypeForm.formState.errors.basePrice?.message ??
-                  'Giá phòng mặc định mỗi đêm khi chưa thiết lập bảng giá theo ngày'
+                  'Bạn có thể chỉnh lại giá cơ bản sau khi tạo hạng phòng.'
                 }
               >
                 <Controller
@@ -466,12 +465,18 @@ export function HotelRoomCreatePage() {
                   name="basePrice"
                   render={({ field }) => (
                     <InputNumber
+                      controls={false}
+                      keyboard={false}
+                      changeOnWheel={false}
+                      inputMode="numeric"
+                      id="create-room-type-base-price"
                       min={0}
+                      max={Number.MAX_SAFE_INTEGER}
                       precision={0}
                       formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                       parser={(val) => (val ? Number(val.replace(/\$\s?|(,*)/g, '')) : (null as unknown as number))}
-                      addonAfter="VND/đêm"
-                      placeholder="VD: 1,500,000"
+                      suffix="VND"
+                      placeholder="Nhập giá cơ bản"
                       className="w-full"
                       value={field.value}
                       onChange={(val) => field.onChange(val)}
@@ -481,27 +486,38 @@ export function HotelRoomCreatePage() {
                 />
               </Form.Item>
 
-              <Form.Item label="Trạng thái mở bán">
-                <div className="pt-1">
+              <Form.Item label="Trạng thái hạng phòng">
+                <label htmlFor="create-room-type-active" className="inline-flex min-h-11 cursor-pointer items-center gap-3">
                   <Controller
                     control={roomTypeForm.control}
                     name="active"
                     render={({ field }) => (
                       <Switch
+                        id="create-room-type-active"
                         checked={field.value}
                         onChange={field.onChange}
-                        checkedChildren="Mở bán"
-                        unCheckedChildren="Tạm ngưng"
+                        aria-label="Cho phép mở bán hạng phòng"
                         disabled={isSubmittingRoomType}
                       />
                     )}
                   />
-                </div>
+                  <span className="text-sm text-[#344a44]">{watchedActive ? 'Mở bán' : 'Tạm ngưng'}</span>
+                </label>
               </Form.Item>
             </div>
 
+            <div className="rounded-xl bg-[#f4f8f7] p-4 text-sm">
+              <div className="flex flex-wrap justify-between gap-2">
+                <span className="font-medium text-[#344a44]">Giá mặc định trên lịch</span>
+                <strong className="tabular-nums text-[#12211d]">{(watchedBasePrice ?? 0) > 0 ? `${formatCurrencyAmount(watchedBasePrice!, 'VND')} / đêm` : 'Chưa thiết lập'}</strong>
+              </div>
+              <p className="mb-0 mt-2 leading-relaxed text-[#5f736e]">Sau khi tạo, vào <strong>Giá & Tồn kho</strong> để xem lịch 7 ngày hoặc đặt giá riêng cho ngày lễ, cuối tuần.</p>
+              {watchedActive && !(watchedBasePrice && watchedBasePrice > 0) && <p className="mb-0 mt-2 text-[#8a5a00]">Chưa có giá cơ bản: mỗi đêm muốn bán cần được đặt giá riêng hợp lệ.</p>}
+            </div>
+            </div>
+
             <Form.Item
-              label="Mô tả loại phòng (Tùy chọn)"
+              label="Mô tả hạng phòng (không bắt buộc)" htmlFor="create-room-type-description"
               validateStatus={roomTypeForm.formState.errors.description ? 'error' : undefined}
               help={roomTypeForm.formState.errors.description?.message}
             >
@@ -510,6 +526,7 @@ export function HotelRoomCreatePage() {
                 name="description"
                 render={({ field }) => (
                   <Input.TextArea
+                    id="create-room-type-description"
                     {...field}
                     rows={4}
                     placeholder="Mô tả không gian, loại giường, diện tích m2 và các tiện ích đặc trưng của hạng phòng..."
@@ -521,7 +538,7 @@ export function HotelRoomCreatePage() {
               />
             </Form.Item>
 
-            <div className="pt-4 border-t border-[#dce7e3] flex justify-end gap-3">
+            <div className="pt-4 border-t border-[#dce7e3] flex flex-wrap justify-end gap-3">
               <Button onClick={() => navigate(`/hotels/${hotelId}/rooms`)} disabled={isSubmittingRoomType}>
                 Hủy
               </Button>
@@ -529,10 +546,9 @@ export function HotelRoomCreatePage() {
                 type="primary"
                 htmlType="submit"
                 loading={isSubmittingRoomType}
-                icon={createdRoomTypeId ? <ReloadOutlined /> : <SaveOutlined />}
                 className="!bg-[#0b5f53]"
               >
-                {createdRoomTypeId ? 'Thử lại lưu cấu hình' : 'Tạo loại phòng'}
+                {createdRoomTypeId ? 'Thử lại lưu cấu hình' : 'Tạo hạng phòng'}
               </Button>
             </div>
           </Form>

@@ -22,7 +22,10 @@ export function HotelSubNav() {
           ? location.pathname === `/hotels/${hotelId}` || location.pathname === `/hotels/${hotelId}/`
           : location.pathname.startsWith(targetPath)
 
-        const isSectionDone = completion.sections[item.key as keyof typeof completion.sections] ?? false
+        const resourceState = completion.resourceStates?.[item.key as keyof NonNullable<typeof completion.resourceStates>]
+        const isSectionDone = !resourceState && (completion.sections[item.key as keyof typeof completion.sections] ?? false)
+        const sectionTitle = resourceState === 'loading' ? 'Đang tải' : resourceState === 'error' ? 'Không thể tải dữ liệu' : isSectionDone ? 'Đã hoàn thành' : 'Chưa hoàn thành'
+        const sectionSymbol = resourceState === 'loading' ? '…' : resourceState === 'error' ? '!' : isSectionDone ? '✓' : '○'
         const isDisabled = isDraft && Boolean(item.requireApproved)
 
         // Item có submenu (nhóm Phòng)
@@ -56,9 +59,9 @@ export function HotelSubNav() {
                     className={`text-[11px] ${
                       isSectionDone ? 'text-[#0f7a5f] font-bold' : 'text-[#8c9e99]'
                     }`}
-                    title={isSectionDone ? 'Đã hoàn thành' : 'Chưa hoàn thành'}
+                    title={sectionTitle}
                   >
-                    {isSectionDone ? '✓' : '○'}
+                    {sectionSymbol}
                   </span>
                   {roomsExpanded ? (
                     <DownOutlined className="text-[9px] text-[#5f736e]" />
@@ -142,9 +145,9 @@ export function HotelSubNav() {
               className={`text-[11px] shrink-0 ${
                 isSectionDone ? 'text-[#0f7a5f] font-bold' : 'text-[#8c9e99]'
               }`}
-              title={isSectionDone ? 'Đã hoàn thành' : 'Chưa hoàn thành'}
+              title={sectionTitle}
             >
-              {isSectionDone ? '✓' : '○'}
+              {sectionSymbol}
             </span>
           </Link>
         )

@@ -241,6 +241,7 @@ export function EditRoomTypeModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Form.Item
               label="Giá cơ bản mỗi đêm"
+              htmlFor="edit-room-type-base-price"
               validateStatus={errors.basePrice ? 'error' : ''}
               help={
                 errors.basePrice?.message ??
@@ -254,6 +255,11 @@ export function EditRoomTypeModal({
                 control={control}
                 render={({ field }) => (
                   <InputNumber
+                    controls={false}
+                    keyboard={false}
+                    changeOnWheel={false}
+                    inputMode="numeric"
+                    id="edit-room-type-base-price"
                     min={0}
                     precision={0}
                     formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}

@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { hotelManagementKeys } from '@/features/hotels/hooks/hotel-query-keys'
+import { useHotelWorkspace } from '@/features/hotels'
 import { HotelWorkspaceLayout } from './HotelWorkspaceLayout'
 
 const mockHotel = {
@@ -80,7 +81,7 @@ describe('HotelWorkspaceLayout', () => {
 
     // Hotel Switcher
     expect(markup).toContain('Khách sạn Biển Xanh')
-    expect(markup).toContain('Hoàn thiện')
+    expect(markup).toContain('Đang tải hồ sơ')
 
     // SubNav items
     expect(markup).toContain('Tổng quan')
@@ -97,4 +98,55 @@ describe('HotelWorkspaceLayout', () => {
     expect(markup).toContain('aria-current="page"')
     expect(markup).toContain('Nội dung thông tin chung')
   })
+})
+
+function CompletionProbe() {
+  const { hotelId, completion } = useHotelWorkspace()
+  return <output>{hotelId}:{completion.percent}:{String(completion.sections.amenities)}:{String(completion.sections.pricing)}</output>
+}
+
+function renderWorkspace(qc: QueryClient, hotelId = 'h123') {
+  return renderToStaticMarkup(
+    <MemoryRouter initialEntries={[`/hotels/${hotelId}/info`]}>
+      <QueryClientProvider client={qc}><Routes>
+        <Route path="hotels/:hotelId" element={<HotelWorkspaceLayout />}>
+          <Route path="info" element={<CompletionProbe />} />
+        </Route>
+      </Routes></QueryClientProvider>
+    </MemoryRouter>,
+  )
+}
+
+function seedWorkspace(qc: QueryClient, hotelId = 'h123') {
+  qc.setQueryData(hotelManagementKeys.detail('api', hotelId), { ...mockHotel, id: hotelId, amenityIds: undefined })
+  qc.setQueryData(['hotels', hotelId, 'room-types'], [{ id: 'rt', name: 'Double', active: true, basePrice: 500000, maxAdults: 2, maxChildren: 0 }])
+  qc.setQueryData(hotelManagementKeys.images('api', hotelId), [{ id: 'image', url: 'cover.jpg', cover: true }])
+}
+
+it('derives completion from independently loaded amenities and base prices on a fresh cache', () => {
+  const qc = new QueryClient()
+  seedWorkspace(qc)
+  qc.setQueryData(hotelManagementKeys.scopedAmenities('h123'), {
+    catalogAmenities: [], customAmenities: [{ id: 'custom', attached: true }], inheritedAmenities: [],
+  })
+  expect(renderWorkspace(qc)).toContain('h123:100:true:true')
+  qc.setQueryData(hotelManagementKeys.scopedAmenities('h123'), {
+    catalogAmenities: [], customAmenities: [{ id: 'custom', attached: false }], inheritedAmenities: [],
+  })
+  expect(renderWorkspace(qc)).toContain('h123:85:false:true')
+  qc.setQueryData(hotelManagementKeys.scopedAmenities('h123'), {
+    catalogAmenities: [{ id: 'wifi' }], customAmenities: [], inheritedAmenities: [],
+  })
+  qc.setQueryData(['hotels', 'h123', 'room-types'], [{ id: 'rt', name: 'Double', active: true, basePrice: 0, maxAdults: 2, maxChildren: 0 }])
+  expect(renderWorkspace(qc)).toContain('h123:90:true:false')
+})
+
+it('does not reuse the previous hotel amenities when switching hotels', () => {
+  const qc = new QueryClient()
+  seedWorkspace(qc)
+  seedWorkspace(qc, 'other')
+  qc.setQueryData(hotelManagementKeys.scopedAmenities('h123'), { catalogAmenities: [{ id: 'wifi' }], customAmenities: [], inheritedAmenities: [] })
+  expect(renderWorkspace(qc)).toContain('h123:100:true:true')
+  expect(renderWorkspace(qc, 'other')).toContain('other:85:false:true')
+  expect(renderWorkspace(qc, 'other')).toContain('Đang tải hồ sơ')
 })

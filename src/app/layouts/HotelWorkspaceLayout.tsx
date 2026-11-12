@@ -14,6 +14,7 @@ import {
   HotelWorkspaceProvider,
   useManagementHotelDetailQuery,
   useHotelImagesQuery,
+  useScopedAmenitiesQuery,
 } from '@/features/hotels'
 import { useManagementRoomTypesQuery } from '@/features/rooms'
 import { HOTEL_WORKSPACE_NAV_ITEMS } from '@/config/navigation.config'
@@ -190,6 +191,16 @@ export function HotelWorkspaceLayout() {
   const roomTypesQuery = useManagementRoomTypesQuery(hotelId, detailQuery.isSuccess)
   const imagesQuery = useHotelImagesQuery(hotelId, detailQuery.isSuccess)
 
+  const amenitiesQuery = useScopedAmenitiesQuery({ hotelId })
+  const resourceState = (query: { isPending: boolean; isError: boolean }) =>
+    query.isError ? 'error' as const : query.isPending ? 'loading' as const : undefined
+  const resourceStates = {
+    photos: resourceState(imagesQuery),
+    amenities: resourceState(amenitiesQuery),
+    rooms: resourceState(roomTypesQuery),
+    pricing: resourceState(roomTypesQuery),
+  }
+
   if (detailQuery.isPending) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[400px]">
@@ -221,6 +232,10 @@ export function HotelWorkspaceLayout() {
 
   const hotel = {
     ...detailQuery.data,
+    amenityIds: amenitiesQuery.isSuccess ? [
+      ...amenitiesQuery.data.catalogAmenities.map((amenity) => amenity.id),
+      ...amenitiesQuery.data.customAmenities.filter((amenity) => amenity.attached).map((amenity) => amenity.id),
+    ] : undefined,
     ...(roomTypesQuery.isSuccess ? {
       roomTypes: roomTypesQuery.data.map((type) => ({ ...type, hotelId, isActive: type.active })),
     } : {}),
@@ -237,7 +252,13 @@ export function HotelWorkspaceLayout() {
       isLoading={detailQuery.isPending}
       isError={detailQuery.isError}
       error={detailQuery.error}
-      refetch={() => void detailQuery.refetch()}
+      resourceStates={resourceStates}
+      refetch={() => {
+        void detailQuery.refetch()
+        void imagesQuery.refetch()
+        void roomTypesQuery.refetch()
+        void amenitiesQuery.refetch()
+      }}
     >
       <div className="hotel-workspace-shell flex flex-col flex-1 min-w-0 -m-4 lg:-m-6">
         {/* HEADER QUẢN LÝ CƠ SỞ & DÀN HÀNG NGANG CÁC HẠNG MỤC - GU SKILL PHƯƠNG ÁN A */}

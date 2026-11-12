@@ -13,7 +13,7 @@ import { useHotelWorkspace, HotelStatusBadge, CompletionChecklist } from '@/feat
 import { PageHeader } from '@/shared/ui/PageHeader'
 
 export function HotelOverviewPage() {
-  const { hotel, hotelId, completion } = useHotelWorkspace()
+  const { hotel, hotelId, completion, refetch } = useHotelWorkspace()
   const navigate = useNavigate()
 
   if (!hotel) return null
@@ -118,7 +118,7 @@ export function HotelOverviewPage() {
       </div>
 
       {/* 3. Card Checklist hoàn thiện hồ sơ */}
-      <CompletionChecklist hotel={hotel} completion={completion} />
+      <CompletionChecklist hotel={hotel} completion={completion} onRetry={refetch} />
 
       {/* 4. Card Thống kê nhanh (Placeholder cho vận hành) */}
       <div className="space-y-3">

@@ -13,12 +13,26 @@ export async function invalidateManagementRooms(client: QueryClient, hotelId: st
   ])
 }
 
+export async function invalidateRoomTypePricing(client: QueryClient, hotelId: string) {
+      await Promise.all([
+        invalidateManagementRooms(client, hotelId),
+        client.invalidateQueries({
+          queryKey: ['hotels', 'room-rates', 'api'],
+          predicate: (query) => (query.queryKey[3] as { hotelId?: string } | undefined)?.hotelId === hotelId,
+        }),
+      ])
+}
+
 export function useManagementRoomMutations(hotelId: string) {
   const client = useQueryClient()
   const onSuccess = () => invalidateManagementRooms(client, hotelId)
   const createRoom = useMutation({ retry: false, mutationFn: (payload: CreateRoomPayload) => createManagementRoom(hotelId, payload), onSuccess })
   const updateRoom = useMutation({ retry: false, mutationFn: ({ roomId, payload }: { roomId: string; payload: UpdateRoomPayload }) => updateManagementRoom(hotelId, roomId, payload), onSuccess })
   const createRoomType = useMutation({ retry: false, mutationFn: (payload: CreateRoomTypePayload) => createManagementRoomType(hotelId, payload), onSuccess })
-  const updateRoomType = useMutation({ retry: false, mutationFn: ({ roomTypeId, payload }: { roomTypeId: string; payload: UpdateRoomTypePayload }) => updateManagementRoomType(hotelId, roomTypeId, payload), onSuccess })
+  const updateRoomType = useMutation({
+    retry: false,
+    mutationFn: ({ roomTypeId, payload }: { roomTypeId: string; payload: UpdateRoomTypePayload }) => updateManagementRoomType(hotelId, roomTypeId, payload),
+    onSuccess: () => invalidateRoomTypePricing(client, hotelId),
+  })
   return { createRoom, updateRoom, createRoomType, updateRoomType }
 }

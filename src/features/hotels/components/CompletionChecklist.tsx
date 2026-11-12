@@ -11,6 +11,7 @@ import {
   ClockCircleOutlined,
   PictureOutlined,
   PlusOutlined,
+  LoadingOutlined,
   ProfileOutlined,
   SendOutlined,
   ShopOutlined,
@@ -27,6 +28,7 @@ import { useApproveHotelMutation } from '../hooks/use-approve-hotel-mutation'
 export interface CompletionChecklistProps {
   hotel: ManagementHotelDetail
   completion: HotelCompletionStatus
+  onRetry?: () => void
 }
 
 interface ChecklistItemConfig {
@@ -38,7 +40,7 @@ interface ChecklistItemConfig {
   icon: typeof ProfileOutlined
 }
 
-export function CompletionChecklist({ hotel, completion }: CompletionChecklistProps) {
+export function CompletionChecklist({ hotel, completion, onRetry }: CompletionChecklistProps) {
   const navigate = useNavigate()
   const { message } = AntApp.useApp()
   const { isAdmin } = useCurrentUser()
@@ -81,23 +83,32 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
     },
     {
       id: 'pricing',
-      title: 'Thiết lập giá bán theo đêm',
-      description: 'Cấu hình bảng giá chuẩn cho các hạng phòng mở bán.',
-      actionLabel: 'Đặt giá',
-      to: `/hotels/${hotel.id}/pricing`,
+      title: 'Thiết lập giá cơ bản',
+      description: 'Các hạng phòng đang mở bán cần có giá cơ bản lớn hơn 0. Giá riêng theo ngày được quản lý tại Giá & Tồn kho.',
+      actionLabel: 'Cập nhật giá gốc',
+      to: `/hotels/${hotel.id}/rooms`,
       icon: PlusOutlined,
+    },
+    {
+      id: 'policies',
+      title: 'Giờ nhận và trả phòng',
+      description: 'Thiết lập giờ nhận phòng và trả phòng của khách sạn.',
+      actionLabel: 'Cập nhật giờ',
+      to: `/hotels/${hotel.id}/policies`,
+      icon: ClockCircleOutlined,
     },
   ]
 
   // Checklist completion check
-  const missingItems = items.filter((item) => !completion.sections[item.id])
-  const isComplete = missingItems.length === 0
-  const unknownSections = new Set<string>([
-    ...(hotel.imageCount === undefined && hotel.coverImageUrl === undefined ? ['photos'] : []),
-    ...(hotel.amenityIds === undefined ? ['amenities'] : []),
-    ...(hotel.roomTypes === undefined ? ['rooms'] : []),
-    ...(hotel.hasConfiguredRates === undefined ? ['pricing'] : []),
-  ])
+  const states = completion.resourceStates ?? {}
+  const missingItems = items.filter((item) => !completion.sections[item.id] && !states[item.id as keyof typeof states])
+  const isLoading = Object.values(states).includes('loading')
+  const hasError = Object.values(states).includes('error')
+  const isComplete = missingItems.length === 0 && !isLoading && !hasError
+  const incompleteLabels: Record<string, string> = {
+    info: 'Chưa đủ thông tin', photos: 'Chưa có ảnh', amenities: 'Chưa chọn tiện ích',
+    rooms: 'Chưa có hạng phòng', pricing: 'Chưa đủ giá cơ bản', policies: 'Chưa đủ giờ nhận/trả',
+  }
   const isDraft = hotel.status === 'DRAFT'
   const isPendingApproval = hotel.status === 'PENDING_APPROVAL'
   const isActive = hotel.status === 'ACTIVE'
@@ -146,7 +157,7 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
               {completion.percent}% hoàn tất
             </div>
             <div className="text-[11px] text-[#5f736e]">
-              {isComplete ? 'Đã hoàn thiện các mục kiểm tra' : `Còn ${missingItems.length} mục chưa xác minh hoặc hoàn tất`}
+              {isLoading ? 'Đang tải hồ sơ…' : hasError ? 'Chưa tải đủ hồ sơ' : isComplete ? 'Đã hoàn thiện các mục kiểm tra' : `Còn ${missingItems.length} mục cần hoàn thiện`}
             </div>
           </div>
           <Progress
@@ -162,7 +173,8 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
       {/* Checklist items list */}
       <div className="divide-y divide-[#eef4f2]">
         {items.map((item, index) => {
-          const done = completion.sections[item.id]
+          const state = states[item.id as keyof typeof states]
+          const done = !state && completion.sections[item.id]
           const Icon = item.icon
 
           return (
@@ -179,7 +191,7 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
                   }`}
                   aria-hidden="true"
                 >
-                  {done ? (
+                  {state === 'loading' ? <LoadingOutlined /> : done ? (
                     <CheckCircleFilled className="text-sm" />
                   ) : (
                     <span className="text-xs font-semibold">{index + 1}</span>
@@ -197,9 +209,9 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
                         Đã xong
                       </Tag>
                     )}
-                    {!done && unknownSections.has(item.id) && (
-                      <Tag className="!text-[10px] !leading-4 !px-1.5 !m-0 !rounded-md text-[#5f736e]">
-                        Chưa xác minh từ API
+                    {!done && (
+                      <Tag color={state === 'error' ? 'error' : 'default'} className="!text-[10px] !leading-4 !px-1.5 !m-0 !rounded-md">
+                        {state === 'loading' ? 'Đang tải…' : state === 'error' ? 'Không thể tải dữ liệu' : incompleteLabels[item.id]}
                       </Tag>
                     )}
                   </div>
@@ -209,7 +221,8 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
                 </div>
               </div>
 
-              <div className="flex justify-end sm:shrink-0 w-full sm:w-auto pl-10 sm:pl-0">
+              <div className="flex justify-end gap-2 sm:shrink-0 w-full sm:w-auto pl-10 sm:pl-0">
+                {state === 'error' && onRetry && <Button size="small" onClick={onRetry}>Thử lại</Button>}
                 <Button
                   size="small"
                   type={done ? 'default' : 'primary'}
@@ -234,7 +247,7 @@ export function CompletionChecklist({ hotel, completion }: CompletionChecklistPr
         <div className="text-xs text-[#5f736e]">
           {isDraft && (
             <span className="text-amber-700 font-medium">
-              {isAdmin ? 'Quản trị viên có thể duyệt khách sạn bản nháp. Các mục chưa có API chưa thể xác minh đầy đủ.' : 'Backend chưa hỗ trợ gửi hồ sơ kiểm duyệt. Khách sạn chỉ mở bán sau khi quản trị viên phê duyệt.'}
+              {isAdmin ? 'Quản trị viên có thể duyệt khách sạn bản nháp. Tiến độ hồ sơ không thay thế kết quả phê duyệt.' : 'Backend chưa hỗ trợ gửi hồ sơ kiểm duyệt. Khách sạn chỉ mở bán sau khi quản trị viên phê duyệt.'}
             </span>
           )}
           {isPendingApproval && (

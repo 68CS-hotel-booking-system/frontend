@@ -283,7 +283,7 @@ export function HotelSwitcher() {
             </div>
           </div>
           <span className="text-[11px] font-semibold text-[#0b5f53] bg-[#eef8f5] px-2 py-0.5 rounded-full shrink-0">
-            Hoàn thiện {completion.percent}%
+            {Object.values(completion.resourceStates ?? {}).includes('loading') ? 'Đang tải hồ sơ…' : Object.values(completion.resourceStates ?? {}).includes('error') ? 'Chưa tải đủ hồ sơ' : `Hoàn thiện ${completion.percent}%`}
           </span>
           <DownOutlined
             className={`text-[10px] text-[#5f736e] shrink-0 transition-transform duration-200 ${

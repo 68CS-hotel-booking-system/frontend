@@ -6,8 +6,8 @@ const roomTypeId = '22222222-2222-4222-8222-222222222222'
 const response = {
   hotelId, roomTypeId, currency: 'VND', startDate: '2026-11-10', endDate: '2026-11-11',
   rates: [
-    { date: '2026-11-10', price: 1200000, hasRate: true, updatedAt: '2026-11-09T00:00:00Z' },
-    { date: '2026-11-11', price: null, hasRate: false, updatedAt: null },
+    { date: '2026-11-10', price: 1200000, hasRate: true, updatedAt: '2026-11-09T00:00:00Z', effectivePrice: 1200000, source: 'RATE' },
+    { date: '2026-11-11', price: null, hasRate: false, updatedAt: null, effectivePrice: 500000, source: 'BASE' },
   ],
 }
 
@@ -27,9 +27,33 @@ describe('backend room rates contract', () => {
     expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/management/hotels/${hotelId}/room-types/${roomTypeId}/rates?startDate=2026-11-10&endDate=2026-11-11`)
     expect(fetcher.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal)
     expect(rates).toEqual([
-      { roomTypeId, rateDate: '2026-11-10', amount: 1200000, currency: 'VND', hasRate: true },
-      { roomTypeId, rateDate: '2026-11-11', amount: null, currency: 'VND', hasRate: false },
+      { roomTypeId, rateDate: '2026-11-10', amount: 1200000, currency: 'VND', hasRate: true, effectivePrice: 1200000, source: 'RATE' },
+      { roomTypeId, rateDate: '2026-11-11', amount: null, currency: 'VND', hasRate: false, effectivePrice: 500000, source: 'BASE' },
     ])
+  })
+
+  it('preserves NONE instead of deriving a price locally', async () => {
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ message: 'ok', data: {
+      ...response, rates: [{ ...response.rates[1], effectivePrice: null, source: 'NONE' }],
+    } })))
+    const { getRoomTypeDailyRates } = await import('./hotel-management-api')
+    const rates = await getRoomTypeDailyRates({ hotelId, roomTypeId, startDate: '2026-11-10', endDate: '2026-11-11' })
+    expect(rates[0]).toMatchObject({ amount: null, effectivePrice: null, source: 'NONE' })
+  })
+
+  it.each([
+    { effectivePrice: null, source: 'BASE' },
+    { effectivePrice: 0, source: 'BASE' },
+    { effectivePrice: 500000, source: 'NONE' },
+    { effectivePrice: 500000, source: 'RATE' },
+    { effectivePrice: 500000, source: 'UNKNOWN' },
+  ])('rejects inconsistent effective-price metadata: %j', async (metadata) => {
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ message: 'ok', data: {
+      ...response, rates: [{ ...response.rates[1], ...metadata }],
+    } })))
+    const { getRoomTypeDailyRates } = await import('./hotel-management-api')
+    await expect(getRoomTypeDailyRates({ hotelId, roomTypeId, startDate: '2026-11-10', endDate: '2026-11-11' }))
+      .rejects.toMatchObject({ code: 'INVALID_RESPONSE' })
   })
 
   it('rejects a reversed date range without sending a request', async () => {
