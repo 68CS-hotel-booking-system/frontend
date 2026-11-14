@@ -25,7 +25,17 @@ export function exclusiveRateEndDate(endDate: string): string {
   return date.toISOString().slice(0, 10)
 }
 
+/** Ngày nghiệp vụ Việt Nam, không phụ thuộc múi giờ máy người dùng. */
 export function localRateDate(): string {
-  const date = new Date()
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date())
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value
+  return `${part('year')}-${part('month')}-${part('day')}`
+}
+
+export function rateRangeEnd(startDate: string, days: number): string {
+  const date = new Date(`${startDate}T00:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + days - 1)
+  return date.toISOString().slice(0, 10)
 }

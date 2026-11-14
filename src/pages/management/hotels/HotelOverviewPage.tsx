@@ -10,11 +10,14 @@ import {
 import { Button, Card, Space, Tag } from 'antd'
 import { useNavigate } from 'react-router'
 import { useHotelWorkspace, HotelStatusBadge, CompletionChecklist, HotelSalesControls, useHotelProfileAccess } from '@/features/hotels'
+import { useCurrentUser } from '@/features/auth'
+import { HotelReviewResultPanel } from '@/features/hotel-review-requests'
 import { PageHeader } from '@/shared/ui/PageHeader'
 
 export function HotelOverviewPage() {
-  const { hotel, hotelId, completion } = useHotelWorkspace()
+  const { hotel, hotelId, completion, refetch } = useHotelWorkspace()
   const navigate = useNavigate()
+  const { isAdmin } = useCurrentUser()
   const { canEditProfile } = useHotelProfileAccess(hotel)
 
   if (!hotel) return null
@@ -55,6 +58,8 @@ export function HotelOverviewPage() {
           </Space>
         }
       />
+
+      <HotelReviewResultPanel hotelId={hotelId} isAdmin={isAdmin} />
 
       {/* 2. Hero Card */}
       <div className="bg-white rounded-2xl border border-[#dce7e3] overflow-hidden shadow-xs">
@@ -120,7 +125,7 @@ export function HotelOverviewPage() {
       </div>
 
       {/* 3. Card Checklist hoàn thiện hồ sơ */}
-      <CompletionChecklist hotel={hotel} completion={completion} />
+      <CompletionChecklist hotel={hotel} completion={completion} onRetry={refetch} />
 
       {/* 4. Card Thống kê nhanh (Placeholder cho vận hành) */}
       <div className="space-y-3">
@@ -129,7 +134,7 @@ export function HotelOverviewPage() {
             Chỉ số vận hành cơ sở
           </h3>
           <span className="text-[11px] text-[#5f736e] italic">
-            Backend chưa cung cấp API thống kê vận hành
+            Thống kê vận hành chưa khả dụng
           </span>
         </div>
 
@@ -146,7 +151,7 @@ export function HotelOverviewPage() {
               —
             </div>
             <div className="text-[11px] text-[#5f736e] mt-1">
-              Chưa có dữ liệu từ API
+              Chưa thể hiển thị thống kê
             </div>
           </Card>
 
@@ -162,7 +167,7 @@ export function HotelOverviewPage() {
               —
             </div>
             <div className="text-[11px] text-[#5f736e] mt-1">
-              Chưa có dữ liệu từ API
+              Chưa thể hiển thị thống kê
             </div>
           </Card>
 
@@ -178,7 +183,7 @@ export function HotelOverviewPage() {
               —
             </div>
             <div className="text-[11px] text-[#5f736e] mt-1">
-              Chưa có dữ liệu từ API
+              Chưa thể hiển thị thống kê
             </div>
           </Card>
         </div>

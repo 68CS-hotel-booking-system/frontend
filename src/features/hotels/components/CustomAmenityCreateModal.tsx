@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { amenitySearchKey } from '../model/amenity-workspace'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Alert, Button, Form, Input, Modal } from 'antd'
-import { Controller, useForm } from 'react-hook-form'
+import { Alert, App, Button, Form, Input, Modal } from 'antd'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import {
   createCustomAmenityFormSchema,
   type CreateCustomAmenityFormValues,
@@ -17,7 +18,9 @@ interface CustomAmenityCreateModalProps {
   scope: AmenityScope
   scopeLabel: string
   onClose: () => void
+  onBusyChange?: (busy: boolean) => void
   onSuccess?: () => void
+  knownNames?: string[]
 }
 
 export function CustomAmenityCreateModal({
@@ -26,9 +29,13 @@ export function CustomAmenityCreateModal({
   scopeLabel,
   onClose,
   onSuccess,
+  onBusyChange,
+  knownNames = [],
 }: CustomAmenityCreateModalProps) {
+  const { message } = App.useApp()
   const [apiError, setApiError] = useState<string | null>(null)
   const createMutation = useCreateCustomAmenityMutation(scope)
+  useEffect(() => { onBusyChange?.(createMutation.isPending) }, [createMutation.isPending, onBusyChange])
 
   const {
     control,
@@ -42,6 +49,9 @@ export function CustomAmenityCreateModal({
       description: '',
     },
   })
+
+  const name = useWatch({ control, name: 'name' }) ?? ''
+  const duplicate = Boolean(name.trim()) && knownNames.some(value => amenitySearchKey(value) === amenitySearchKey(name))
 
   const handleClose = () => {
     if (createMutation.isPending) return
@@ -61,7 +71,8 @@ export function CustomAmenityCreateModal({
       onSuccess?.()
       onClose()
     } catch (error) {
-      setApiError(getAmenityErrorMessage(error))
+      const detail = getAmenityErrorMessage(error)
+      setApiError(detail); void message.error(detail)
     }
   }
 
@@ -90,6 +101,7 @@ export function CustomAmenityCreateModal({
           />
         )}
 
+        {duplicate && <Alert type="warning" showIcon title="Tên này đã có trong danh mục hoặc tiện ích cùng cấp. Hãy kiểm tra trước khi thêm." style={{ marginBottom: 16 }} />}
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
           <Form.Item
             label="Tên tiện ích"

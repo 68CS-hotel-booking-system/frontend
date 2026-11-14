@@ -172,6 +172,7 @@ export const HOTEL_WORKSPACE_NAV_ITEMS: HotelWorkspaceSubNavItem[] = [
     path: '',
     icon: HomeOutlined,
   },
+  { key: 'review-requests', label: 'Hồ sơ xét duyệt', path: 'review-requests', icon: FileTextOutlined },
   {
     key: 'info',
     label: 'Thông tin chung',
@@ -186,7 +187,7 @@ export const HOTEL_WORKSPACE_NAV_ITEMS: HotelWorkspaceSubNavItem[] = [
   },
   {
     key: 'amenities',
-    label: 'Tiện ích khách sạn',
+    label: 'Tiện ích',
     path: 'amenities',
     icon: AppstoreAddOutlined,
   },

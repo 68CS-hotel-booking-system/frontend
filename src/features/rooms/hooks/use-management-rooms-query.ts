@@ -11,5 +11,6 @@ export function useManagementRoomsQuery(
     queryKey: ['rooms', 'management-list', hotelId, params],
     queryFn: ({ signal }) => getManagementRooms(hotelId, params, signal),
     enabled: Boolean(hotelId) && enabled,
+    refetchInterval: 30000,
   })
 }

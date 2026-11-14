@@ -32,6 +32,7 @@ export function HotelPricingPage() {
       />
 
       <RoomTypeDailyRatesPanel
+        key={hotelId}
         hotelId={hotelId}
         roomTypes={roomTypes}
         hotelStatus={hotel.status}

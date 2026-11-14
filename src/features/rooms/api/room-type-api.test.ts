@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import { buildRoomTypeEditPayload } from './room-type-api'
-import { invalidateManagementRooms } from '../hooks/use-management-room-mutations'
+import { invalidateManagementRooms, invalidateRoomTypePricing } from '../hooks/use-management-room-mutations'
 
 describe('room type edits', () => {
   const original = { name: 'Deluxe', description: '', maxAdults: 2, maxChildren: 0, active: true }
@@ -64,4 +64,17 @@ it('preserves unknown list-only occupancy/price and concrete PATCH values', asyn
   expect(listed.maxOccupancy).toBeUndefined()
   expect(listed.basePrice).toBeUndefined()
   expect(managementRoomTypeSchema.parse({ ...listed, maxOccupancy: 5, basePrice: 0 })).toMatchObject({ maxOccupancy: 5, basePrice: 0, active: false })
+})
+
+it('invalidates all date ranges for the edited hotel without touching another hotel prices', async () => {
+  const client = new QueryClient()
+  const keys = [
+    ['hotels', 'a', 'room-types'],
+    ['hotels', 'room-rates', 'api', { hotelId: 'a', roomTypeId: 'r1', startDate: '2026-11-12' }],
+    ['hotels', 'room-rates', 'api', { hotelId: 'a', roomTypeId: 'r1', startDate: '2026-11-20' }],
+    ['hotels', 'room-rates', 'api', { hotelId: 'b', roomTypeId: 'r2', startDate: '2026-11-12' }],
+  ]
+  keys.forEach((key) => client.setQueryData(key, []))
+  await invalidateRoomTypePricing(client, 'a')
+  expect(keys.map((key) => client.getQueryState(key)?.isInvalidated)).toEqual([true, true, true, false])
 })

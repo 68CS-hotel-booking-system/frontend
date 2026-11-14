@@ -20,6 +20,7 @@ interface CatalogAmenitiesListProps {
   catalogOptions: AmenityItem[]
   savedAmenityIds: string[]
   inheritedAmenityIds?: string[]
+  saveLabel?: string
   title?: string
   description?: string
   scopeLabel: string
@@ -33,6 +34,7 @@ export function CatalogAmenitiesList({
   savedAmenityIds,
   inheritedAmenityIds = [],
   title = 'Tiện ích có sẵn',
+  saveLabel = 'Lưu lựa chọn',
   description,
   scopeLabel,
   isSaving,
@@ -115,11 +117,11 @@ export function CatalogAmenitiesList({
   }
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-[#dce7e3] shadow-xs space-y-5">
+    <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#dce7e3] shadow-xs space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#dce7e3]">
+      <div className="flex flex-col gap-3 pb-4 border-b border-[#dce7e3]">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-base font-bold text-[#12211d] m-0">{title}</h3>
             <Tag color="green" className="!rounded-md !m-0 font-medium">
               Đã chọn: {selectedIds.length} / {catalogOptions.length}
@@ -137,7 +139,7 @@ export function CatalogAmenitiesList({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             size="middle"
             icon={<ReloadOutlined />}
@@ -154,9 +156,9 @@ export function CatalogAmenitiesList({
             onClick={handleSaveClick}
             loading={isSaving}
             disabled={!isDirty || isSaving}
-            className="!bg-[#0b5f53] !border-[#0b5f53] !rounded-xl font-medium text-xs"
+            className="!rounded-xl font-medium text-xs"
           >
-            Lưu lựa chọn
+            {saveLabel}
           </Button>
         </div>
       </div>
@@ -191,7 +193,7 @@ export function CatalogAmenitiesList({
             : 'Danh mục tiện ích đang trống.'}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
           {filteredOptions.map((item) => {
             const isChecked = selectedIds.includes(item.id)
             const isInherited = inheritedSet.has(item.id)

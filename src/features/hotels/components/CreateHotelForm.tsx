@@ -37,11 +37,12 @@ import { geocodeAddress, isCityMatch } from '../api/geocoding-api'
 import type { ManagementHotelDetail } from '../model/hotel'
 import { InteractiveHotelMap } from './InteractiveHotelMap'
 import {
-  createAdminHotelApiFormSchema,
-  type CreateAdminHotelFormValues,
+  createHotelWithContactFormSchema,
+  type CreateHotelWithContactFormValues,
 } from '../model/hotel-form-schemas'
 
 export interface CreateHotelFormProps {
+  showHeader?: boolean
   onSuccess?: (created: ManagementHotelDetail) => void
   onCancel?: () => void
 }
@@ -63,7 +64,7 @@ const STAR_LABELS: Record<number, string> = {
   5: '5 Sao đẳng cấp',
 }
 
-export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
+export function CreateHotelForm({ onSuccess, onCancel, showHeader = true }: CreateHotelFormProps) {
   const formId = useId()
   const { message } = AntApp.useApp()
   const { currentUser, isAdmin, isOwner, isChecking, isAuthorized } = useCurrentUser()
@@ -87,18 +88,19 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
     handleSubmit,
     setValue,
     setError,
-    getValues,
     reset,
     clearErrors,
     formState: { errors },
-  } = useForm<CreateAdminHotelFormValues>({
-    resolver: zodResolver(createAdminHotelApiFormSchema),
+  } = useForm<CreateHotelWithContactFormValues>({
+    resolver: zodResolver(createHotelWithContactFormSchema),
     defaultValues: {
       name: '',
       slug: '',
       cityId: '',
       ownerUserId: isOwner ? (currentUser?.id ?? '') : '',
       address: '',
+      contactPhone: '',
+      contactEmail: '',
       starRating: 4,
       checkInTime: '14:00',
       checkOutTime: '12:00',
@@ -115,6 +117,9 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
   const currentOwnerUserId = useWatch({ control, name: 'ownerUserId' })
   const currentLat = useWatch({ control, name: 'latitude' })
   const currentLng = useWatch({ control, name: 'longitude' })
+  const contactPhone = useWatch({ control, name: 'contactPhone' }) ?? ''
+  const contactEmail = useWatch({ control, name: 'contactEmail' }) ?? ''
+  const hasContact = Boolean(contactPhone.trim() || contactEmail.trim())
   const currentCheckIn = useWatch({ control, name: 'checkInTime' })
   const currentCheckOut = useWatch({ control, name: 'checkOutTime' })
 
@@ -273,16 +278,17 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
   if (currentOwnerUserId && currentOwnerUserId.trim().length > 0) completedWeight += 15
   if (currentCheckIn && currentCheckOut) completedWeight += 10
   if (currentLat != null && currentLng != null) completedWeight += 10
-  if (photos.length > 0) completedWeight += 15
+  if (photos.length > 0) completedWeight += 10
+  if (hasContact) completedWeight += 5
 
-  async function onSubmit(values: CreateAdminHotelFormValues) {
+  async function onSubmit(values: CreateHotelWithContactFormValues) {
     if (submitting.current) return
     if (!isAuthorized || (!creationSession.current.created && (!citiesQuery.isSuccess || cities.length === 0))) return
     submitting.current = true
     setRecoveryError(null)
     clearErrors('root')
     try {
-      setUploadingStatus(creationSession.current.created ? 'Đang thử lưu lại hình ảnh...' : 'Đang khởi tạo hồ sơ cơ sở lưu trú...')
+      setUploadingStatus(creationSession.current.created ? 'Đang hoàn tất hồ sơ...' : 'Đang khởi tạo hồ sơ cơ sở lưu trú...')
       const isSelfOwner = !values.ownerUserId || values.ownerUserId === currentUser?.id
       const payload = { ...values, ownerUserId: !isAdmin && isSelfOwner ? '' : values.ownerUserId }
       const created = await completeHotelCreation(creationSession.current, photos, {
@@ -303,7 +309,7 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
       if (creationSession.current.created) {
         const id = creationSession.current.created.id
         setCreatedHotelId(id)
-        setRecoveryError(`Đã tạo khách sạn ${id}. Bộ ảnh chưa được lưu đầy đủ. ${error instanceof Error ? error.message : 'Lưu ảnh thất bại.'} Thử lại chỉ xử lý ảnh cho khách sạn này; thông tin hồ sơ đã được lưu trước đó.`)
+        setRecoveryError(`Đã tạo bản nháp khách sạn ${id} và lưu thông tin liên hệ, nhưng bộ ảnh chưa được lưu đầy đủ. ${error instanceof Error ? error.message : 'Vui lòng thử lại.'} Bấm thử lại để lưu ảnh trên cùng khách sạn; không tạo hồ sơ mới.`)
       } else {
         applyApiFieldErrors(error, setError)
         setError('root', { type: 'server', message: errorMessage(error) })
@@ -320,20 +326,14 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
   return (
     <form
       id={`${formId}-hotel-form`}
-      onSubmit={(event) => {
-        if (createdHotelId) {
-          event.preventDefault()
-          void onSubmit(getValues())
-        } else {
-          void handleSubmit(onSubmit)(event)
-        }
-      }}
+      onSubmit={(event) => { void handleSubmit(onSubmit)(event) }}
       noValidate
       className="w-full flex flex-col gap-6"
     >
       {!isAdmin && <input type="hidden" {...register('ownerUserId')} />}
 
       {/* 1. Header & Actions Bar */}
+      {showHeader && (
       <div className="page-header" style={{ marginBottom: 0 }}>
         <div>
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -383,12 +383,14 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
             ) : (
               <>
                 <SendOutlined aria-hidden="true" />
-                <span>{createdHotelId ? 'Thử lưu lại hình ảnh' : 'Tạo khách sạn'}</span>
+                <span>{createdHotelId ? 'Thử hoàn tất hồ sơ' : 'Tạo khách sạn'}</span>
               </>
             )}
           </button>
         </div>
       </div>
+
+      )}
 
       {/* 2. Verification note */}
       <div
@@ -482,6 +484,23 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
                   </span>
                 )}
               </div>
+
+              <fieldset className="space-y-3 border-0 p-0 m-0" aria-describedby={`${formId}-contact-help`}>
+                <legend className="form-label mb-1">Thông tin liên hệ <span className="req">*</span></legend>
+                <p id={`${formId}-contact-help`} className="form-help">Nhập ít nhất số điện thoại hoặc email của khách sạn. Thông tin dành cho quản lý và hỗ trợ khách sạn, không hiển thị cho khách đặt phòng.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="form-group">
+                    <label className="form-label" htmlFor={`${formId}-contactPhone`}>Số điện thoại liên hệ</label>
+                    <input {...register('contactPhone')} id={`${formId}-contactPhone`} type="tel" inputMode="tel" maxLength={16} placeholder="Ví dụ: 0901234567" className={`form-input ${errors.contactPhone ? 'is-error' : ''}`} aria-invalid={Boolean(errors.contactPhone)} aria-describedby={errors.contactPhone ? `${formId}-contactPhone-error` : undefined} disabled={isSubmitting || Boolean(createdHotelId)} />
+                    {errors.contactPhone && <span id={`${formId}-contactPhone-error`} className="form-field-error" role="alert">{errors.contactPhone.message}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor={`${formId}-contactEmail`}>Email liên hệ</label>
+                    <input {...register('contactEmail')} id={`${formId}-contactEmail`} type="email" maxLength={255} placeholder="Ví dụ: reservations@hotel.vn" className={`form-input ${errors.contactEmail ? 'is-error' : ''}`} aria-invalid={Boolean(errors.contactEmail)} aria-describedby={errors.contactEmail ? `${formId}-contactEmail-error` : undefined} disabled={isSubmitting || Boolean(createdHotelId)} />
+                    {errors.contactEmail && <span id={`${formId}-contactEmail-error`} className="form-field-error" role="alert">{errors.contactEmail.message}</span>}
+                  </div>
+                </div>
+              </fieldset>
 
               {/* Star Rating & City */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1133,7 +1152,7 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
                 ) : (
                   <>
                     <SendOutlined aria-hidden="true" />
-                    <span>{createdHotelId ? 'Thử lưu lại hình ảnh' : 'Tạo khách sạn'}</span>
+                    <span>{createdHotelId ? 'Thử hoàn tất hồ sơ' : 'Tạo khách sạn'}</span>
                   </>
                 )}
               </button>
@@ -1178,6 +1197,10 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
                   <MinusCircleOutlined className="chk-pending" aria-hidden="true" />
                 )}
                 <span>Địa chỉ chi tiết cơ sở lưu trú</span>
+              </div>
+              <div className="checklist-item">
+                {hasContact ? <CheckCircleFilled className="chk-ok" aria-hidden="true" /> : <MinusCircleOutlined className="chk-pending" aria-hidden="true" />}
+                <span>Số điện thoại hoặc email liên hệ</span>
               </div>
               <div className="checklist-item">
                 {currentLat != null && currentLng != null ? (

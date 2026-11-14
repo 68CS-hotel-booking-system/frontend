@@ -74,3 +74,13 @@ export { HotelReviewStatusBadge } from './components/HotelReviewStatusBadge'
 export { HotelProfileReadOnly } from './components/HotelProfileReadOnly'
 export { useHotelProfileAccess } from './hooks/use-hotel-profile-access'
 export { HotelProfileAccessNotice } from './components/HotelProfileAccessNotice'
+
+export { RoomTypeAmenitiesSummary } from './components/RoomTypeAmenitiesSummary'
+
+export { AmenityScopeEditor } from './components/AmenityScopeEditor'
+export type { AmenityScopeEditorProps, AmenityEditorState } from './components/AmenityScopeEditor'
+export * from './model/amenity-workspace'
+
+export { AmenityScopeTree } from './components/AmenityScopeTree'
+export type { AmenityScopeTreeProps, AmenityTreeItem } from './components/AmenityScopeTree'
+export { useAmenityCounts } from './hooks/use-amenity-counts'

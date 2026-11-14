@@ -48,7 +48,7 @@ export const createAdminHotelFormSchema = z.object({
     .nullable()
     .optional(),
 })
-export type CreateAdminHotelFormValues = z.infer<typeof createAdminHotelFormSchema>
+export type CreateAdminHotelFormValues = z.infer<typeof createAdminHotelFormSchema> & { contactPhone?: string; contactEmail?: string }
 
 /** API mode uses real city UUIDs and lets the backend generate the slug. */
 export const createAdminHotelApiFormSchema = createAdminHotelFormSchema.extend({
@@ -64,6 +64,15 @@ export const createAdminHotelApiFormSchema = createAdminHotelFormSchema.extend({
     .refine((value) => value === Number(value.toFixed(6)), 'Kinh độ tối đa 6 chữ số thập phân.')
     .nullable().optional(),
 })
+
+/** Full hotel creation requires at least one private management contact. */
+export const createHotelWithContactFormSchema = createAdminHotelApiFormSchema.extend({
+  contactPhone: z.string().trim().regex(/^\+?[0-9]{8,15}$/, 'Số điện thoại cần 8–15 chữ số, có thể bắt đầu bằng +.').or(z.literal('')),
+  contactEmail: z.string().trim().max(255, 'Email tối đa 255 ký tự.').email('Email không đúng định dạng.').or(z.literal('')),
+}).refine((values) => Boolean(values.contactPhone || values.contactEmail), {
+  message: 'Nhập ít nhất một số điện thoại hoặc email liên hệ.', path: ['contactPhone'],
+})
+export type CreateHotelWithContactFormValues = z.infer<typeof createHotelWithContactFormSchema>
 
 /** HT09: PATCH /api/v1/management/hotels/{hotelId} — Sửa nội dung khách sạn */
 export const updateManagementHotelFormSchema = z.object({

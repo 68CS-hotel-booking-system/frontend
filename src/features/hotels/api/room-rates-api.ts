@@ -10,7 +10,14 @@ const roomRatesResponseSchema = z.object({
   rates: z.array(z.object({
     date: z.iso.date(), price: z.number().int().nonnegative().safe().nullable(),
     hasRate: z.boolean(), updatedAt: z.string().nullable(),
-  }).refine((rate) => rate.hasRate === (rate.price !== null))),
+    effectivePrice: z.number().int().positive().safe().nullable(),
+    source: z.enum(['RATE', 'BASE', 'NONE']),
+  }).refine((rate) => {
+    if (rate.hasRate !== (rate.price !== null)) return false
+    if (rate.source === 'RATE') return rate.hasRate && rate.price === rate.effectivePrice && rate.effectivePrice !== null
+    if (rate.source === 'BASE') return !rate.hasRate && rate.effectivePrice !== null
+    return !rate.hasRate && rate.effectivePrice === null
+  })),
 })
 
 export interface RoomRatesQuery {
@@ -28,6 +35,7 @@ function toDailyRates(response: z.infer<typeof roomRatesResponseSchema>): DailyR
   return response.rates.map((rate) => ({
     roomTypeId: response.roomTypeId, rateDate: rate.date, amount: rate.price,
     currency: response.currency, hasRate: rate.hasRate,
+    effectivePrice: rate.effectivePrice, source: rate.source,
   }))
 }
 

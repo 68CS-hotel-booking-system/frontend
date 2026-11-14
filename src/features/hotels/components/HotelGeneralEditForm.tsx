@@ -166,7 +166,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                         <Input
                           {...field}
                           size="large"
-                          prefix={<ShopOutlined className="text-slate-400" />}
+                          prefix={<ShopOutlined className="text-slate-600" />}
                           placeholder="Ví dụ: StayHub Grand Luxury Hotel"
                           className="!rounded-xl font-medium"
                         />
@@ -224,7 +224,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                       <label className="block text-xs font-bold text-slate-800">
                         Mô tả &amp; Điểm nổi bật
                       </label>
-                      <span className="text-[11px] text-slate-400">Tối đa 2.000 ký tự</span>
+                      <span className="text-[11px] text-slate-600">Tối đa 2.000 ký tự</span>
                     </div>
                     <Controller
                       name="description"
@@ -300,7 +300,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                           <Input
                             {...field}
                             size="large"
-                            prefix={<EnvironmentOutlined className="text-slate-400" />}
+                            prefix={<EnvironmentOutlined className="text-slate-600" />}
                             placeholder="Số nhà, tên đường, phường/xã..."
                             className="!rounded-xl"
                           />
@@ -328,7 +328,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                               value={field.value ?? undefined}
                               step={0.0001}
                               className="w-full !rounded-xl"
-                              prefix={<CompassOutlined className="text-slate-400" />}
+                              prefix={<CompassOutlined className="text-slate-600" />}
                               placeholder="16.0544"
                             />
                           )}
@@ -348,7 +348,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                               value={field.value ?? undefined}
                               step={0.0001}
                               className="w-full !rounded-xl"
-                              prefix={<CompassOutlined className="text-slate-400" />}
+                              prefix={<CompassOutlined className="text-slate-600" />}
                               placeholder="108.2022"
                             />
                           )}
@@ -388,14 +388,14 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                       <Input
                         {...field}
                         size="middle"
-                        prefix={<ClockCircleOutlined className="text-slate-400 text-xs" />}
+                        prefix={<ClockCircleOutlined className="text-slate-600 text-xs" />}
                         placeholder="14:00"
                         className="!rounded-lg font-mono text-xs"
                       />
                     )}
                   />
                   <div className="flex items-center gap-1.5 pt-0.5">
-                    <span className="text-[10.5px] text-slate-400">Gợi ý:</span>
+                    <span className="text-[10.5px] text-slate-600">Gợi ý:</span>
                     {CHECK_IN_CHIPS.map((chip) => (
                       <button
                         key={chip}
@@ -422,14 +422,14 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                       <Input
                         {...field}
                         size="middle"
-                        prefix={<ClockCircleOutlined className="text-slate-400 text-xs" />}
+                        prefix={<ClockCircleOutlined className="text-slate-600 text-xs" />}
                         placeholder="12:00"
                         className="!rounded-lg font-mono text-xs"
                       />
                     )}
                   />
                   <div className="flex items-center gap-1.5 pt-0.5">
-                    <span className="text-[10.5px] text-slate-400">Gợi ý:</span>
+                    <span className="text-[10.5px] text-slate-600">Gợi ý:</span>
                     {CHECK_OUT_CHIPS.map((chip) => (
                       <button
                         key={chip}
@@ -501,7 +501,7 @@ export function HotelGeneralEditForm({ hotel, cities }: HotelGeneralEditFormProp
                       ) : (
                         <span className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0" />
                       )}
-                      <span className={item.done ? 'text-slate-700' : 'text-slate-400'}>
+                      <span className={item.done ? 'text-slate-700' : 'text-slate-600'}>
                         {item.label}
                       </span>
                     </div>

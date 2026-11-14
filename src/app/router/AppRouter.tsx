@@ -1,11 +1,10 @@
-import { AdminHotelReviewRequestsPage } from '@/pages/admin/AdminHotelReviewRequestsPage'
 import { HotelReviewRequestPage } from '@/pages/management/HotelReviewRequestPage'
 import { HotelSearchPage } from '@/pages/public/HotelSearchPage'
 import { SystemStatusPage } from '@/pages/public/SystemStatusPage'
 import { HotelModulePage } from '@/pages/management/HotelModulePage'
 import { MyBookingsPage } from '@/pages/customer/MyBookingsPage'
 import { MyComplaintsPage } from '@/pages/customer/MyComplaintsPage'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
+import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider } from 'react-router'
 import {
   BarChartOutlined,
   CreditCardOutlined,
@@ -28,6 +27,9 @@ import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
 import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
+import { AdminHotelReviewRequestsPage } from '@/pages/admin/AdminHotelReviewRequestsPage'
+import { HotelReviewRequestsPage } from '@/pages/management/hotels/HotelReviewRequestsPage'
+import { HotelProfileEditGuard } from '@/pages/management/hotels/HotelProfileEditGuard'
 import { AdminOverviewPage } from '@/pages/admin/AdminOverviewPage'
 import { HotelManagementListPage } from '@/pages/management/HotelManagementListPage'
 import { ManagementPlaceholderPage } from '@/pages/management/ManagementPlaceholderPage'
@@ -38,7 +40,6 @@ import {
   HotelAmenitiesPage,
   HotelRoomsPage,
   HotelRoomCreatePage,
-  HotelRoomDetailPage,
   HotelRoomAmenitiesPage,
   HotelPhysicalRoomAmenitiesPage,
   HotelPricingPage,
@@ -51,10 +52,7 @@ import { NotFoundPage } from '@/pages/public/NotFoundPage'
 import { StayVibeHomePage } from '@/pages/public/StayVibeHomePage'
 import { HotelDetailPage } from '@/pages/public/HotelDetailPage'
 
-export function AppRouter() {
-  return (
-    <BrowserRouter>
-      <Routes>
+const router = createBrowserRouter(createRoutesFromElements(<>
         <Route path="admin/login" element={<AdminLoginPage />} />
         <Route path="verify-email" element={<VerifyEmailPage />} />
 
@@ -68,8 +66,8 @@ export function AppRouter() {
         >
           <Route path="admin" element={<Navigate to="/admin/overview" replace />} />
           <Route path="admin/overview" element={<AdminOverviewPage />} />
-          <Route path="admin/users" element={<AdminUsersPage />} />
           <Route path="admin/hotel-review-requests" element={<AdminHotelReviewRequestsPage />} />
+          <Route path="admin/users" element={<AdminUsersPage />} />
           <Route path="hotel-review-requests/:requestId" element={<HotelReviewRequestPage />} />
 
           {/* CẤP 1: Danh sách Khách sạn & Thêm mới */}
@@ -79,16 +77,17 @@ export function AppRouter() {
           {/* CẤP 2: Khách sạn Workspace (/hotels/:hotelId/*) */}
           <Route path="hotels/:hotelId" element={<HotelWorkspaceLayout />}>
             <Route index element={<HotelOverviewPage />} />
-            <Route path="info" element={<HotelInfoPage />} />
-            <Route path="photos" element={<HotelPhotosPage />} />
+            <Route path="review-requests" element={<HotelReviewRequestsPage />} />
+            <Route path="info" element={<HotelProfileEditGuard><HotelInfoPage /></HotelProfileEditGuard>} />
+            <Route path="photos" element={<HotelProfileEditGuard><HotelPhotosPage /></HotelProfileEditGuard>} />
             <Route path="amenities" element={<HotelAmenitiesPage />} />
             <Route path="rooms" element={<HotelRoomsPage />} />
-            <Route path="rooms/new" element={<HotelRoomCreatePage />} />
-            <Route path="rooms/:roomId" element={<HotelRoomDetailPage />} />
-            <Route path="rooms/physical/:roomId/amenities" element={<HotelPhysicalRoomAmenitiesPage />} />
-            <Route path="rooms/amenities" element={<HotelRoomAmenitiesPage />} />
-            <Route path="pricing" element={<HotelPricingPage />} />
-            <Route path="policies" element={<HotelPoliciesPage />} />
+            <Route path="rooms/new" element={<HotelProfileEditGuard><HotelRoomCreatePage /></HotelProfileEditGuard>} />
+            <Route path="rooms/:roomId" element={<HotelRoomsPage />} />
+            <Route path="rooms/physical/:roomId/amenities" element={<HotelProfileEditGuard><HotelPhysicalRoomAmenitiesPage /></HotelProfileEditGuard>} />
+            <Route path="rooms/amenities" element={<HotelProfileEditGuard><HotelRoomAmenitiesPage /></HotelProfileEditGuard>} />
+            <Route path="pricing" element={<HotelProfileEditGuard operational><HotelPricingPage /></HotelProfileEditGuard>} />
+            <Route path="policies" element={<HotelProfileEditGuard><HotelPoliciesPage /></HotelProfileEditGuard>} />
             <Route path="bookings" element={<HotelBookingsPage />} />
             <Route path="reviews" element={<HotelReviewsPage />} />
           </Route>
@@ -186,7 +185,8 @@ export function AppRouter() {
           <Route path="forgot-password" element={<ForgotPasswordPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
-      </Routes>
-    </BrowserRouter>
-  )
+  </>))
+
+export function AppRouter() {
+  return <RouterProvider router={router} />
 }

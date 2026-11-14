@@ -247,7 +247,7 @@ export function HotelSwitcher() {
   )
 
   return (
-    <div className="hotel-switcher-container">
+    <div className="hotel-switcher-container min-w-0 flex-1 sm:flex-initial">
       <Popover
         content={popoverContent}
         trigger="click"
@@ -257,7 +257,7 @@ export function HotelSwitcher() {
       >
         <button
           type="button"
-          className="inline-flex items-center gap-2.5 px-3 py-2 rounded-xl border border-[#dce7e3] bg-white hover:bg-[#f7fbfa] hover:border-[#bcd8cf] transition-all cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-[#0b5f53]/20 shadow-2xs"
+          className="inline-flex w-full sm:w-auto min-w-0 items-center gap-2.5 px-3 py-2 rounded-xl border border-[#dce7e3] bg-white hover:bg-[#f7fbfa] hover:border-[#bcd8cf] transition-all cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-[#0b5f53]/20 shadow-2xs"
           aria-label={`Khách sạn hiện tại: ${hotelName}. Bấm để đổi khách sạn.`}
           aria-expanded={open}
         >
@@ -272,18 +272,18 @@ export function HotelSwitcher() {
               <ShopOutlined className="text-base" />
             )}
           </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-[9px] uppercase tracking-wider font-semibold text-[#8c9e99] leading-none">
+          <div className="flex flex-1 flex-col min-w-0">
+            <span className="text-xs uppercase tracking-wide font-medium text-[#526760] leading-none">
               Cơ sở đang quản lý
             </span>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <strong className="text-xs sm:text-sm font-semibold text-[#12211d] truncate max-w-[160px] sm:max-w-[260px]">
+              <strong className="text-xs sm:text-sm font-semibold text-[#12211d] line-clamp-2 sm:line-clamp-1 sm:max-w-[260px]">
                 {hotelName}
               </strong>
             </div>
           </div>
-          <span className="text-[11px] font-semibold text-[#0b5f53] bg-[#eef8f5] px-2 py-0.5 rounded-full shrink-0">
-            Hoàn thiện {completion.percent}%
+          <span className="hidden sm:inline-flex text-xs font-semibold text-[#0b5f53] bg-[#eef8f5] px-2 py-0.5 rounded-full shrink-0">
+            {Object.values(completion.resourceStates ?? {}).includes('loading') ? 'Đang tải hồ sơ…' : Object.values(completion.resourceStates ?? {}).includes('error') ? 'Chưa tải đủ hồ sơ' : `Hoàn thiện ${completion.percent}%`}
           </span>
           <DownOutlined
             className={`text-[10px] text-[#5f736e] shrink-0 transition-transform duration-200 ${

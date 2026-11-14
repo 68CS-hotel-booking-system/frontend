@@ -106,7 +106,9 @@ export const dailyRoomRateSchema = z.object({
   rateDate: z.string().min(1),
   amount: z.number().nonnegative().nullable(),
   currency: z.string().length(3),
-  hasRate: z.boolean().optional(),
+  hasRate: z.boolean(),
+  effectivePrice: z.number().int().positive().safe().nullable(),
+  source: z.enum(['RATE', 'BASE', 'NONE']),
 })
 export type DailyRoomRate = z.infer<typeof dailyRoomRateSchema>
 

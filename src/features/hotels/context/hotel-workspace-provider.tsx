@@ -4,9 +4,11 @@ import {
   HotelWorkspaceContext,
   calculateHotelCompletion,
   type HotelWorkspaceContextValue,
+  type CompletionResourceStates,
 } from './hotel-workspace-context'
 
 export interface HotelWorkspaceProviderProps {
+  resourceStates?: CompletionResourceStates
   children: ReactNode
   hotel: ManagementHotelDetail | undefined
   hotelId: string
@@ -24,8 +26,9 @@ export function HotelWorkspaceProvider({
   isError,
   error,
   refetch,
+  resourceStates,
 }: HotelWorkspaceProviderProps) {
-  const completion = useMemo(() => calculateHotelCompletion(hotel), [hotel])
+  const completion = useMemo(() => calculateHotelCompletion(hotel, resourceStates), [hotel, resourceStates])
   const isDraft = hotel?.status === 'DRAFT'
   const isActive = hotel?.status === 'ACTIVE'
 

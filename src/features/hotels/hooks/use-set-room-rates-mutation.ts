@@ -1,8 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { setRoomTypeDailyRates } from '../api/room-rates-api'
 import { exclusiveRateEndDate, type SetRoomRatesFormValues } from '../model/room-rates'
-import { hotelManagementKeys } from './hotel-query-keys'
-import type { ManagementHotelDetail } from '../model/hotel'
 
 export interface SetRoomRateMutationInput {
   startDate: string
@@ -28,8 +26,6 @@ export function useSetRoomRatesMutation(hotelId: string, roomTypeId: string) {
       })
     },
     onSuccess: async () => {
-      queryClient.setQueryData<ManagementHotelDetail>(hotelManagementKeys.detail('api', hotelId), (hotel) =>
-        hotel ? { ...hotel, hasConfiguredRates: true } : hotel)
       await queryClient.invalidateQueries({ queryKey: ['hotels', 'room-rates', 'api'] })
     },
   })

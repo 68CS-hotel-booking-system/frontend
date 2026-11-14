@@ -1,3 +1,4 @@
+import '@/shared/styles/hotel-management.css'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
 import { useNavigate } from 'react-router'
@@ -30,6 +31,7 @@ export function HotelCreatePage() {
       />
 
       <CreateHotelForm
+        showHeader={false}
         onSuccess={(created) => {
           navigate(`/hotels/${created.id}`)
         }}

@@ -72,6 +72,7 @@ export function HotelPhysicalRoomAmenitiesPage() {
       <HotelAmenitiesManager readOnly={!canEditProfile}
         hotelId={hotelId}
         roomId={roomId}
+        roomTypeId={room?.roomTypeId}
         roomNumber={roomDisplayNumber}
         roomTypeName={roomTypeDisplayName}
       />
