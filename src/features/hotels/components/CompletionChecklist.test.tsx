@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { App as AntApp } from 'antd'
+import { reviewKeys } from '@/features/hotel-review-requests'
 import { CompletionChecklist } from './CompletionChecklist'
 import type { ManagementHotelDetail } from '../model/hotel'
 import type { HotelCompletionStatus } from '../context/hotel-workspace-context'
@@ -33,7 +34,7 @@ const mockHotel: ManagementHotelDetail = {
 
 describe('CompletionChecklist component', () => {
   afterEach(() => { roles.isAdmin = false })
-  it('renders all 5 checklist criteria, progress stats, and disabled approval button when incomplete', () => {
+  it('renders all 6 checklist criteria, progress stats, and a link to the owner review flow when incomplete', () => {
     const qc = new QueryClient()
     const partialCompletion: HotelCompletionStatus = {
       percent: 40,
@@ -62,28 +63,30 @@ describe('CompletionChecklist component', () => {
     // Heading & Progress
     expect(markup).toContain('Checklist hoàn thiện hồ sơ')
     expect(markup).toContain('40% hoàn tất')
-    expect(markup).toContain('Còn 3 mục chưa xác minh hoặc hoàn tất')
+    expect(markup).toContain('Còn 3 mục cần hoàn thiện')
 
     // 5 criteria present
     expect(markup).toContain('Thông tin cơ bản')
     expect(markup).toContain('Ảnh đại diện khách sạn')
     expect(markup).toContain('Chọn tiện ích khách sạn')
     expect(markup).toContain('Có ít nhất 1 loại phòng')
-    expect(markup).toContain('Thiết lập giá bán theo đêm')
+    expect(markup).toContain('Thiết lập giá cơ bản')
 
     // Action buttons for subpages present
     expect(markup).toContain('Cập nhật')
     expect(markup).toContain('Thêm ảnh')
     expect(markup).toContain('Chọn tiện ích')
     expect(markup).toContain('Tạo phòng')
-    expect(markup).toContain('Đặt giá')
+    expect(markup).toContain('Cập nhật giá gốc')
+    expect(markup).toContain('Giờ nhận và trả phòng')
+    expect(markup).not.toContain('Chưa xác minh từ API')
 
     // Submit for approval button present
     expect(markup).toContain('Gửi kiểm duyệt')
-    expect(markup).toContain('Backend chưa hỗ trợ gửi hồ sơ kiểm duyệt')
+    expect(markup).toContain('Gửi hồ sơ để quản trị viên xét duyệt')
   })
 
-  it('does not enable an unsupported owner submission even when all criteria are complete', () => {
+  it('opens the supported submission flow without treating checklist completion as approval', () => {
     const qc = new QueryClient()
     const fullCompletion: HotelCompletionStatus = {
       percent: 100,
@@ -113,10 +116,21 @@ describe('CompletionChecklist component', () => {
     expect(markup).toContain('Đã hoàn thiện các mục kiểm tra')
     expect(markup).toContain('Gửi kiểm duyệt')
     const button = markup.match(/<button\b[^>]*>[\s\S]*?<\/button>/g)?.find((item) => item.includes('Gửi kiểm duyệt'))
-    expect(button).toContain('disabled')
+    expect(button).not.toContain('disabled')
   })
 
-  it('allows the real admin approval of a draft without unsupported checklist prerequisites', () => {
+
+  it('shows tracking rather than another submit action for a pending review', () => {
+    const client = new QueryClient()
+    client.setQueryData(reviewKeys.hotel(mockHotel.id, 0, 1), { content: [{ status: 'PENDING' }], page: 0, size: 1, totalElements: 1, totalPages: 1 })
+    const completion: HotelCompletionStatus = { percent: 0, sections: { info: false, photos: false, amenities: false, rooms: false, pricing: false, policies: false, bookings: false, reviews: false } }
+    const html = renderToStaticMarkup(<MemoryRouter><QueryClientProvider client={client}><AntApp><CompletionChecklist hotel={mockHotel} completion={completion} /></AntApp></QueryClientProvider></MemoryRouter>)
+    expect(html).toContain('Theo dõi xét duyệt')
+    expect(html).not.toContain('Gửi kiểm duyệt')
+    expect(html).toContain('đang trong hàng đợi phê duyệt')
+  })
+
+  it('sends admins to submitted review requests instead of directly approving a draft', () => {
     roles.isAdmin = true
     const completion: HotelCompletionStatus = {
       percent: 0,
@@ -127,8 +141,36 @@ describe('CompletionChecklist component', () => {
         <CompletionChecklist hotel={mockHotel} completion={completion} />
       </AntApp></QueryClientProvider></MemoryRouter>,
     )
-    const button = markup.match(/<button\b[^>]*>[\s\S]*?<\/button>/g)?.find((item) => item.includes('Duyệt khách sạn'))
+    const button = markup.match(/<button\b[^>]*>[\s\S]*?<\/button>/g)?.find((item) => item.includes('Xem hồ sơ xét duyệt'))
     expect(button).toBeDefined()
     expect(button).not.toContain('disabled')
   })
+})
+
+function renderChecklistState(state: 'loading' | 'error') {
+  const completion: HotelCompletionStatus = {
+    percent: 75,
+    sections: { info: true, photos: true, amenities: false, rooms: true, pricing: false, policies: true, bookings: false, reviews: false },
+    resourceStates: { amenities: state, pricing: state },
+  }
+  return renderToStaticMarkup(
+    <MemoryRouter><QueryClientProvider client={new QueryClient()}><AntApp>
+      <CompletionChecklist hotel={mockHotel} completion={completion} onRetry={() => {}} />
+    </AntApp></QueryClientProvider></MemoryRouter>,
+  )
+}
+
+it('shows loading separately from missing configuration', () => {
+  const markup = renderChecklistState('loading')
+  expect(markup).toContain('Đang tải hồ sơ')
+  expect(markup).not.toContain('Chưa chọn tiện ích')
+  expect(markup).not.toContain('Còn 2 mục')
+})
+
+it('offers retry on resource errors without claiming missing configuration', () => {
+  const markup = renderChecklistState('error')
+  expect(markup).toContain('Chưa tải đủ hồ sơ')
+  expect(markup).toContain('Không thể tải dữ liệu')
+  expect(markup).toContain('Thử lại')
+  expect(markup).not.toContain('Chưa chọn tiện ích')
 })

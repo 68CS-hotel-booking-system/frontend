@@ -35,8 +35,8 @@ export function HotelReviewsPage() {
 
       <div className="bg-white p-8 rounded-2xl border border-[#dce7e3] text-center">
         <EmptyState
-          title="Chưa có đánh giá nào"
-          description="Các đánh giá và nhận xét từ khách hàng sau khi trả phòng sẽ được cập nhật tại đây."
+          title="Danh sách đánh giá chưa khả dụng"
+          description="Bạn chưa thể xem đánh giá tại màn hình này. Trạng thái này không có nghĩa là khách sạn chưa nhận được đánh giá."
         />
       </div>
     </div>

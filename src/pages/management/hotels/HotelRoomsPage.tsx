@@ -3,11 +3,16 @@ import {
   AppstoreOutlined,
   BuildOutlined,
   EditOutlined,
+  EllipsisOutlined,
+  EyeOutlined,
   PlusOutlined,
   UserOutlined,
 } from '@ant-design/icons'
 import {
+  Alert,
+  App,
   Button,
+  Dropdown,
   Form,
   Input,
   Modal,
@@ -15,13 +20,19 @@ import {
   Select,
   Table,
   Tag,
-  message,
+  Tabs,
 } from 'antd'
 import dayjs from 'dayjs'
-import { Link, useNavigate } from 'react-router'
-import { useHotelWorkspace } from '@/features/hotels'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useCurrentUser } from '@/features/auth'
+import { useHotelReviewRequests } from '@/features/hotel-review-requests'
+import { HotelAmenitiesManager, useHotelWorkspace } from '@/features/hotels'
 import {
+  RoomOperationalStatusTag,
+  roomReadinessOptions,
+  readinessPatchStatus,
   EditRoomTypeModal,
+  RoomTypeDetailsModal,
   buildRoomEditPayload,
   useManagementRoomMutations,
   useManagementRoomTypesQuery,
@@ -32,13 +43,23 @@ import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { PageLoading } from '@/shared/ui/PageLoading'
+import { formatCurrencyAmount } from '@/shared/lib/format'
 
 export function HotelRoomsPage() {
   const { hotel, hotelId } = useHotelWorkspace()
+  const { message, modal } = App.useApp()
   const navigate = useNavigate()
+  const { isAdmin } = useCurrentUser()
+  const latestReview = useHotelReviewRequests(hotelId, 0, 1, !isAdmin)
+  const profileLocked = isAdmin || !latestReview.isSuccess || latestReview.data.content[0]?.status === 'PENDING'
   const { updateRoom } = useManagementRoomMutations(hotelId)
-  const [activeTab, setActiveTab] = useState<'rooms' | 'types'>('rooms')
-  const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string | undefined>(undefined)
+  const { roomId: linkedRoomTypeId } = useParams<{ roomId: string }>()
+  const [params] = useSearchParams()
+  const [activeTab, setActiveTab] = useState<'rooms' | 'types'>(linkedRoomTypeId || params.get('tab') === 'types' ? 'types' : 'rooms')
+  const [detailRoomTypeId, setDetailRoomTypeId] = useState<string | null>(null)
+  const [editTypeTab, setEditTypeTab] = useState<'info' | 'amenities'>('info')
+  const [editRoomTab, setEditRoomTab] = useState<'info' | 'amenities'>('info')
+  const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string | undefined>(params.get('roomTypeId') ?? undefined)
 
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
@@ -63,6 +84,25 @@ export function HotelRoomsPage() {
   // Modal Sửa loại phòng
   const [editingRoomType, setEditingRoomType] = useState<ManagementRoomType | null>(null)
 
+  const selectedDetailId = linkedRoomTypeId ?? detailRoomTypeId
+  const detailRoomType = roomTypes.find((type) => type.id === selectedDetailId)
+  const closeDetails = () => {
+    setDetailRoomTypeId(null)
+    if (linkedRoomTypeId) navigate(`/hotels/${hotelId}/rooms?tab=types`, { replace: true })
+  }
+  const editType = (type: ManagementRoomType, tab: 'info' | 'amenities') => {
+    if (profileLocked) return
+    setEditTypeTab(tab)
+    setEditingRoomType(type)
+  }
+  const editRoom = (room: ManagementRoom, tab: 'info' | 'amenities') => {
+    if (profileLocked) return
+    setEditRoomTab(tab)
+    setEditingRoom(room)
+    roomEditForm.resetFields()
+    roomEditForm.setFieldsValue({ roomNumber: room.roomNumber, floor: room.floor, status: room.readiness })
+  }
+
   if (!hotel) return null
 
   const breadcrumbItems = [
@@ -73,26 +113,24 @@ export function HotelRoomsPage() {
   ]
 
   // Render readiness badge
-  const renderReadinessTag = (readiness: string, roomId: string) => {
+  const renderReadinessTag = (readiness: string, roomId: string, roomNumber: string) => {
     return (
       <Select
+        disabled={isAdmin}
+        aria-label={`Trạng thái phòng ${roomNumber}`}
         size="small"
         value={readiness}
-        className="w-28 text-xs"
+        className="!w-44 text-xs"
         onChange={async (newStatus) => {
-                      if (newStatus !== 'ready' && newStatus !== 'cleaning') return
+                      if (newStatus !== 'ready' && newStatus !== 'dirty') return
           try {
-            await updateRoom.mutateAsync({ roomId, payload: { status: newStatus } })
-            message.success('Đã cập nhật trạng thái buồng phòng!')
+            await updateRoom.mutateAsync({ roomId, payload: { status: readinessPatchStatus(newStatus) } })
+            message.success('Đã cập nhật trạng thái phòng!')
           } catch (error) {
             message.error(error instanceof Error ? error.message : 'Cập nhật trạng thái thất bại.')
           }
         }}
-        options={[
-          { value: 'ready', label: '🟢 Sẵn sàng' },
-          { value: 'cleaning', label: '🟡 Cần dọn' },
-          { value: 'dirty', label: 'Chưa sẵn sàng', disabled: true },
-        ]}
+        options={roomReadinessOptions}
       />
     )
   }
@@ -120,10 +158,10 @@ export function HotelRoomsPage() {
         breadcrumbItems={breadcrumbItems}
         kicker="QUẢN LÝ PHÒNG &amp; LƯU TRÚ"
         title="Quản lý buồng phòng &amp; Hạng phòng"
-        description="Theo dõi danh sách các phòng vật lý thực tế, trạng thái buồng phòng (sẵn sàng hoặc chưa sẵn sàng) và các hạng phòng phục vụ kinh doanh."
+        description="Theo dõi danh sách các phòng vật lý thực tế, trạng thái phòng (sẵn sàng hoặc chưa sẵn sàng) và các hạng phòng phục vụ kinh doanh."
         extra={
           <Button
-            type="primary"
+            type="primary" disabled={profileLocked}
             icon={<PlusOutlined />}
             onClick={() =>
               navigate(
@@ -133,7 +171,7 @@ export function HotelRoomsPage() {
                       ? 'room-type'
                       : 'room'
                     : 'room-type'
-                }`
+                }${activeTab === 'rooms' && selectedRoomTypeId ? `&roomTypeId=${selectedRoomTypeId}` : ''}`
               )
             }
             className="!bg-[#0b5f53] !rounded-xl font-semibold"
@@ -179,6 +217,12 @@ export function HotelRoomsPage() {
         )}
       </div>
 
+      <p className="text-sm text-[#526760]" role="note">
+        {activeTab === 'types'
+          ? 'Hạng phòng: thông tin, giá cơ bản và tiện ích chung cho tất cả phòng thuộc hạng. Có thể cấu hình tiện ích ngay cả khi chưa tạo phòng vật lý.'
+          : 'Phòng vật lý: quản lý từng số phòng và tiện ích bổ sung riêng. Tiện ích chung được kế thừa từ hạng phòng.'}
+      </p>
+      {!isAdmin && latestReview.isError && <Alert showIcon type="warning" title="Chưa tải được trạng thái xét duyệt" description="Các thao tác sửa hồ sơ tạm khóa để tránh thay đổi bản đang chờ duyệt. Bạn vẫn có thể cập nhật trạng thái phòng." action={<Button onClick={() => void latestReview.refetch()}>Thử lại</Button>} />}
       {/* TAB 1: DANH SÁCH PHÒNG VẬT LÝ */}
       {activeTab === 'rooms' && (
         <>
@@ -197,7 +241,7 @@ export function HotelRoomsPage() {
                   description="Khách sạn cần có ít nhất 1 loại phòng (hạng phòng như Standard, Deluxe...) trước khi có thể khởi tạo các số phòng vật lý thực tế."
                   action={
                     <Button
-                      type="primary"
+                      type="primary" disabled={profileLocked}
                       icon={<PlusOutlined />}
                       onClick={() => {
                         setActiveTab('types')
@@ -219,9 +263,9 @@ export function HotelRoomsPage() {
                   }
                   action={
                     <Button
-                      type="primary"
+                      type="primary" disabled={profileLocked}
                       icon={<PlusOutlined />}
-                      onClick={() => navigate(`/hotels/${hotelId}/rooms/new?tab=room`)}
+                      onClick={() => navigate(`/hotels/${hotelId}/rooms/new?tab=room${selectedRoomTypeId ? `&roomTypeId=${selectedRoomTypeId}` : ''}`)}
                       className="!bg-[#0b5f53] !rounded-xl font-semibold mt-3"
                     >
                       Thêm phòng vật lý mới
@@ -233,6 +277,7 @@ export function HotelRoomsPage() {
           ) : (
             <div className="bg-white rounded-2xl border border-[#dce7e3] overflow-hidden shadow-xs">
               <Table
+                scroll={{ x: 900 }}
                 dataSource={physicalRooms}
                 rowKey="id"
                 pagination={{ current: currentPage + 1, pageSize, total: roomPage?.totalItems ?? 0, showSizeChanger: true, onChange: (page, size) => { setCurrentPage(page - 1); setPageSize(size) } }}
@@ -269,53 +314,44 @@ export function HotelRoomsPage() {
                     },
                   },
                   {
-                    title: 'Trạng thái buồng phòng',
+                    title: 'Trạng thái phòng',
                     dataIndex: 'readiness',
                     key: 'readiness',
-                    render: (readiness: string, record) => renderReadinessTag(readiness, record.id),
+                    render: (readiness: string, record) => renderReadinessTag(readiness, record.id, record.roomNumber),
                   },
                   {
-                    title: 'Ngày vận hành',
+                    title: 'Vận hành',
                     dataIndex: 'operationalFrom',
                     key: 'operationalFrom',
-                    render: (operationalFrom: string) => (
-                      <span className="text-xs text-[#5f736e]">
-                        {operationalFrom ? dayjs(operationalFrom).format('DD/MM/YYYY') : '—'}
-                      </span>
-                    ),
+                    render: (_: string, record) => <div className="space-y-1"><RoomOperationalStatusTag status={record.operationalStatus} /><div className="text-xs text-[#526760]">Từ {dayjs(record.operationalFrom).format('DD/MM/YYYY HH:mm')}{record.operationalUntil && <><br />Đến {dayjs(record.operationalUntil).format('DD/MM/YYYY HH:mm')}</>}</div></div>,
                   },
                   {
                     title: 'Thao tác',
+                    width: 96,
                     key: 'action',
                     align: 'right',
                     render: (_, record) => (
-                      <div className="flex items-center justify-end gap-1.5">
+                      <Dropdown
+                        trigger={['click']}
+                        placement="bottomRight"
+                        menu={{
+                          items: [
+                            { key: 'edit', label: 'Sửa', disabled: profileLocked, icon: <EditOutlined /> },
+                            { key: 'amenities', label: 'Tiện ích riêng', disabled: profileLocked, icon: <AppstoreOutlined /> },
+                          ],
+                          onClick: ({ key }) => {
+                            if (key === 'edit') editRoom(record, 'info')
+                            else if (key === 'amenities') editRoom(record, 'amenities')
+                          },
+                        }}
+                      >
                         <Button
-                          size="small"
-                          icon={<EditOutlined />}
-                          onClick={() => {
-                            setEditingRoom(record)
-                            roomEditForm.resetFields()
-                            roomEditForm.setFieldsValue({
-                              roomNumber: record.roomNumber,
-                              floor: record.floor,
-                              status: record.readiness,
-                            })
-                          }}
-                        >
-                          Sửa
-                        </Button>
-                        <Button
-                          size="small"
-                          onClick={() =>
-                            navigate(
-                              `/hotels/${hotelId}/rooms/physical/${record.id}/amenities`,
-                            )
-                          }
-                        >
-                          Tiện ích
-                        </Button>
-                      </div>
+                          type="text"
+                          icon={<EllipsisOutlined className="text-lg" />}
+                          aria-label={`Thao tác phòng ${record.roomNumber}`}
+                          title="Thao tác phòng"
+                        />
+                      </Dropdown>
                     ),
                   },
                 ]}
@@ -342,7 +378,7 @@ export function HotelRoomsPage() {
                 description="Hãy tạo loại phòng đầu tiên để khách sạn có thể thiết lập giá và tạo phòng vật lý."
                 action={
                   <Button
-                    type="primary"
+                    type="primary" disabled={profileLocked}
                     icon={<PlusOutlined />}
                     onClick={() => navigate(`/hotels/${hotelId}/rooms/new?tab=room-type`)}
                     className="!bg-[#0b5f53] mt-3"
@@ -355,6 +391,7 @@ export function HotelRoomsPage() {
           ) : (
             <div className="bg-white rounded-2xl border border-[#dce7e3] overflow-hidden shadow-xs">
               <Table
+                scroll={{ x: 900 }}
                 dataSource={roomTypes}
                 rowKey="id"
                 pagination={false}
@@ -365,12 +402,9 @@ export function HotelRoomsPage() {
                     key: 'name',
                     render: (name: string, record) => (
                       <div>
-                        <Link
-                          to={`/hotels/${hotelId}/rooms/${record.id}`}
-                          className="font-bold text-[#12211d] hover:text-[#0b5f53]"
-                        >
+                        <Button type="link" onClick={() => setDetailRoomTypeId(record.id)} className="!p-0 !h-auto !whitespace-normal !text-left font-bold !text-[#12211d]">
                           {name}
-                        </Link>
+                        </Button>
                         {record.description && (
                           <div className="text-xs text-[#5f736e] line-clamp-1 mt-0.5">
                             {record.description}
@@ -378,6 +412,12 @@ export function HotelRoomsPage() {
                         )}
                       </div>
                     ),
+                  },
+                  {
+                    title: 'Giá cơ bản / đêm',
+                    dataIndex: 'basePrice',
+                    key: 'basePrice',
+                    render: (value: number | undefined) => <span className="tabular-nums">{value === undefined ? 'Chưa tải được giá' : value > 0 ? formatCurrencyAmount(value, 'VND') : 'Chưa thiết lập'}</span>,
                   },
                   {
                     title: 'Sức chứa',
@@ -402,24 +442,35 @@ export function HotelRoomsPage() {
                   },
                   {
                     title: 'Thao tác',
+                    width: 96,
                     key: 'action',
                     align: 'right',
                     render: (_, record) => (
-                      <div className="flex items-center justify-end gap-2">
+                      <Dropdown
+                        trigger={['click']}
+                        placement="bottomRight"
+                        menu={{
+                          items: [
+                            { key: 'add-room', label: 'Thêm phòng thuộc hạng này', disabled: profileLocked || !record.active, icon: <PlusOutlined /> },
+                            { key: 'edit', label: 'Chỉnh sửa', disabled: profileLocked, icon: <EditOutlined /> },
+                            { key: 'detail', label: 'Chi tiết', icon: <EyeOutlined /> },
+                            { key: 'amenities', label: 'Tiện ích hạng phòng', disabled: profileLocked, icon: <AppstoreOutlined /> },
+                          ],
+                          onClick: ({ key }) => {
+                            if (key === 'add-room') navigate(`/hotels/${hotelId}/rooms/new?tab=room&roomTypeId=${record.id}`)
+                            else if (key === 'edit') editType(record, 'info')
+                            else if (key === 'detail') setDetailRoomTypeId(record.id)
+                            else if (key === 'amenities') editType(record, 'amenities')
+                          },
+                        }}
+                      >
                         <Button
-                          size="small"
-                          icon={<EditOutlined />}
-                          onClick={() => setEditingRoomType(record)}
-                        >
-                          Chỉnh sửa
-                        </Button>
-                        <Button
-                          size="small"
-                          onClick={() => navigate(`/hotels/${hotelId}/rooms/${record.id}`)}
-                        >
-                          Chi tiết
-                        </Button>
-                      </div>
+                          type="text"
+                          icon={<EllipsisOutlined className="text-lg" />}
+                          aria-label={`Thao tác hạng phòng ${record.name}`}
+                          title="Thao tác hạng phòng"
+                        />
+                      </Dropdown>
                     ),
                   },
                 ]}
@@ -432,7 +483,11 @@ export function HotelRoomsPage() {
       {/* MODAL SỬA PHÒNG VẬT LÝ (HT21: UpdateRoomRequest) */}
       <Modal
         title={`Chỉnh sửa phòng ${editingRoom?.roomNumber || ''}`}
-        open={Boolean(editingRoom)}
+        width={800}
+        styles={{ body: { maxHeight: '72vh', overflowY: 'auto' } }}
+        footer={editRoomTab === 'amenities' ? null : undefined}
+        key={editingRoom?.id ?? 'no-room'}
+        open={Boolean(editingRoom) && !profileLocked}
         onCancel={() => setEditingRoom(null)}
         onOk={handleSaveRoomEdit}
         confirmLoading={isUpdatingRoom}
@@ -440,7 +495,8 @@ export function HotelRoomsPage() {
         cancelText="Hủy"
         okButtonProps={{ className: '!bg-[#0b5f53]' }}
       >
-        <Form form={roomEditForm} layout="vertical" className="mt-4">
+        <Tabs activeKey={editRoomTab} onChange={(key) => setEditRoomTab(key as 'info' | 'amenities')} items={[
+          { key: 'info', label: 'Thông tin phòng vật lý', forceRender: true, children: <Form form={roomEditForm} layout="vertical" className="mt-4">
           <Form.Item
             label="Số phòng"
             name="roomNumber"
@@ -453,24 +509,42 @@ export function HotelRoomsPage() {
             <Input placeholder="VD: 1, 2, 3..." />
           </Form.Item>
 
-          <Form.Item label="Hoạt động" name="active" help="Để trống để giữ nguyên. Mở lại phòng sẽ xóa ngày kết thúc phục vụ.">
-            <Select allowClear placeholder="Giữ nguyên" options={[{ value: true, label: 'Sử dụng' }, { value: false, label: 'Ngừng sử dụng' }]} />
-          </Form.Item>
-          <Form.Item label="Trạng thái buồng phòng" name="status" help="DIRTY chỉ có nghĩa chưa sẵn sàng; backend chưa phân biệt dọn dẹp và bảo trì.">
-            <Select
-              options={[
-                { value: 'ready', label: '🟢 Sẵn sàng phục vụ (ready)' },
-                { value: 'cleaning', label: '🟡 Cần dọn (DIRTY)' },
-                { value: 'dirty', label: 'Chưa sẵn sàng (DIRTY)', disabled: true },
-              ]}
-            />
-          </Form.Item>
-        </Form>
+          <section className="mb-5 rounded-xl border border-[#dce7e3] p-4 space-y-3">
+            <div><strong>Vận hành: </strong><RoomOperationalStatusTag status={editingRoom?.operationalStatus} /></div>
+            <p className="text-sm text-[#526760]">Bắt đầu: {editingRoom && dayjs(editingRoom.operationalFrom).format('DD/MM/YYYY HH:mm')}{editingRoom?.operationalUntil ? ` · Kết thúc: ${dayjs(editingRoom.operationalUntil).format('DD/MM/YYYY HH:mm')}` : ' · Không giới hạn ngày kết thúc'}</p>
+            {editingRoom?.operationalStatus && editingRoom.operationalStatus !== 'SCHEDULED' && <Button danger={editingRoom.operationalStatus === 'OPERATING'} loading={updateRoom.isPending} onClick={() => {
+              const room = editingRoom
+              const active = room.operationalStatus === 'STOPPED'
+              modal.confirm({ title: active ? 'Đưa phòng vào sử dụng lại?' : 'Ngừng phục vụ phòng này?', content: 'Thay đổi thời gian phục vụ; không thay đổi trạng thái sẵn sàng.', okText: 'Xác nhận', cancelText: 'Hủy', onOk: async () => {
+                try { await updateRoom.mutateAsync({ roomId: room.id, payload: { active } }); setEditingRoom(null); message.success('Đã cập nhật vận hành') }
+                catch (error) { message.error(error instanceof Error ? error.message : 'Không cập nhật được phòng'); throw error }
+              } })
+            }}>{editingRoom.operationalStatus === 'STOPPED' ? 'Đưa vào sử dụng lại' : 'Ngừng phục vụ'}</Button>}
+          </section>
+          <Form.Item label="Trạng thái phòng" name="status" help="Sẵn sàng đón khách hoặc chưa sẵn sàng; không thay đổi thời gian phục vụ."><Select options={roomReadinessOptions} /></Form.Item>
+        </Form> },
+          { key: 'amenities', label: 'Tiện ích riêng của phòng', children: editingRoom && <div>
+            <p className="text-sm text-[#526760] mb-4">Chỉ bổ sung cho phòng {editingRoom.roomNumber}. Tiện ích chung của hạng phòng được hiển thị để đối chiếu.</p>
+            <HotelAmenitiesManager hotelId={hotelId} roomId={editingRoom.id} roomNumber={editingRoom.roomNumber} roomTypeId={editingRoom.roomTypeId} roomTypeName={roomTypes.find((type) => type.id === editingRoom.roomTypeId)?.name} />
+          </div> },
+        ]} />
       </Modal>
 
+      {selectedDetailId && (detailRoomType ? <RoomTypeDetailsModal
+        hotelId={hotelId}
+        roomType={detailRoomType}
+        readOnly={profileLocked}
+        onClose={closeDetails}
+        onEdit={() => { closeDetails(); editType(detailRoomType, 'info') }}
+        onAmenities={() => { closeDetails(); editType(detailRoomType, 'amenities') }}
+        onViewRooms={() => { closeDetails(); setSelectedRoomTypeId(detailRoomType.id); setCurrentPage(0); setActiveTab('rooms') }}
+      /> : <Modal open title="Chi tiết hạng phòng" onCancel={closeDetails} footer={<Button onClick={closeDetails}>Đóng</Button>}>
+        {roomTypesQuery.isPending ? <PageLoading /> : roomTypesQuery.isError ? <ErrorState error={roomTypesQuery.error} onRetry={() => void roomTypesQuery.refetch()} /> : <EmptyState title="Không tìm thấy hạng phòng" description="Hạng phòng không tồn tại trong khách sạn này." />}
+      </Modal>)}
       {/* Modal chỉnh sửa loại phòng */}
       <EditRoomTypeModal
-        open={Boolean(editingRoomType)}
+        initialTab={editTypeTab}
+        open={Boolean(editingRoomType) && !profileLocked}
         roomType={editingRoomType}
         hotelId={hotelId}
         onClose={() => setEditingRoomType(null)}

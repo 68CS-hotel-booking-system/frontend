@@ -11,13 +11,14 @@ import {
   type CreateCustomAmenityPayload,
   type UpdateCustomAmenityPayload,
 } from '../api/scoped-amenities-api'
+import { ApiError } from '@/shared/api/api-error'
 import { hotelManagementKeys } from './hotel-query-keys'
 
 /**
  * Hook đọc tiện ích quản lý của khách sạn hoặc phòng vật lý (GET H / GET R).
  * Sử dụng được kể cả khi khách sạn còn DRAFT.
  */
-export function useScopedAmenitiesQuery(scope: AmenityScope) {
+export function useScopedAmenitiesQuery(scope: AmenityScope, enabled = true) {
   const isScopeValid =
     Boolean(scope.hotelId) &&
     (scope.roomId === undefined || scope.roomId === null || Boolean(scope.roomId))
@@ -25,7 +26,7 @@ export function useScopedAmenitiesQuery(scope: AmenityScope) {
   return useQuery({
     queryKey: hotelManagementKeys.scopedAmenities(scope.hotelId, scope.roomId),
     queryFn: ({ signal }) => getScopedAmenities(scope, signal),
-    enabled: isScopeValid,
+    enabled: isScopeValid && enabled,
     retry: false,
   })
 }
@@ -105,6 +106,7 @@ export function useUpdateCustomAmenityMutation(scope: AmenityScope) {
       payload: UpdateCustomAmenityPayload
     }) => updateCustomAmenity(scope, amenityId, payload),
     retry: false,
+    onError: async error => { if (error instanceof ApiError && error.status === 409) await queryClient.invalidateQueries({ queryKey: hotelManagementKeys.scopedAmenities(scope.hotelId, scope.roomId) }) },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: hotelManagementKeys.scopedAmenities(scope.hotelId, scope.roomId),

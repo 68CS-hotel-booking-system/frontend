@@ -59,7 +59,9 @@ export function AdminLayout() {
 
   // Derive current page title for breadcrumb
   let currentPageTitle = 'Quản lý'
-  if (location.pathname.includes('/admin/users')) {
+  if (location.pathname.includes('/admin/hotel-review-requests')) {
+    currentPageTitle = 'Xét duyệt khách sạn'
+  } else if (location.pathname.includes('/admin/users')) {
     currentPageTitle = 'Người dùng & Phân quyền'
   } else if (location.pathname.includes('/admin/overview')) {
     currentPageTitle = 'Tổng quan'

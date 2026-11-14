@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { http } from '@/shared/api/http'
+import { readinessPatchStatus } from '../model/room-status'
 import { managementRoomTypeSchema } from './room-type-api'
 
 export interface RoomPaginationParams { page?: number; size?: number }
@@ -10,6 +11,7 @@ export const managementRoomSchema = z.object({
   roomNumber: z.string(),
   floor: z.string().nullable().optional(),
   readiness: z.enum(['READY', 'DIRTY', 'ready', 'dirty']).transform((value) => value.toLowerCase()),
+  operationalStatus: z.enum(['SCHEDULED', 'OPERATING', 'STOPPED']).optional(),
   readinessUpdatedAt: z.string().nullable().optional(),
   operationalFrom: z.string(),
   operationalUntil: z.string().nullable().optional(),
@@ -49,8 +51,9 @@ export interface CreateRoomPayload {
   roomTypeId: string
   roomNumber: string
   floor?: string
-  operationalFrom: string
+  operationalFrom?: string
   operationalUntil?: string
+  readiness?: 'READY' | 'DIRTY'
 }
 export interface UpdateRoomPayload {
   roomNumber?: string
@@ -115,10 +118,10 @@ export function buildRoomEditPayload(
     payload.floor = floor
   }
   if (values.status !== undefined && values.status !== room.readiness) {
-    if (values.status !== 'ready' && values.status !== 'cleaning' && values.status !== 'maintenance') {
-      throw new Error('Trạng thái buồng phòng không hợp lệ.')
+    if (values.status !== 'dirty' && values.status !== 'ready' && values.status !== 'cleaning' && values.status !== 'maintenance') {
+      throw new Error('Trạng thái phòng không hợp lệ.')
     }
-    payload.status = values.status
+    payload.status = values.status === 'dirty' ? readinessPatchStatus(values.status) : values.status
   }
   if (values.active !== undefined) payload.active = values.active
   return payload

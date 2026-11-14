@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { Select } from 'antd'
-import { useHotelWorkspace, HotelAmenitiesManager } from '@/features/hotels'
+import { useHotelWorkspace, HotelAmenitiesManager, RoomTypeAmenitiesSummary } from '@/features/hotels'
 import { useManagementRoomTypesQuery } from '@/features/rooms'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { PageLoading } from '@/shared/ui/PageLoading'
@@ -10,7 +10,8 @@ import { EmptyState } from '@/shared/ui/EmptyState'
 export function HotelRoomAmenitiesPage() {
   const { hotel, hotelId } = useHotelWorkspace()
   const types = useManagementRoomTypesQuery(hotelId)
-  const [selected, setSelected] = useState('')
+  const [params, setParams] = useSearchParams()
+  const selected = params.get('roomTypeId') ?? ''
 
   if (!hotel) return null
   if (types.isPending) return <PageLoading />
@@ -51,9 +52,11 @@ export function HotelRoomAmenitiesPage() {
           className="w-full sm:w-80"
           value={room.id}
           options={types.data.map((type) => ({ value: type.id, label: type.name }))}
-          onChange={setSelected}
+          onChange={(id) => setParams({ roomTypeId: id }, { replace: true })}
         />
       </div>
+
+      <RoomTypeAmenitiesSummary compact hotelId={hotelId} roomTypeId={room.id} />
 
       <HotelAmenitiesManager
         hotelId={hotelId}

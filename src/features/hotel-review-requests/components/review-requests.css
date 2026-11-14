@@ -1,0 +1,23 @@
+.review-management-page { min-width: 0; }
+.review-management-page .ant-table-wrapper { max-width: 100%; min-width: 0; }
+.review-request-modal .ant-modal-body { scrollbar-gutter: stable; }
+.review-request-detail .ant-tabs-content-holder { min-width: 0; }
+.review-request-detail .ant-descriptions-item-content { overflow-wrap: anywhere; }
+.review-request-detail .ant-descriptions-item-label { color: #526760; }
+.review-request-detail .ant-image { width: 100%; }
+.review-request-detail .ant-tabs-nav { max-width: 100%; }
+.review-decision-footer { background: white; }
+@media (max-width: 639px) {
+  .review-request-detail .ant-descriptions-row { display: flex; flex-direction: column; }
+  .review-request-detail .ant-descriptions-item-label { min-width: auto !important; }
+}
+
+.review-management-page .surface-card { padding: 20px; }
+.review-management-page .ant-alert-info,
+.review-request-detail .ant-alert-info { background: #f0f7f6; border-color: #cfe5dd; }
+.review-management-page .page-header-container .uppercase { font-size: 12px; }
+@media (max-width: 639px) {
+  .review-management-page .surface-card { padding: 16px; }
+}
+
+.review-management-page .ant-empty-description { color: #526760; }

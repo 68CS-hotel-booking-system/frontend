@@ -1,7 +1,10 @@
 import { createContext, useContext } from 'react'
 import type { ManagementHotelDetail } from '../model/hotel'
 
+export type CompletionResourceStates = Partial<Record<'photos' | 'amenities' | 'rooms' | 'pricing', 'loading' | 'error'>>
+
 export interface HotelCompletionStatus {
+  resourceStates?: CompletionResourceStates
   percent: number
   sections: {
     info: boolean
@@ -39,6 +42,7 @@ export function useHotelWorkspace(): HotelWorkspaceContextValue {
 
 export function calculateHotelCompletion(
   hotel?: Partial<ManagementHotelDetail> | null,
+  resourceStates: CompletionResourceStates = {},
 ): HotelCompletionStatus {
   if (!hotel) {
     return {
@@ -60,30 +64,25 @@ export function calculateHotelCompletion(
   const photosDone = hotel.imageCount !== undefined ? hotel.imageCount > 0 : Boolean(hotel.coverImageUrl)
   const amenitiesDone = Boolean(hotel.amenityIds && hotel.amenityIds.length > 0)
   const roomsDone = Boolean(hotel.roomTypes && hotel.roomTypes.length > 0)
-  const pricingDone = hotel.hasConfiguredRates === true
+  const activeRoomTypes = hotel.roomTypes?.filter((room) => room.isActive) ?? []
+  const pricingDone = activeRoomTypes.length > 0 && activeRoomTypes.every((room) => (room.basePrice ?? 0) > 0)
   const policiesDone = Boolean(hotel.checkInTime && hotel.checkOutTime)
   const bookingsDone = hotel.status === 'ACTIVE'
   const reviewsDone = hotel.status === 'ACTIVE'
 
-  let score = 0
-  if (infoDone) score += 25
-  if (photosDone) score += 20
-  if (amenitiesDone) score += 15
-  if (roomsDone) score += 20
-  if (pricingDone) score += 10
-  if (policiesDone) score += 10
-
-  return {
-    percent: Math.min(100, score),
-    sections: {
-      info: infoDone,
-      photos: photosDone,
-      amenities: amenitiesDone,
-      rooms: roomsDone,
-      pricing: pricingDone,
-      policies: policiesDone,
-      bookings: bookingsDone,
-      reviews: reviewsDone,
-    },
+  const sections = {
+    info: infoDone,
+    photos: photosDone && !resourceStates.photos,
+    amenities: amenitiesDone && !resourceStates.amenities,
+    rooms: roomsDone && !resourceStates.rooms,
+    pricing: pricingDone && !resourceStates.pricing,
+    policies: policiesDone,
+    bookings: bookingsDone,
+    reviews: reviewsDone,
   }
+  const percent = (sections.info ? 25 : 0) + (sections.photos ? 20 : 0)
+    + (sections.amenities ? 15 : 0) + (sections.rooms ? 20 : 0)
+    + (sections.pricing ? 10 : 0) + (sections.policies ? 10 : 0)
+
+  return { percent, sections, resourceStates }
 }

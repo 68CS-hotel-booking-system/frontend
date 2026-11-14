@@ -35,6 +35,8 @@ describe('CreateHotelForm component' , () => {
 
     // Backend-supported fields present
     expect(markup).toContain('Tên khách sạn chính thức')
+    expect(markup).toContain('Số điện thoại liên hệ')
+    expect(markup).toContain('Email liên hệ')
     expect(markup).toContain('Tiêu chuẩn sao')
     expect(markup).toContain('Tỉnh / Thành phố')
     expect(markup).toContain('Mô tả &amp; Điểm nổi bật')
@@ -72,4 +74,23 @@ describe('CreateHotelForm component' , () => {
     expect(markup).not.toContain('Email lễ tân')
     expect(markup).not.toContain('Tiện ích &amp; Dịch vụ khách sạn')
   })
+  it('collects contact information in the owner creation form', () => {
+    auth.isAdmin = false
+    auth.isOwner = true
+    try {
+      const qc = new QueryClient()
+      qc.setQueryData(['hotels', 'catalog', 'cities', 'api'], [])
+      const html = renderToStaticMarkup(<QueryClientProvider client={qc}><AntApp><CreateHotelForm /></AntApp></QueryClientProvider>)
+      expect(html).toContain('Số điện thoại liên hệ')
+      expect(html).toContain('Email liên hệ')
+      expect(html).toContain('name="contactPhone"')
+      expect(html).toContain('name="contactEmail"')
+      expect(html).toContain('ít nhất số điện thoại hoặc email')
+      expect(html).toContain('không hiển thị cho khách đặt phòng')
+    } finally {
+      auth.isAdmin = true
+      auth.isOwner = false
+    }
+  })
+
 })

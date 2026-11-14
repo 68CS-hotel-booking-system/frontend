@@ -141,3 +141,20 @@ describe('room edit payloads', () => {
     }
   })
 })
+
+describe('two-state room readiness', () => {
+  it('saves not-ready using the existing PATCH contract without changing operation', async () => {
+    const { buildRoomEditPayload } = await import('./room-api')
+    expect(buildRoomEditPayload({ roomNumber: '101', floor: '1', readiness: 'ready' }, { roomNumber: '101', floor: '1', status: 'dirty' })).toEqual({ status: 'cleaning' })
+  })
+  it('creates an immediately operating and ready room in a single POST using server time', async () => {
+    const hotelId = '11111111-1111-4111-8111-111111111111'
+    const roomTypeId = '33333333-3333-4333-8333-333333333333'
+    respond({ id: hotelId, roomTypeId, roomNumber: '101', readiness: 'READY', operationalStatus: 'OPERATING', operationalFrom: '2026-11-13T00:00:00Z' }, 201)
+    const { createManagementRoom } = await import('./room-api')
+    const result = await createManagementRoom(hotelId, { roomTypeId, roomNumber: '101', readiness: 'READY' })
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({ roomTypeId, roomNumber: '101', readiness: 'READY' })
+    expect(result.operationalStatus).toBe('OPERATING')
+  })
+})

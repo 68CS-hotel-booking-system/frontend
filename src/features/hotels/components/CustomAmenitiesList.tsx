@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   CheckCircleOutlined,
   DeleteOutlined,
@@ -8,12 +8,12 @@ import {
 } from '@ant-design/icons'
 import {
   Alert,
+  App,
   Button,
   Collapse,
   Modal,
   Tag,
   Tooltip,
-  message,
 } from 'antd'
 import type { CustomAmenity } from '../model/scoped-amenity-schemas'
 import {
@@ -31,13 +31,22 @@ interface CustomAmenitiesListProps {
   customAmenities: CustomAmenity[]
   scope: AmenityScope
   scopeLabel: string
+  title?: string
+  compact?: boolean
+  readOnly?: boolean
+  knownNames?: string[]
+  onBusyChange?: (busy: boolean) => void
 }
 
 export function CustomAmenitiesList({
   customAmenities,
   scope,
   scopeLabel,
+  title = 'Tiện ích riêng',
+  compact = false, readOnly = false, knownNames = [], onBusyChange,
 }: CustomAmenitiesListProps) {
+  const { message } = App.useApp()
+  const [formBusy, setFormBusy] = useState(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [editingAmenity, setEditingAmenity] = useState<CustomAmenity | null>(null)
   const [detachingAmenity, setDetachingAmenity] = useState<CustomAmenity | null>(null)
@@ -46,6 +55,8 @@ export function CustomAmenitiesList({
   const detachMutation = useDetachCustomAmenityMutation(scope)
   const updateMutation = useUpdateCustomAmenityMutation(scope)
 
+  const busy = formBusy || detachMutation.isPending || updateMutation.isPending
+  useEffect(() => { onBusyChange?.(busy) }, [busy, onBusyChange])
   const activeAmenities = customAmenities.filter((item) => item.attached)
   const detachedAmenities = customAmenities.filter((item) => !item.attached)
 
@@ -61,7 +72,8 @@ export function CustomAmenitiesList({
       void message.success(`Đã tháo tiện ích "${detachingAmenity.name}". Mục này được chuyển vào danh sách "Đã tháo".`)
       setDetachingAmenity(null)
     } catch (error) {
-      setActionError(getAmenityErrorMessage(error))
+      const detail = getAmenityErrorMessage(error)
+      setActionError(detail); void message.error(detail)
     }
   }
 
@@ -78,17 +90,18 @@ export function CustomAmenitiesList({
       })
       void message.success(`Đã gắn lại tiện ích "${item.name}".`)
     } catch (error) {
-      setActionError(getAmenityErrorMessage(error))
+      const detail = getAmenityErrorMessage(error)
+      setActionError(detail); void message.error(detail)
     }
   }
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-[#dce7e3] shadow-xs space-y-5">
+    <div className={compact ? "space-y-4" : "bg-white p-4 sm:p-5 rounded-2xl border border-[#dce7e3] shadow-xs space-y-5"}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#dce7e3]">
         <div>
-          <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-[#12211d] m-0">Tiện ích riêng</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-bold text-[#12211d] m-0">{title}</h3>
             <Tag color="cyan" className="!rounded-md !m-0">
               Đang gắn: {activeAmenities.length}
             </Tag>
@@ -98,8 +111,9 @@ export function CustomAmenitiesList({
           </p>
         </div>
 
-        <Button
+        {!readOnly && <Button
           type="primary"
+          disabled={busy}
           icon={<PlusOutlined />}
           onClick={() => {
             setActionError(null)
@@ -107,8 +121,8 @@ export function CustomAmenitiesList({
           }}
           className="!bg-[#0b5f53] !border-[#0b5f53] !rounded-xl font-medium shrink-0"
         >
-          Thêm tiện ích riêng
-        </Button>
+          {compact ? '+ Thêm' : 'Thêm tiện ích riêng'}
+        </Button>}
       </div>
 
       {actionError && (
@@ -140,7 +154,7 @@ export function CustomAmenitiesList({
               className="p-3.5 rounded-xl border border-[#dce7e3] bg-[#fcfdfd] hover:border-[#0b5f53] transition-colors flex items-start justify-between gap-3 group"
             >
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <CheckCircleOutlined className="text-[#0b5f53] text-sm shrink-0" />
                   <span className="text-sm font-semibold text-[#12211d] truncate">
                     {item.name}
@@ -155,11 +169,13 @@ export function CustomAmenitiesList({
                 )}
               </div>
 
-              <div className="flex items-center gap-1 shrink-0 pt-0.5">
+              {!readOnly && <div className="flex items-center gap-1 shrink-0 pt-0.5">
                 <Tooltip title="Chỉnh sửa tiện ích">
                   <Button
                     type="text"
+                    disabled={busy}
                     size="small"
+                    aria-label={`Sửa tiện ích ${item.name}`}
                     icon={<EditOutlined />}
                     onClick={() => {
                       setActionError(null)
@@ -171,8 +187,10 @@ export function CustomAmenitiesList({
                 <Tooltip title="Tháo tiện ích (có thể gắn lại)">
                   <Button
                     type="text"
+                    disabled={busy}
                     size="small"
                     danger
+                    aria-label={`Tháo tiện ích ${item.name}`}
                     icon={<DeleteOutlined />}
                     onClick={() => {
                       setActionError(null)
@@ -181,7 +199,7 @@ export function CustomAmenitiesList({
                     className="hover:!bg-red-50"
                   />
                 </Tooltip>
-              </div>
+              </div>}
             </div>
           ))}
         </div>
@@ -192,12 +210,12 @@ export function CustomAmenitiesList({
         <div className="pt-2 border-t border-[#dce7e3]">
           <Collapse
             ghost
-            defaultActiveKey={['detached']}
+            defaultActiveKey={compact ? [] : ['detached']}
             items={[
               {
                 key: 'detached',
                 label: (
-                  <div className="flex items-center gap-2 text-xs font-semibold text-[#5f736e]">
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#5f736e]">
                     <span>Danh sách tiện ích đã tháo ({detachedAmenities.length})</span>
                     <span className="text-[11px] font-normal text-[#8c9e99]">
                       — Nhấn để mở rộng và gắn lại khi cần
@@ -226,6 +244,7 @@ export function CustomAmenitiesList({
                             )}
                           </div>
                           <Button
+                            disabled={readOnly || busy}
                             size="small"
                             icon={<RedoOutlined />}
                             loading={updateMutation.isPending}
@@ -247,7 +266,10 @@ export function CustomAmenitiesList({
 
       {/* Modal tạo mới */}
       <CustomAmenityCreateModal
-        open={createModalOpen}
+        onBusyChange={setFormBusy}
+        open={createModalOpen && !readOnly}
+        knownNames={[...knownNames, ...customAmenities.map(item => item.name)]}
+        onSuccess={() => void message.success('Đã thêm tiện ích riêng')}
         scope={scope}
         scopeLabel={scopeLabel}
         onClose={() => setCreateModalOpen(false)}
@@ -257,7 +279,10 @@ export function CustomAmenitiesList({
       {editingAmenity && (
         <CustomAmenityEditModal
           key={editingAmenity.id}
-          open={Boolean(editingAmenity)}
+          onBusyChange={setFormBusy}
+          knownNames={[...knownNames, ...customAmenities.filter(item => item.id !== editingAmenity.id).map(item => item.name)]}
+          open={Boolean(editingAmenity) && !readOnly}
+          onSuccess={() => void message.success('Đã cập nhật tiện ích riêng')}
           amenity={editingAmenity}
           scope={scope}
           scopeLabel={scopeLabel}
@@ -268,7 +293,7 @@ export function CustomAmenitiesList({
       {/* Modal xác nhận tháo */}
       <Modal
         title={`Tháo tiện ích "${detachingAmenity?.name}"?`}
-        open={Boolean(detachingAmenity)}
+        open={Boolean(detachingAmenity) && !readOnly}
         onCancel={() => {
           if (!detachMutation.isPending) setDetachingAmenity(null)
         }}
