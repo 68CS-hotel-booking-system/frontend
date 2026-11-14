@@ -37,6 +37,8 @@ export async function createAdminHotel(
         name: payload.name,
         description: payload.description,
         address: payload.address,
+        contactPhone: payload.contactPhone?.trim() || undefined,
+        contactEmail: payload.contactEmail?.trim() || undefined,
         latitude: payload.latitude,
         longitude: payload.longitude,
         starRating: payload.starRating,

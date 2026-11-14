@@ -36,6 +36,7 @@ export function RoomTypeDailyRatesPanel({ hotelId, hotelName, roomTypes = [], ho
   const [selectedId, setSelectedId] = useState(roomTypes[0]?.id ?? '')
   const roomTypeId = roomTypes.some((room) => room.id === selectedId) ? selectedId : roomTypes[0]?.id ?? ''
   const selectedRoom = roomTypes.find((room) => room.id === roomTypeId)
+  const basePriceLabel = selectedRoom?.basePrice === undefined ? 'Chưa tải được giá cơ bản' : selectedRoom.basePrice > 0 ? money(selectedRoom.basePrice) : 'Chưa có giá cơ bản'
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [editingRate, setEditingRate] = useState<DailyRoomRate | null>(null)
   const [singleAmount, setSingleAmount] = useState<number | null>(null)
@@ -127,7 +128,7 @@ export function RoomTypeDailyRatesPanel({ hotelId, hotelName, roomTypes = [], ho
             <Button type="link" href={`/hotels/${hotelId}/rooms`} className="!p-0">Sửa hạng phòng</Button>
           </div>
           <div className="mt-1 break-words text-xl font-semibold tabular-nums">
-            {(selectedRoom?.basePrice ?? 0) > 0 ? money(selectedRoom!.basePrice!) : 'Chưa có giá cơ bản'}
+            {basePriceLabel}
           </div>
           <p className="mb-0 mt-1 text-xs leading-relaxed text-[#5f736e]">Ngày chưa có giá riêng sẽ dùng giá cơ bản. Giá riêng thay thế giá cơ bản của ngày đó.</p>
         </div>
@@ -228,7 +229,7 @@ export function RoomTypeDailyRatesPanel({ hotelId, hotelName, roomTypes = [], ho
       okButtonProps={{ disabled: !canWrite || singleAmount === null || !Number.isSafeInteger(singleAmount) || singleAmount <= 0 }}>
       <p className="mb-4 text-sm text-[#5f736e]">{selectedRoom?.name}</p>
       <dl className="mb-5 grid grid-cols-2 gap-3 rounded-xl bg-[#f4f8f7] p-3 text-sm">
-        <div><dt className="text-xs text-[#5f736e]">Giá cơ bản</dt><dd className="m-0 mt-1 font-medium">{(selectedRoom?.basePrice ?? 0) > 0 ? money(selectedRoom!.basePrice!) : 'Chưa thiết lập'}</dd></div>
+        <div><dt className="text-xs text-[#5f736e]">Giá cơ bản</dt><dd className="m-0 mt-1 font-medium">{basePriceLabel}</dd></div>
         <div><dt className="text-xs text-[#5f736e]">Giá đang áp dụng</dt><dd className="m-0 mt-1 font-medium">{editingRate ? money(editingRate.effectivePrice) : '—'}{editingRate && <div className="mt-1"><PriceSourceTag source={editingRate.source} /></div>}</dd></div>
       </dl>
       <Form.Item label="Giá riêng mới (VND / phòng / đêm)" htmlFor="single-night-price" layout="vertical"

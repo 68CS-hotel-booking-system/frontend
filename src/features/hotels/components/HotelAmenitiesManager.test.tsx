@@ -120,11 +120,11 @@ describe('HotelAmenitiesManager with Scoped Amenities API', () => {
     expect(html).toContain('Wi-Fi tốc độ cao')
 
     // Direct catalog section
-    expect(html).toContain('Bổ sung từ danh mục')
+    expect(html).toContain('Tiện ích bổ sung riêng cho phòng')
     expect(html).toContain('Ban công hướng biển')
 
     // Custom room section
-    expect(html).toContain('Tiện ích riêng')
+    expect(html).toContain('Tiện ích tự tạo cho phòng')
     expect(html).toContain('Bồn tắm đá tự nhiên 201')
     expect(html).toContain('phòng 201')
   })
@@ -245,4 +245,17 @@ describe('HotelAmenitiesManager with Scoped Amenities API', () => {
     // Room type mode only configures catalog amenities, not custom amenities
     expect(html).not.toContain('Thêm tiện ích riêng')
   })
+  it('keeps custom room amenities available when the shared catalog is empty', () => {
+    const client = new QueryClient()
+    client.setQueryData(hotelManagementKeys.amenities('api:ROOM'), [])
+    client.setQueryData(hotelManagementKeys.scopedAmenities(hotelId, roomId201), {
+      hotelId, roomId: roomId201, catalogAmenities: [], customAmenities: [], inheritedAmenities: [],
+    })
+    const html = renderComponent(<HotelAmenitiesManager hotelId={hotelId} roomId={roomId201} roomTypeId="type-201" roomNumber="201" />, client)
+    expect(html).toContain('Thêm tiện ích riêng')
+    expect(html).toContain('roomTypeId=type-201')
+    expect(html).toContain('Lưu tiện ích riêng của phòng')
+    expect(html).not.toContain('Tiện ích có sẵn của hạng phòng')
+  })
+
 })

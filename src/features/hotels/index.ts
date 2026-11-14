@@ -5,6 +5,7 @@ export { HotelAmenitiesManager } from './components/HotelAmenitiesManager'
 export { HotelGeneralEditForm } from './components/HotelGeneralEditForm'
 export { RoomTypeDailyRatesPanel } from './components/RoomTypeDailyRatesPanel'
 export { useCitiesQuery } from './hooks/use-cities-query'
+export { getCities } from './api/catalog-api'
 export { CreateAdminHotelDrawer } from './components/CreateAdminHotelDrawer'
 export { CreateHotelForm, type CreateHotelFormProps } from './components/CreateHotelForm'
 export { QuickCreateHotelForm, type QuickCreateHotelFormProps } from './components/QuickCreateHotelForm'
@@ -64,3 +65,13 @@ export { InheritedAmenitiesSection } from './components/InheritedAmenitiesSectio
 export { CustomAmenityCreateModal } from './components/CustomAmenityCreateModal'
 export { CustomAmenityEditModal } from './components/CustomAmenityEditModal'
 
+
+export { RoomTypeAmenitiesSummary } from './components/RoomTypeAmenitiesSummary'
+
+export { AmenityScopeEditor } from './components/AmenityScopeEditor'
+export type { AmenityScopeEditorProps, AmenityEditorState } from './components/AmenityScopeEditor'
+export * from './model/amenity-workspace'
+
+export { AmenityScopeTree } from './components/AmenityScopeTree'
+export type { AmenityScopeTreeProps, AmenityTreeItem } from './components/AmenityScopeTree'
+export { useAmenityCounts } from './hooks/use-amenity-counts'

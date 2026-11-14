@@ -10,11 +10,15 @@ import {
 import { Button, Card, Space, Tag } from 'antd'
 import { useNavigate } from 'react-router'
 import { useHotelWorkspace, HotelStatusBadge, CompletionChecklist } from '@/features/hotels'
+import { useCurrentUser } from '@/features/auth'
+import { HotelReviewResultPanel, useHotelReviewRequests } from '@/features/hotel-review-requests'
 import { PageHeader } from '@/shared/ui/PageHeader'
 
 export function HotelOverviewPage() {
   const { hotel, hotelId, completion, refetch } = useHotelWorkspace()
   const navigate = useNavigate()
+  const { isAdmin } = useCurrentUser()
+  const latest = useHotelReviewRequests(hotelId, 0, 1)
 
   if (!hotel) return null
 
@@ -34,12 +38,12 @@ export function HotelOverviewPage() {
         description="Bảng điều khiển cơ sở lưu trú, theo dõi tiến độ hoàn thiện hồ sơ và các chỉ số hoạt động."
         extra={
           <Space>
-            <Button
+            {!isAdmin && latest.isSuccess && latest.data.content[0]?.status !== 'PENDING' && <Button
               icon={<EditOutlined />}
               onClick={() => navigate(`/hotels/${hotelId}/info`)}
             >
               Chỉnh sửa hồ sơ
-            </Button>
+            </Button>}
             {hotel.status === 'ACTIVE' && (
               <Button
                 type="primary"
@@ -53,6 +57,8 @@ export function HotelOverviewPage() {
           </Space>
         }
       />
+
+      <HotelReviewResultPanel hotelId={hotelId} isAdmin={isAdmin} />
 
       {/* 2. Hero Card */}
       <div className="bg-white rounded-2xl border border-[#dce7e3] overflow-hidden shadow-xs">
@@ -127,7 +133,7 @@ export function HotelOverviewPage() {
             Chỉ số vận hành cơ sở
           </h3>
           <span className="text-[11px] text-[#5f736e] italic">
-            Backend chưa cung cấp API thống kê vận hành
+            Thống kê vận hành chưa khả dụng
           </span>
         </div>
 
@@ -144,7 +150,7 @@ export function HotelOverviewPage() {
               —
             </div>
             <div className="text-[11px] text-[#5f736e] mt-1">
-              Chưa có dữ liệu từ API
+              Chưa thể hiển thị thống kê
             </div>
           </Card>
 
@@ -160,7 +166,7 @@ export function HotelOverviewPage() {
               —
             </div>
             <div className="text-[11px] text-[#5f736e] mt-1">
-              Chưa có dữ liệu từ API
+              Chưa thể hiển thị thống kê
             </div>
           </Card>
 
@@ -176,7 +182,7 @@ export function HotelOverviewPage() {
               —
             </div>
             <div className="text-[11px] text-[#5f736e] mt-1">
-              Chưa có dữ liệu từ API
+              Chưa thể hiển thị thống kê
             </div>
           </Card>
         </div>

@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import '@/shared/styles/management-pricing.css'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
   Alert,
+  App,
   Button,
   DatePicker,
   Form,
@@ -13,7 +14,6 @@ import {
   Segmented,
   Select,
   Switch,
-  message,
 } from 'antd'
 import { useNavigate, useSearchParams } from 'react-router'
 import { ArrowLeftOutlined, BuildOutlined, AppstoreAddOutlined, SaveOutlined } from '@ant-design/icons'
@@ -22,6 +22,7 @@ import { useHotelWorkspace } from '@/features/hotels'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { formatCurrencyAmount } from '@/shared/lib/format'
 import {
+  roomReadinessOptions,
   useManagementRoomMutations,
   useManagementRoomTypesQuery,
   type UpdateRoomTypePayload,
@@ -32,8 +33,14 @@ const createPhysicalRoomSchema = z.object({
   roomNumber: z.string().trim().min(1, 'Số phòng không được để trống').max(20, 'Số phòng tối đa 20 ký tự'),
   roomTypeId: z.string().uuid('Vui lòng chọn loại phòng'),
   floor: z.string().trim().max(20, 'Tầng tối đa 20 ký tự').optional(),
-  operationalFrom: z.custom<dayjs.Dayjs>((value) => dayjs.isDayjs(value) && value.isValid(), 'Vui lòng chọn ngày bắt đầu phục vụ'),
+  operationMode: z.enum(['now', 'scheduled']),
+  readiness: z.enum(['ready', 'dirty']),
+  operationalFrom: z.custom<dayjs.Dayjs>((value) => dayjs.isDayjs(value) && value.isValid(), 'Vui lòng chọn ngày bắt đầu phục vụ').nullish(),
   operationalUntil: z.custom<dayjs.Dayjs>((value) => dayjs.isDayjs(value) && value.isValid(), 'Ngày kết thúc không hợp lệ').nullish(),
+}).superRefine((values, ctx) => {
+  if (values.operationMode === 'scheduled' && (!values.operationalFrom || !values.operationalFrom.isAfter(dayjs()))) ctx.addIssue({ code: 'custom', path: ['operationalFrom'], message: 'Chọn thời điểm phục vụ trong tương lai' })
+  const from = values.operationMode === 'scheduled' ? values.operationalFrom : dayjs()
+  if (values.operationalUntil && from && !values.operationalUntil.isAfter(from)) ctx.addIssue({ code: 'custom', path: ['operationalUntil'], message: 'Thời điểm kết thúc phải sau thời điểm bắt đầu' })
 })
 
 type CreatePhysicalRoomFormValues = z.infer<typeof createPhysicalRoomSchema>
@@ -58,6 +65,7 @@ type CreateRoomTypeFormValues = z.infer<typeof createRoomTypeSchema>
 
 export function HotelRoomCreatePage() {
   const { hotel, hotelId } = useHotelWorkspace()
+  const { message } = App.useApp()
   const navigate = useNavigate()
   const { createRoom, createRoomType, updateRoomType } = useManagementRoomMutations(hotelId)
   const [searchParams, setSearchParams] = useSearchParams()
@@ -77,9 +85,11 @@ export function HotelRoomCreatePage() {
     resolver: zodResolver(createPhysicalRoomSchema),
     defaultValues: {
       roomNumber: '',
-      roomTypeId: roomTypes[0]?.id || '',
+      roomTypeId: searchParams.get('roomTypeId') ?? '',
+      operationMode: 'now',
+      readiness: 'ready',
       floor: '',
-      operationalFrom: dayjs(),
+      operationalFrom: null,
       operationalUntil: null,
     },
   })
@@ -104,12 +114,9 @@ export function HotelRoomCreatePage() {
   const watchedBasePrice = useWatch({ control: roomTypeForm.control, name: 'basePrice' })
   const watchedActive = useWatch({ control: roomTypeForm.control, name: 'active' })
 
-  // Tự động gán roomTypeId mặc định cho form phòng vật lý khi danh sách loại phòng tải xong
-  useEffect(() => {
-    if (roomTypes.length > 0 && !roomForm.getValues('roomTypeId')) {
-      roomForm.setValue('roomTypeId', roomTypes[0].id)
-    }
-  }, [roomTypes, roomForm])
+  const operationMode = useWatch({ control: roomForm.control, name: 'operationMode' })
+  const chosenTypeId = useWatch({ control: roomForm.control, name: 'roomTypeId' })
+  const chosenType = roomTypes.find((type) => type.id === chosenTypeId)
 
   if (!hotel) return null
 
@@ -121,7 +128,7 @@ export function HotelRoomCreatePage() {
   // Submit tạo phòng vật lý
   const onSubmitRoom = async (values: CreatePhysicalRoomFormValues) => {
     try {
-      const fromDate = dayjs(values.operationalFrom).toISOString()
+      const fromDate = values.operationMode === 'scheduled' ? values.operationalFrom?.toISOString() : undefined
       const untilDate = values.operationalUntil ? dayjs(values.operationalUntil).toISOString() : undefined
 
       await createRoom.mutateAsync({
@@ -130,10 +137,11 @@ export function HotelRoomCreatePage() {
         floor: values.floor?.trim() || undefined,
         operationalFrom: fromDate,
         operationalUntil: untilDate,
+        readiness: values.readiness === 'ready' ? 'READY' : 'DIRTY',
       })
 
       message.success(`Đã tạo phòng ${values.roomNumber} thành công!`)
-      navigate(`/hotels/${hotelId}/rooms`)
+      navigate(`/hotels/${hotelId}/rooms?roomTypeId=${values.roomTypeId}`)
     } catch (error) {
       message.error(error instanceof Error ? error.message : 'Tạo phòng vật lý thất bại.')
     }
@@ -179,7 +187,9 @@ export function HotelRoomCreatePage() {
       })
 
       message.success(`Đã tạo và thiết lập loại phòng "${values.name}" thành công!`)
-      navigate(`/hotels/${hotelId}/rooms`)
+      navigate(`/hotels/${hotelId}/rooms/new?tab=room&roomTypeId=${targetRoomTypeId}`)
+      roomForm.setValue('roomTypeId', targetRoomTypeId)
+      setActiveTab('room')
     } catch (error) {
       if (targetRoomTypeId) {
         setRoomTypeError(
@@ -194,7 +204,7 @@ export function HotelRoomCreatePage() {
   }
 
   return (
-    <div className="hotel-room-create-page max-w-4xl space-y-6">
+    <div className="hotel-room-create-page w-full max-w-4xl space-y-6">
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         kicker="QUẢN LÝ PHÒNG &amp; HẠNG PHÒNG"
@@ -223,7 +233,7 @@ export function HotelRoomCreatePage() {
 
       {activeTab === 'room' ? (
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#dce7e3]">
-          {roomTypes.length === 0 ? (
+          {roomTypesQuery.isPending ? <p role="status">Đang tải hạng phòng…</p> : roomTypesQuery.isError ? <Alert type="error" title="Chưa tải được hạng phòng" action={<Button onClick={() => void roomTypesQuery.refetch()}>Thử lại</Button>} /> : roomTypes.length === 0 ? (
             <div className="py-8 text-center bg-[#f7fbfa] rounded-xl border border-dashed border-[#dce7e3]">
               <p className="text-sm font-semibold text-[#12211d] mb-1">
                 Khách sạn chưa có loại phòng nào
@@ -244,9 +254,10 @@ export function HotelRoomCreatePage() {
             </div>
           ) : (
             <Form layout="vertical" onFinish={roomForm.handleSubmit(onSubmitRoom)}>
+              {chosenType && <Alert style={{ marginBottom: 20, background: '#eff9f5', borderColor: '#cfe5dd', color: '#12211d' }} type="info" showIcon title={`Tạo phòng thuộc hạng: ${chosenType.name}`} description="Phòng kế thừa giá cơ bản và tiện ích chung của hạng này. Tiện ích riêng có thể bổ sung sau." />}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Form.Item
-                  label="Gán vào loại phòng"
+                  label="Hạng phòng"
                   required
                   validateStatus={roomForm.formState.errors.roomTypeId ? 'error' : undefined}
                   help={roomForm.formState.errors.roomTypeId?.message}
@@ -258,7 +269,7 @@ export function HotelRoomCreatePage() {
                       <Select
                         {...field}
                         placeholder="Chọn loại phòng"
-                        options={roomTypes.map((rt) => ({
+                        options={roomTypes.filter((type) => type.active).map((rt) => ({
                           value: rt.id,
                           label: `${rt.name} (${rt.maxAdults} người lớn, ${rt.maxChildren} trẻ em)`,
                         }))}
@@ -283,7 +294,9 @@ export function HotelRoomCreatePage() {
                 </Form.Item>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Form.Item label="Bắt đầu phục vụ"><Controller control={roomForm.control} name="operationMode" render={({ field }) => <Segmented {...field} options={[{ value: 'now', label: 'Ngay bây giờ' }, { value: 'scheduled', label: 'Lên lịch' }]} />} /></Form.Item>
+              <Form.Item label="Trạng thái phòng" help="Sẵn sàng đón khách độc lập với thời gian đưa phòng vào phục vụ."><Controller control={roomForm.control} name="readiness" render={({ field }) => <Select {...field} options={roomReadinessOptions} />} /></Form.Item>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Form.Item
                   label="Tầng"
                   validateStatus={roomForm.formState.errors.floor ? 'error' : undefined}
@@ -298,8 +311,8 @@ export function HotelRoomCreatePage() {
                   />
                 </Form.Item>
 
-                <Form.Item
-                  label="Ngày bắt đầu phục vụ"
+                {operationMode === 'scheduled' && <Form.Item
+                  label="Thời điểm bắt đầu phục vụ"
                   required
                   validateStatus={roomForm.formState.errors.operationalFrom ? 'error' : undefined}
                   help={roomForm.formState.errors.operationalFrom?.message}
@@ -310,16 +323,16 @@ export function HotelRoomCreatePage() {
                     render={({ field }) => (
                       <DatePicker
                         className="w-full"
-                        format="DD/MM/YYYY"
+                        showTime format="DD/MM/YYYY HH:mm"
                         value={field.value}
                         onChange={(date) => field.onChange(date)}
                       />
                     )}
                   />
-                </Form.Item>
+                </Form.Item>}
 
                 <Form.Item
-                  label="Ngày kết thúc phục vụ (Tùy chọn)"
+                  label="Thời điểm kết thúc phục vụ (tùy chọn)"
                   validateStatus={roomForm.formState.errors.operationalUntil ? 'error' : undefined}
                   help={roomForm.formState.errors.operationalUntil?.message}
                 >
@@ -329,7 +342,7 @@ export function HotelRoomCreatePage() {
                     render={({ field }) => (
                       <DatePicker
                         className="w-full"
-                        format="DD/MM/YYYY"
+                        showTime format="DD/MM/YYYY HH:mm"
                         placeholder="Để trống nếu vô thời hạn"
                         value={field.value}
                         onChange={(date) => field.onChange(date)}

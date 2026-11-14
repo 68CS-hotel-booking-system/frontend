@@ -223,3 +223,16 @@ describe('mock financial access', () => {
     ).rejects.toThrowError(ApiError)
   })
 })
+
+
+describe('private contact fields in hotel creation', () => {
+  it('sends contacts with the initial POST and returns saved management fields', async () => {
+    respond({ ...hotel, contactPhone: '0901234567', contactEmail: 'desk@hotel.vn' }, 201)
+    const { createAdminHotel } = await import('./hotel-management-api')
+    const result = await createAdminHotel({ ...payload, contactPhone: ' 0901234567 ', contactEmail: ' desk@hotel.vn ' })
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(fetcher.mock.calls[0][1]?.method).toBe('POST')
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toMatchObject({ contactPhone: '0901234567', contactEmail: 'desk@hotel.vn' })
+    expect(result).toMatchObject({ contactPhone: '0901234567', contactEmail: 'desk@hotel.vn' })
+  })
+})

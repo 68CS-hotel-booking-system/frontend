@@ -7,12 +7,12 @@ import { hotelManagementKeys } from '../hooks/hotel-query-keys'
 import { localRateDate, rateRangeEnd } from '../model/room-rates'
 import type { DailyRoomRate } from '../model/hotel'
 
-function renderRates(rates: DailyRoomRate[], hotelStatus = 'DRAFT', basePrice = 500000) {
+function renderRates(rates: DailyRoomRate[], hotelStatus = 'DRAFT', basePrice: number | 'missing' = 500000) {
   const date = localRateDate()
   const client = new QueryClient()
   client.setQueryData(hotelManagementKeys.rates('api', { hotelId: 'hotel', roomTypeId: 'type', startDate: date, endDate: rateRangeEnd(date, 7) }), rates)
   return renderToStaticMarkup(<QueryClientProvider client={client}><AntApp>
-    <RoomTypeDailyRatesPanel hotelId="hotel" hotelStatus={hotelStatus} roomTypes={[{ id: 'type', hotelId: 'hotel', name: 'Deluxe', maxAdults: 2, maxChildren: 0, isActive: true, basePrice }]} />
+    <RoomTypeDailyRatesPanel hotelId="hotel" hotelStatus={hotelStatus} roomTypes={[{ id: 'type', hotelId: 'hotel', name: 'Deluxe', maxAdults: 2, maxChildren: 0, isActive: true, basePrice: basePrice === 'missing' ? undefined : basePrice }]} />
   </AntApp></QueryClientProvider>)
 }
 
@@ -55,4 +55,19 @@ describe('backend-owned effective price rendering', () => {
     expect(markup).toContain('Khách sạn đang bị khóa')
     expect(markup).not.toContain('Lưới giá theo ngày')
   })
+})
+
+it('distinguishes a missing base-price field from a stored zero without overriding Pricing daily prices', () => {
+  const missing = renderRates([day(0, 'BASE', 300000)], 'DRAFT', 'missing')
+  expect(missing).toContain('Chưa tải được giá cơ bản')
+  expect(missing).not.toContain('Chưa có giá cơ bản')
+  expect(missing).toContain('300.000')
+  const zero = renderRates([day(0, 'NONE', null)], 'DRAFT', 0)
+  expect(zero).toContain('Chưa có giá cơ bản')
+  expect(zero).not.toContain('Chưa tải được giá cơ bản')
+})
+it('shows the saved base price in the header independently from a custom nightly rate', () => {
+  const markup = renderRates([day(0, 'RATE', 200000)], 'DRAFT', 300000)
+  expect(markup).toContain('300.000')
+  expect(markup).toContain('200.000')
 })

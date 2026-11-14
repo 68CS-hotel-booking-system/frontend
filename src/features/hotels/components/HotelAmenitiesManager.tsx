@@ -33,7 +33,7 @@ export interface HotelAmenitiesManagerProps {
 export function HotelAmenitiesManager(props: HotelAmenitiesManagerProps) {
   // Key uniquely by hotel, physical room, or room type to isolate all state
   const componentKey = `${props.hotelId}:${props.roomId ?? ''}:${props.roomTypeId ?? ''}`
-  return <ScopedAmenitiesEditor key={componentKey} {...props} />
+  return <div className="hotel-amenities-editor"><ScopedAmenitiesEditor key={componentKey} {...props} /></div>
 }
 
 function ScopedAmenitiesEditor({
@@ -63,15 +63,15 @@ function ScopedAmenitiesEditor({
   // 1. In Room Type mode, query room type amenities
   const roomTypeQuery = useRoomTypeAmenitiesQuery(
     hotelId,
-    roomTypeId ?? '',
+    isRoomTypeMode ? roomTypeId! : '',
   )
   const replaceRoomTypeMutation = useReplaceRoomTypeAmenitiesMutation(
     hotelId,
-    roomTypeId ?? '',
+    isRoomTypeMode ? roomTypeId! : '',
   )
 
   // 2. In Scoped mode (Hotel or Physical Room), query scoped amenities
-  const scopedQuery = useScopedAmenitiesQuery(scope)
+  const scopedQuery = useScopedAmenitiesQuery(scope, !isRoomTypeMode)
   const replaceCatalogMutation = useReplaceCatalogAmenitiesMutation(scope)
 
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -118,7 +118,7 @@ function ScopedAmenitiesEditor({
   }
 
   const catalogOptions = catalogQuery.data ?? []
-  if (catalogOptions.length === 0) {
+  if (catalogOptions.length === 0 && isRoomTypeMode) {
     return (
       <EmptyState
         title="Danh mục tiện ích đang trống"
@@ -152,6 +152,7 @@ function ScopedAmenitiesEditor({
           savedAmenityIds={savedIds}
           scopeLabel={scopeLabel}
           title="Tiện ích có sẵn của hạng phòng"
+          saveLabel="Lưu tiện ích hạng phòng"
           description={`Chọn các tiện nghi chung áp dụng cho tất cả các phòng thuộc hạng ${roomTypeName || ''}.`}
           isSaving={replaceRoomTypeMutation.isPending}
           saveError={saveError}
@@ -187,7 +188,7 @@ function ScopedAmenitiesEditor({
       {isPhysicalRoomMode && (
         <InheritedAmenitiesSection
           hotelId={hotelId}
-          roomTypeId={scopedData?.roomId ?? undefined}
+          roomTypeId={roomTypeId}
           roomTypeName={roomTypeName}
           inheritedAmenities={inheritedAmenities}
         />
@@ -197,11 +198,12 @@ function ScopedAmenitiesEditor({
       <CatalogAmenitiesList
         catalogOptions={catalogOptions}
         savedAmenityIds={savedCatalogIds}
+        saveLabel={isPhysicalRoomMode ? 'Lưu tiện ích riêng của phòng' : undefined}
         inheritedAmenityIds={inheritedIds}
         scopeLabel={scopeLabel}
         title={
           isPhysicalRoomMode
-            ? 'Bổ sung từ danh mục'
+            ? 'Tiện ích bổ sung riêng cho phòng'
             : 'Tiện ích có sẵn'
         }
         description={
@@ -216,6 +218,7 @@ function ScopedAmenitiesEditor({
 
       {/* KHU VỰC C: Tiện ích riêng (custom amenities) */}
       <CustomAmenitiesList
+        title={isPhysicalRoomMode ? 'Tiện ích tự tạo cho phòng' : undefined}
         customAmenities={customAmenities}
         scope={scope}
         scopeLabel={scopeLabel}

@@ -113,3 +113,16 @@ describe('HotelManagementListPage component', () => {
     expect(markup).toContain('Tạo khách sạn đầu tiên')
   })
 })
+
+it('does not turn unavailable related-resource data into zero rooms or a partial completion score', () => {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  qc.setQueryData(hotelManagementKeys.cities('api'), [])
+  qc.setQueryData(hotelManagementKeys.list('api', { page: 0, size: 12 }), {
+    content: [{ ...mockHotels[0], roomTypeCount: undefined }], page: 0, size: 12, totalElements: 1, totalPages: 1, first: true, last: true,
+  })
+  const markup = renderToStaticMarkup(<MemoryRouter><QueryClientProvider client={qc}><AntApp><HotelManagementListPage /></AntApp></QueryClientProvider></MemoryRouter>)
+  expect(markup).toContain('Chưa tải số hạng phòng')
+  expect(markup).toContain('Xem tiến độ trong hồ sơ')
+  expect(markup).not.toContain('0 loại phòng')
+  expect(markup).not.toContain('Hoàn thiện hồ sơ')
+})

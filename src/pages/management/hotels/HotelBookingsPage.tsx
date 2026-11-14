@@ -1,5 +1,4 @@
-import { Alert, Button } from 'antd'
-import { ReloadOutlined } from '@ant-design/icons'
+import { Alert } from 'antd'
 import { useHotelWorkspace } from '@/features/hotels'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { EmptyState } from '@/shared/ui/EmptyState'
@@ -22,11 +21,7 @@ export function HotelBookingsPage() {
         kicker="VẬN HÀNH &amp; ĐẶT CHỖ"
         title="Danh sách đặt phòng"
         description="Theo dõi các đơn đặt phòng phát sinh của khách sạn này, thời gian lưu trú, trạng thái thanh toán và thông tin khách nhận phòng."
-        extra={
-          <Button icon={<ReloadOutlined />}>
-            Làm mới
-          </Button>
-        }
+
       />
 
       {isDraft && (
@@ -41,11 +36,11 @@ export function HotelBookingsPage() {
 
       <div className="bg-white p-8 rounded-2xl border border-[#dce7e3] text-center">
         <EmptyState
-          title="Chưa có đơn đặt phòng nào"
+          title="Danh sách đặt phòng chưa khả dụng"
           description={
             isDraft
-              ? 'Khách sạn cần được duyệt và kích hoạt để bắt đầu đón khách.'
-              : 'Hiện chưa có lượt đặt phòng nào trong khoảng thời gian này.'
+              ? 'Khách sạn cần được duyệt để mở bán. Bạn chưa thể tra cứu đơn tại màn hình này.'
+              : 'Màn hình này chưa hỗ trợ tra cứu đơn. Trạng thái này không phản ánh số đơn thực tế của khách sạn.'
           }
         />
       </div>

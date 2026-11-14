@@ -78,7 +78,7 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
   }
 
   // 7. Bảo vệ riêng trang Quản trị người dùng: chỉ dành cho ADMIN, nếu là Owner chuyển hướng về Quản lý khách sạn
-  if (location.pathname.startsWith('/admin/users') && !isAdmin) {
+  if ((location.pathname.startsWith('/admin/users') || location.pathname.startsWith('/admin/hotel-review-requests')) && !isAdmin) {
     return <Navigate to="/hotels" replace />
   }
 

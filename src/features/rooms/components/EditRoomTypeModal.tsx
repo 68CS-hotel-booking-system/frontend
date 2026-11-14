@@ -1,5 +1,7 @@
+import { useNavigate } from 'react-router'
 import { useMemo, useState } from 'react'
-import { Alert, Button, Form, Input, InputNumber, Modal, Switch, message } from 'antd'
+import { Alert, Button, Form, Input, InputNumber, Modal, Switch, Tabs, message } from 'antd'
+import { HotelAmenitiesManager, RoomTypeAmenitiesSummary } from '@/features/hotels'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -40,15 +42,23 @@ interface EditRoomTypeModalProps {
   hotelId: string
   onClose: () => void
   onSuccess?: () => void
+  initialTab?: 'info' | 'amenities'
 }
 
-export function EditRoomTypeModal({
+export function EditRoomTypeModal(props: EditRoomTypeModalProps) {
+  return <EditRoomTypeEditor key={`${props.roomType?.id}:${props.open}:${props.initialTab ?? 'info'}`} {...props} />
+}
+
+function EditRoomTypeEditor({
   open,
   roomType,
   hotelId,
   onClose,
   onSuccess,
+  initialTab = 'info',
 }: EditRoomTypeModalProps) {
+  const navigate = useNavigate()
+  const [tab, setTab] = useState(initialTab)
   const { updateRoomType } = useManagementRoomMutations(hotelId)
   const [apiError, setApiError] = useState<string | null>(null)
 
@@ -150,6 +160,8 @@ export function EditRoomTypeModal({
       onCancel={handleClose}
       footer={null}
       destroyOnHidden
+      width={800}
+      styles={{ body: { maxHeight: '72vh', overflowY: 'auto' } }}
       centered
       className="edit-room-type-modal"
     >
@@ -166,7 +178,13 @@ export function EditRoomTypeModal({
           />
         )}
 
-        <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+        <Tabs activeKey={tab} onChange={(key) => setTab(key as 'info' | 'amenities')} items={[
+          { key: 'info', label: 'Thông tin hạng phòng', children: <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+          {roomType && <RoomTypeAmenitiesSummary compact hotelId={hotelId} roomTypeId={roomType.id} onManage={href => {
+            const go = () => { onClose(); navigate(href) }
+            if (hasChanges) Modal.confirm({title:'Chuyển sang quản lý tiện ích?',content:'Thay đổi thông tin hạng phòng chưa lưu sẽ bị bỏ.',okText:'Bỏ thay đổi và chuyển',cancelText:'Ở lại',onOk:go})
+            else go()
+          }} />}
           <Form.Item
             label="Tên loại phòng"
             required
@@ -328,12 +346,17 @@ export function EditRoomTypeModal({
               htmlType="submit"
               loading={isSubmitting || updateRoomType.isPending}
               disabled={!hasChanges}
-              className="!bg-[#0b5f53] !border-[#0b5f53]"
+              className="font-medium"
             >
               Lưu thay đổi
             </Button>
           </div>
-        </Form>
+        </Form> },
+          { key: 'amenities', label: 'Tiện ích hạng phòng', children: roomType && <div>
+            <p className="text-sm text-[#526760] mb-4">Các tiện ích này áp dụng chung cho mọi phòng thuộc hạng. Lưu mục này bằng nút “Lưu tiện ích hạng phòng”.</p>
+            <HotelAmenitiesManager hotelId={hotelId} roomTypeId={roomType.id} roomTypeName={roomType.name} />
+          </div> },
+        ]} />
       </div>
     </Modal>
   )

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { amenitySearchKey } from '../model/amenity-workspace'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Alert, Button, Form, Input, Modal } from 'antd'
+import { Alert, App, Button, Form, Input, Modal } from 'antd'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import {
   updateCustomAmenityFormSchema,
@@ -20,6 +21,8 @@ interface CustomAmenityEditModalProps {
   scope: AmenityScope
   scopeLabel: string
   onClose: () => void
+  onBusyChange?: (busy: boolean) => void
+  knownNames?: string[]
   onSuccess?: () => void
 }
 
@@ -29,10 +32,14 @@ export function CustomAmenityEditModal({
   scope,
   scopeLabel,
   onClose,
+  knownNames = [],
   onSuccess,
+  onBusyChange,
 }: CustomAmenityEditModalProps) {
+  const { message } = App.useApp()
   const [apiError, setApiError] = useState<string | null>(null)
   const updateMutation = useUpdateCustomAmenityMutation(scope)
+  useEffect(() => { onBusyChange?.(updateMutation.isPending) }, [updateMutation.isPending, onBusyChange])
 
   const {
     control,
@@ -55,6 +62,7 @@ export function CustomAmenityEditModal({
   const currentName = watchedName.trim()
   const currentDesc = watchedDescription.trim()
 
+  const duplicate = Boolean(currentName) && knownNames.some(value => amenitySearchKey(value) === amenitySearchKey(currentName))
   const isNameChanged = amenity ? currentName !== originalName : false
   const isDescChanged = amenity ? currentDesc !== originalDesc : false
   const hasChanges = isNameChanged || isDescChanged
@@ -90,7 +98,8 @@ export function CustomAmenityEditModal({
       onSuccess?.()
       onClose()
     } catch (error) {
-      setApiError(getAmenityErrorMessage(error))
+      const detail = getAmenityErrorMessage(error)
+      setApiError(detail); void message.error(detail)
     }
   }
 
@@ -122,6 +131,7 @@ export function CustomAmenityEditModal({
           />
         )}
 
+<>{duplicate && <Alert type="warning" title="Tên này đã có trong danh mục hoặc tiện ích cùng cấp. Hãy kiểm tra trước khi lưu." style={{marginBottom:16}} />}</>
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
           <Form.Item
             label="Tên tiện ích"

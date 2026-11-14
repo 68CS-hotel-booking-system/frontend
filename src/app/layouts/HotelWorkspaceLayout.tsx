@@ -1,5 +1,6 @@
+import '@/shared/styles/hotel-management.css'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Result, Tooltip } from 'antd'
+import { Alert, Button, Result, Tooltip } from 'antd'
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router'
 import {
   ArrowLeftOutlined,
@@ -7,17 +8,32 @@ import {
   LeftOutlined,
   RightOutlined,
 } from '@ant-design/icons'
+import { useCurrentUser } from '@/features/auth'
+import { ReviewStatusTag, useHotelReviewRequests } from '@/features/hotel-review-requests'
 import { PageLoading } from '@/shared/ui/PageLoading'
 import {
   HotelStatusBadge,
   HotelSwitcher,
   HotelWorkspaceProvider,
+  useHotelWorkspace,
   useManagementHotelDetailQuery,
   useHotelImagesQuery,
   useScopedAmenitiesQuery,
 } from '@/features/hotels'
 import { useManagementRoomTypesQuery } from '@/features/rooms'
 import { HOTEL_WORKSPACE_NAV_ITEMS } from '@/config/navigation.config'
+
+function WorkspaceProgressStatus() {
+  const { hotel, hotelId, completion } = useHotelWorkspace()
+  const latestReview = useHotelReviewRequests(hotelId, 0, 1)
+  const states = Object.values(completion.resourceStates ?? {})
+  const label = states.includes('loading') ? 'Đang tải hồ sơ…' : states.includes('error') ? 'Chưa tải đủ hồ sơ' : `Hoàn thiện ${completion.percent}%`
+  return <div className="flex flex-wrap items-center gap-2">
+    <span className="text-xs font-semibold text-[#0b5f53] sm:hidden">{label}</span>
+    {hotel && <HotelStatusBadge status={hotel.status} />}
+    {latestReview.data?.content[0]?.status === 'PENDING' && <ReviewStatusTag status="PENDING" />}
+  </div>
+}
 
 interface HotelWorkspaceNavProps {
   hotelId: string
@@ -151,10 +167,10 @@ function HotelWorkspaceNav({ hotelId, hotel }: HotelWorkspaceNavProps) {
               <span>{item.label}</span>
               {badgeCount !== null && (
                 <span
-                  className={`text-[10.5px] px-1.5 py-0.2 rounded-full transition-colors ${
+                  className={`text-xs px-1.5 py-0.2 rounded-full transition-colors ${
                     isActive
                       ? 'bg-[#eef8f5] text-[#0b5f53] border border-[#cfe5dd] font-bold'
-                      : 'bg-[#f1f5f9] text-[#64748b] border border-[#e2e8f0] font-semibold'
+                      : 'bg-[#f1f5f9] text-[#526760] border border-[#e2e8f0] font-semibold'
                   }`}
                 >
                   {badgeCount}
@@ -187,9 +203,18 @@ function HotelWorkspaceNav({ hotelId, hotel }: HotelWorkspaceNavProps) {
 export function HotelWorkspaceLayout() {
   const { hotelId = '' } = useParams<{ hotelId: string }>()
   const navigate = useNavigate()
+  const { isAdmin } = useCurrentUser()
+  const latestReview = useHotelReviewRequests(hotelId, 0, 1)
   const detailQuery = useManagementHotelDetailQuery(hotelId)
   const roomTypesQuery = useManagementRoomTypesQuery(hotelId, detailQuery.isSuccess)
   const imagesQuery = useHotelImagesQuery(hotelId, detailQuery.isSuccess)
+
+  const latestReviewStatus = latestReview.data?.content[0]?.status
+  const currentHotelStatus = detailQuery.data?.status
+  const refetchHotel = detailQuery.refetch
+  useEffect(() => {
+    if (latestReviewStatus === 'APPROVED' && currentHotelStatus === 'DRAFT') void refetchHotel()
+  }, [latestReviewStatus, currentHotelStatus, refetchHotel])
 
   const amenitiesQuery = useScopedAmenitiesQuery({ hotelId })
   const resourceState = (query: { isPending: boolean; isError: boolean }) =>
@@ -263,12 +288,12 @@ export function HotelWorkspaceLayout() {
       <div className="hotel-workspace-shell flex flex-col flex-1 min-w-0 -m-4 lg:-m-6">
         {/* HEADER QUẢN LÝ CƠ SỞ & DÀN HÀNG NGANG CÁC HẠNG MỤC - GU SKILL PHƯƠNG ÁN A */}
         <header
-          className="bg-white/95 backdrop-blur-md border-b border-[#e2e8f0] sticky top-[64px] z-30 shadow-2xs"
+          data-hotel-workspace-header className="bg-white/95 backdrop-blur-md border-b border-[#e2e8f0] sticky top-[64px] z-30 shadow-2xs"
           aria-label="Thanh điều hướng chi tiết khách sạn"
         >
           {/* Hàng 1: Nút quay lại danh sách + Nút đổi khách sạn & Trạng thái hồ sơ & Xem trước web khách */}
-          <div className="max-w-6xl mx-auto px-4 lg:px-6 py-2 flex items-center justify-between gap-3 border-b border-[#f1f5f9]">
-            <div className="flex items-center gap-2.5 min-w-0">
+          <div className="max-w-6xl mx-auto px-4 lg:px-6 py-2 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 border-b border-[#f1f5f9]">
+            <div className="flex items-center gap-2.5 min-w-0 w-full sm:w-auto sm:flex-1">
               <Tooltip title="Về danh sách khách sạn" placement="bottom">
                 <Button
                   type="text"
@@ -283,7 +308,7 @@ export function HotelWorkspaceLayout() {
               <HotelSwitcher />
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center justify-end gap-2 shrink-0 w-full sm:w-auto">
               {hotel.status === 'ACTIVE' && (
                 <Button
                   size="small"
@@ -294,7 +319,7 @@ export function HotelWorkspaceLayout() {
                   Xem trang khách
                 </Button>
               )}
-              <HotelStatusBadge status={hotel.status} />
+              <WorkspaceProgressStatus />
             </div>
           </div>
 
@@ -305,6 +330,7 @@ export function HotelWorkspaceLayout() {
         {/* Viewport nội dung trang con - Luôn căn giữa màn hình */}
         <div className="flex-1 min-w-0 p-4 lg:p-6">
           <div className="max-w-6xl mx-auto w-full">
+            {(isAdmin || latestReview.data?.content[0]?.status === 'PENDING') && <div className="mb-5"><Alert showIcon type="info" title={isAdmin ? 'Chế độ xem dành cho quản trị viên' : 'Hồ sơ đang chờ xét duyệt'} description={<span>{isAdmin ? 'Nội dung của Owner chỉ được xem; xét duyệt trong hồ sơ đã gửi.' : 'Nội dung hồ sơ đang khóa chỉnh sửa. Bạn vẫn có thể theo dõi kết quả và quản lý vận hành.'} <Link to={`/hotels/${hotelId}/review-requests`}>Xem hồ sơ xét duyệt</Link></span>} /></div>}
             <Outlet />
           </div>
         </div>

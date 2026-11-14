@@ -7,6 +7,7 @@ import type { CreateRoomTypePayload } from '../api/room-type-api'
 
 export async function invalidateManagementRooms(client: QueryClient, hotelId: string) {
   await Promise.all([
+    client.invalidateQueries({ queryKey: ['hotel-publish-readiness', hotelId] }),
     client.invalidateQueries({ queryKey: ['rooms', 'management-list', hotelId] }),
     client.invalidateQueries({ queryKey: ['rooms', 'inventory', hotelId] }),
     client.invalidateQueries({ queryKey: ['hotels', hotelId, 'room-types'] }),

@@ -8,6 +8,7 @@ import {
   Button,
   Form,
   Input,
+  DatePicker,
   Modal,
   Select,
   Space,
@@ -192,18 +193,10 @@ export function RoomInventoryPanel({
           <span className="text-xs font-bold uppercase tracking-wider text-[#12211d]">
             Khoảng ngày tồn kho:
           </span>
-          <div className="flex items-center gap-1.5">
-            <Input
-              type="date"
-              {...dates.register('startDate')}
-              className="w-36 !rounded-lg text-xs"
-            />
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5">
+            <Controller name="startDate" control={dates.control} render={({ field }) => <DatePicker value={field.value ? dayjs(field.value) : null} onBlur={field.onBlur} onChange={(date) => field.onChange(date?.format('YYYY-MM-DD') ?? '')} format="DD/MM/YYYY" allowClear={false} aria-label="Từ ngày tồn kho" className="w-full sm:w-40" />} />
             <span className="text-[#5f736e] font-semibold">→</span>
-            <Input
-              type="date"
-              {...dates.register('endDate')}
-              className="w-36 !rounded-lg text-xs"
-            />
+            <Controller name="endDate" control={dates.control} render={({ field }) => <DatePicker value={field.value ? dayjs(field.value) : null} onBlur={field.onBlur} onChange={(date) => field.onChange(date?.format('YYYY-MM-DD') ?? '')} format="DD/MM/YYYY" allowClear={false} aria-label="Đến ngày tồn kho" className="w-full sm:w-40" />} />
           </div>
           <Button
             htmlType="submit"
@@ -342,11 +335,11 @@ export function RoomInventoryPanel({
         )}
       </div>
 
-      {/* 2. Trạng thái buồng phòng vật lý */}
+      {/* 2. Trạng thái phòng vật lý */}
       {calendar.isSuccess && physical.length > 0 && (
         <div className="space-y-3 pt-2">
           <h3 className="text-sm font-bold text-[#12211d] m-0">
-            Trạng thái buồng phòng vật lý
+            Trạng thái phòng vật lý
           </h3>
           <div className="border border-[#dce7e3] rounded-xl overflow-hidden shadow-xs">
             <Table
@@ -377,7 +370,7 @@ export function RoomInventoryPanel({
                   ),
                 },
                 {
-                  title: 'Trạng thái sẵn sàng',
+                  title: 'Trạng thái phòng',
                   render: (_, room) => (
                     <Select
                       size="small"
@@ -386,8 +379,8 @@ export function RoomInventoryPanel({
                       disabled={mutation.isPending}
                       className="w-32 text-xs"
                       options={[
-                        { value: 'READY', label: '🟢 Sẵn sàng (READY)' },
-                        { value: 'DIRTY', label: '🟡 Cần dọn (DIRTY)' },
+                        { value: 'READY', label: 'Sẵn sàng' },
+                        { value: 'DIRTY', label: 'Chưa sẵn sàng' },
                       ]}
                       onChange={async (readiness: 'READY' | 'DIRTY') => {
                         try {
@@ -581,10 +574,10 @@ export function RoomInventoryPanel({
 
           <div className="grid grid-cols-2 gap-3">
             <Form.Item label="Từ đêm" required>
-              <Input type="date" {...blockForm.register('startDate')} />
+              <Controller name="startDate" control={blockForm.control} render={({ field }) => <DatePicker value={field.value ? dayjs(field.value) : null} onBlur={field.onBlur} onChange={(date) => field.onChange(date?.format('YYYY-MM-DD') ?? '')} format="DD/MM/YYYY" aria-label="Từ đêm chặn phòng" className="w-full" />} />
             </Form.Item>
             <Form.Item label="Đến hết đêm" required>
-              <Input type="date" {...blockForm.register('endDate')} />
+              <Controller name="endDate" control={blockForm.control} render={({ field }) => <DatePicker value={field.value ? dayjs(field.value) : null} onBlur={field.onBlur} onChange={(date) => field.onChange(date?.format('YYYY-MM-DD') ?? '')} format="DD/MM/YYYY" aria-label="Đến hết đêm chặn phòng" className="w-full" />} />
             </Form.Item>
           </div>
 

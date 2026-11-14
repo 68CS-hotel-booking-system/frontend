@@ -1,9 +1,7 @@
 import {
-  App as AntApp,
   Button,
   Progress,
   Tag,
-  Tooltip,
 } from 'antd'
 import {
   ArrowRightOutlined,
@@ -13,17 +11,15 @@ import {
   PlusOutlined,
   LoadingOutlined,
   ProfileOutlined,
-  SendOutlined,
   ShopOutlined,
   TagOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
+import { useHotelReviewRequests } from '@/features/hotel-review-requests'
 import { useCurrentUser } from '@/features/auth'
-import { errorMessage } from '@/shared/api/api-error'
 import type { HotelCompletionStatus } from '../context/hotel-workspace-context'
 import type { ManagementHotelDetail } from '../model/hotel'
 import { HotelStatusBadge } from './HotelStatusBadge'
-import { useApproveHotelMutation } from '../hooks/use-approve-hotel-mutation'
 
 export interface CompletionChecklistProps {
   hotel: ManagementHotelDetail
@@ -42,11 +38,9 @@ interface ChecklistItemConfig {
 
 export function CompletionChecklist({ hotel, completion, onRetry }: CompletionChecklistProps) {
   const navigate = useNavigate()
-  const { message } = AntApp.useApp()
   const { isAdmin } = useCurrentUser()
-  const mode = 'api'
-  const approvalMutation = useApproveHotelMutation()
-  const submitting = approvalMutation.isPending
+  const latestReview = useHotelReviewRequests(hotel.id, 0, 1)
+  const reviewStatus = latestReview.data?.content[0]?.status
 
   const items: ChecklistItemConfig[] = [
     {
@@ -110,29 +104,8 @@ export function CompletionChecklist({ hotel, completion, onRetry }: CompletionCh
     rooms: 'Chưa có hạng phòng', pricing: 'Chưa đủ giá cơ bản', policies: 'Chưa đủ giờ nhận/trả',
   }
   const isDraft = hotel.status === 'DRAFT'
-  const isPendingApproval = hotel.status === 'PENDING_APPROVAL'
+  const isPendingApproval = reviewStatus === 'PENDING' || hotel.status === 'PENDING_APPROVAL'
   const isActive = hotel.status === 'ACTIVE'
-
-  const handleSendApproval = async () => {
-    if (!isAdmin || mode !== 'api' || !isDraft || submitting) return
-    try {
-      await approvalMutation.mutateAsync(hotel.id)
-      message.success({
-        content: 'Đã duyệt khách sạn theo kết quả từ máy chủ.',
-        key: 'approval',
-      })
-    } catch (error) {
-      message.error({ content: errorMessage(error), key: 'approval' })
-    }
-  }
-
-  const tooltipReason = !isAdmin
-    ? 'Backend chưa có API gửi hồ sơ kiểm duyệt dành cho chủ khách sạn.'
-    : mode !== 'api'
-      ? 'Phê duyệt chỉ khả dụng với dữ liệu API.'
-      : !isDraft
-      ? `Hồ sơ hiện ở trạng thái: ${hotel.status}`
-      : ''
 
   return (
     <div className="bg-white rounded-2xl border border-[#dce7e3] overflow-hidden shadow-xs">
@@ -146,7 +119,7 @@ export function CompletionChecklist({ hotel, completion, onRetry }: CompletionCh
             <HotelStatusBadge status={hotel.status} />
           </div>
           <p className="text-xs text-[#5f736e] m-0 leading-relaxed">
-            Theo dõi dữ liệu hồ sơ. Quyền phê duyệt và trạng thái mở bán do backend quyết định.
+            Theo dõi tiến độ hoàn thiện hồ sơ. Khách sạn cần được phê duyệt trước khi mở bán.
           </p>
         </div>
 
@@ -205,12 +178,12 @@ export function CompletionChecklist({ hotel, completion, onRetry }: CompletionCh
                       <span>{item.title}</span>
                     </span>
                     {done && (
-                      <Tag color="success" className="!text-[10px] !leading-4 !px-1.5 !m-0 !rounded-md">
+                      <Tag color="success" className="!text-xs !leading-4 !px-1.5 !m-0 !rounded-lg">
                         Đã xong
                       </Tag>
                     )}
                     {!done && (
-                      <Tag color={state === 'error' ? 'error' : 'default'} className="!text-[10px] !leading-4 !px-1.5 !m-0 !rounded-md">
+                      <Tag color={state === 'error' ? 'error' : 'default'} className="!text-xs !leading-4 !px-1.5 !m-0 !rounded-lg">
                         {state === 'loading' ? 'Đang tải…' : state === 'error' ? 'Không thể tải dữ liệu' : incompleteLabels[item.id]}
                       </Tag>
                     )}
@@ -224,6 +197,7 @@ export function CompletionChecklist({ hotel, completion, onRetry }: CompletionCh
               <div className="flex justify-end gap-2 sm:shrink-0 w-full sm:w-auto pl-10 sm:pl-0">
                 {state === 'error' && onRetry && <Button size="small" onClick={onRetry}>Thử lại</Button>}
                 <Button
+                  disabled={isAdmin || isPendingApproval}
                   size="small"
                   type={done ? 'default' : 'primary'}
                   onClick={() => navigate(item.to)}
@@ -245,9 +219,9 @@ export function CompletionChecklist({ hotel, completion, onRetry }: CompletionCh
       {/* Action Footer */}
       <div className="p-4 sm:px-6 bg-[#f7fbfa] border-t border-[#eef4f2] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="text-xs text-[#5f736e]">
-          {isDraft && (
+          {isDraft && !isPendingApproval && (
             <span className="text-amber-700 font-medium">
-              {isAdmin ? 'Quản trị viên có thể duyệt khách sạn bản nháp. Tiến độ hồ sơ không thay thế kết quả phê duyệt.' : 'Backend chưa hỗ trợ gửi hồ sơ kiểm duyệt. Khách sạn chỉ mở bán sau khi quản trị viên phê duyệt.'}
+              {isAdmin ? 'Xem hồ sơ Owner đã gửi để xét duyệt. Quản trị viên không chỉnh sửa nội dung hồ sơ.' : 'Gửi hồ sơ để quản trị viên xét duyệt. Kết quả và lý do từ chối được lưu trong lịch sử hồ sơ.'}
             </span>
           )}
           {isPendingApproval && (
@@ -262,25 +236,9 @@ export function CompletionChecklist({ hotel, completion, onRetry }: CompletionCh
           )}
         </div>
 
-        <Tooltip title={tooltipReason} placement="topRight">
-          <span>
-            <Button
-              type="primary"
-              size="large"
-              icon={<SendOutlined />}
-              onClick={handleSendApproval}
-              disabled={!isAdmin || mode !== 'api' || !isDraft || submitting}
-              loading={submitting}
-              className={`!rounded-xl font-semibold !px-6 ${
-                isComplete && isDraft
-                  ? '!bg-[#0b5f53] hover:!bg-[#08473e]'
-                  : ''
-              }`}
-            >
-              {isAdmin ? 'Duyệt khách sạn' : 'Gửi kiểm duyệt'}
-            </Button>
-          </span>
-        </Tooltip>
+        <Button type="primary" onClick={() => navigate(`/hotels/${hotel.id}/review-requests`)}>
+          {isAdmin ? 'Xem hồ sơ xét duyệt' : isPendingApproval ? 'Theo dõi xét duyệt' : reviewStatus === 'REJECTED' ? 'Gửi lại hồ sơ' : isDraft ? 'Gửi kiểm duyệt' : 'Theo dõi xét duyệt'}
+        </Button>
       </div>
     </div>
   )

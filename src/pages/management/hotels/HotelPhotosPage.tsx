@@ -297,16 +297,7 @@ export function HotelPhotosPage() {
         kicker="BỘ SƯU TẬP &amp; HÌNH ẢNH"
         title="Hình ảnh khách sạn theo album"
         description="Quản lý ảnh đại diện và phân bổ hình ảnh vào các album chuyên biệt (Phòng ngủ, Phòng tắm, Tiện ích...). Phân loại ảnh để khách dễ xem thông tin cơ sở lưu trú."
-        extra={
-          <Button
-            type="primary"
-            icon={<UploadOutlined />}
-            onClick={scrollToUpload}
-            className="!bg-[#0b5f53] !rounded-lg font-medium"
-          >
-            Tải ảnh vào album
-          </Button>
-        }
+
       />
 
       {albums.query.isPending && <PageLoading />}
@@ -336,12 +327,12 @@ export function HotelPhotosPage() {
                   rootClassName="w-full h-full"
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-xs text-[#8c9e99]">
+                <div className="w-full h-full flex flex-col items-center justify-center text-xs text-[#526760]">
                   <PictureOutlined className="text-xl mb-1 text-[#0b5f53]" />
                   <span>Chưa có bìa</span>
                 </div>
               )}
-              <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#0b5f53] text-white flex items-center gap-1 shadow-xs pointer-events-none">
+              <span className="hotel-photo-cover-label absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded text-xs font-semibold bg-[#064e3b] text-white flex items-center gap-1 shadow-xs pointer-events-none">
                 <StarFilled className="text-[9px]" /> Ảnh bìa
               </span>
             </div>
@@ -376,30 +367,6 @@ export function HotelPhotosPage() {
             </div>
           </div>
 
-          {/* Phải: Phím tắt thao tác nhanh */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto justify-start sm:justify-end">
-            <Button
-              icon={<FolderAddOutlined />}
-              onClick={() => {
-                setEditingAlbumId(null)
-                setAlbumDescription('')
-                setNewAlbumName('')
-                setAlbumNameError(null)
-                setCreateModalOpen(true)
-              }}
-              className="!rounded-xl text-xs font-medium"
-            >
-              Tạo album mới
-            </Button>
-            <Button
-              type="primary"
-              icon={<UploadOutlined />}
-              onClick={scrollToUpload}
-              className="!bg-[#0b5f53] !rounded-xl text-xs font-medium"
-            >
-              Tải ảnh mới
-            </Button>
-          </div>
         </div>
       </section>
 
@@ -431,7 +398,7 @@ export function HotelPhotosPage() {
               <span>Tất cả</span>
               <span
                 className={`text-[11px] px-1.5 py-0.2 rounded-full ${
-                  activeAlbumId === 'all' ? 'bg-[#0b5f53] text-white' : 'bg-[#f4f8f7] text-[#8c9e99]'
+                  activeAlbumId === 'all' ? 'bg-[#0b5f53] text-white' : 'bg-[#f4f8f7] text-[#526760]'
                 }`}
               >
                 {albumCounts.all ?? 0}
@@ -459,7 +426,7 @@ export function HotelPhotosPage() {
                   <span>{album.name}</span>
                   <span
                     className={`text-[11px] px-1.5 py-0.2 rounded-full ${
-                      isActive ? 'bg-[#0b5f53] text-white' : 'bg-[#f4f8f7] text-[#8c9e99]'
+                      isActive ? 'bg-[#0b5f53] text-white' : 'bg-[#f4f8f7] text-[#526760]'
                     }`}
                   >
                     {count}
@@ -496,7 +463,7 @@ export function HotelPhotosPage() {
               <>
                 <Tag>{displayedImages.length} ảnh</Tag>
                 {activeAlbum.isSystem ? (
-                  <span className="text-[11px] text-[#8c9e99] bg-[#f4f8f7] px-2 py-0.5 rounded-md font-medium">
+                  <span className="text-[11px] text-[#526760] bg-[#f4f8f7] px-2 py-0.5 rounded-md font-medium">
                     Mặc định
                   </span>
                 ) : (
@@ -550,18 +517,7 @@ export function HotelPhotosPage() {
                 title={`Chưa có ảnh nào trong album ${activeAlbum?.name || ''}`}
                 description="Hãy chọn hoặc kéo thả các tệp ảnh ở phần tải lên bên dưới để đưa ảnh vào album này."
               />
-              <Button
-                type="primary"
-                size="small"
-                icon={<UploadOutlined />}
-                onClick={() => {
-                  if (activeAlbumId !== 'all') setUploadTarget(activeAlbumId)
-                  scrollToUpload()
-                }}
-                className="mt-4 !bg-[#0b5f53] !rounded-lg"
-              >
-                Tải ảnh vào album ngay
-              </Button>
+
             </div>
           ) : (
             <Image.PreviewGroup>
@@ -586,7 +542,7 @@ export function HotelPhotosPage() {
                             rootClassName="w-full h-full"
                           />
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-xs text-[#8c9e99] bg-[#eef8f5]">
+                          <div className="w-full h-full flex flex-col items-center justify-center text-xs text-[#526760] bg-[#eef8f5]">
                             <PictureOutlined className="text-2xl mb-1 text-[#0b5f53]" />
                             <span>Ảnh #{img.originalIndex + 1}</span>
                           </div>
@@ -618,7 +574,7 @@ export function HotelPhotosPage() {
                       <div className="p-2.5 bg-white flex flex-col gap-2 border-t border-[#edf4f1] mt-auto">
                         {/* Hàng chuyển đổi album */}
                         <div className="flex items-center justify-between gap-1 text-[11px]">
-                          <span className="text-[#8c9e99] flex items-center gap-1 shrink-0">
+                          <span className="text-[#526760] flex items-center gap-1 shrink-0">
                             <SwapOutlined /> Album:
                           </span>
                           <Select

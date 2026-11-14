@@ -1,3 +1,4 @@
+import '@/shared/styles/hotel-management.css'
 import { useState } from 'react'
 import {
   AppstoreOutlined,
@@ -22,14 +23,12 @@ import {
   Dropdown,
   Input,
   Pagination,
-  Progress,
   Segmented,
   Select,
   Skeleton,
 } from 'antd'
 import { useNavigate } from 'react-router'
 import {
-  calculateHotelCompletion,
   HotelStatusBadge,
   useCitiesQuery,
   useManagementHotelsQuery,
@@ -66,26 +65,9 @@ function HotelCardCover({ hotel }: { hotel: ManagementHotelSummary }) {
 }
 
 function HotelCardCompletion({ hotel }: { hotel: ManagementHotelSummary }) {
-  const { data: coverUrl } = useHotelCoverImage(hotel.id, hotel.coverImageUrl)
-  const displayUrl = coverUrl || hotel.coverImageUrl
-  const completion = calculateHotelCompletion(displayUrl ? { ...hotel, coverImageUrl: displayUrl } : hotel)
-
-  return (
-    <div className="bg-[#f8fafc] p-2.5 rounded-xl border border-[#edf2f7] space-y-1.5">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-[#64748b] font-medium">Hoàn thiện hồ sơ</span>
-        <span className="font-bold text-[#0b5f53] text-[12px]">{completion.percent}%</span>
-      </div>
-      <Progress
-        percent={completion.percent}
-        showInfo={false}
-        size={['100%', 4]}
-        strokeColor="#0b5f53"
-        railColor="#e2e8f0"
-        className="!m-0"
-      />
-    </div>
-  )
+  return <p className="m-0 rounded-xl bg-[#f4f8f7] p-2.5 text-xs text-[#526760]" title={`Mở hồ sơ ${hotel.name} để xem tiến độ đầy đủ`}>
+    <InfoCircleOutlined className="mr-1.5" />Xem tiến độ trong hồ sơ
+  </p>
 }
 
 function HotelTableThumbnail({ hotel }: { hotel: ManagementHotelSummary }) {
@@ -108,26 +90,10 @@ function HotelTableThumbnail({ hotel }: { hotel: ManagementHotelSummary }) {
 }
 
 function HotelTableCompletion({ hotel }: { hotel: ManagementHotelSummary }) {
-  const { data: coverUrl } = useHotelCoverImage(hotel.id, hotel.coverImageUrl)
-  const displayUrl = coverUrl || hotel.coverImageUrl
-  const completion = calculateHotelCompletion(displayUrl ? { ...hotel, coverImageUrl: displayUrl } : hotel)
-
-  return (
-    <div className="flex items-center gap-2">
-      <Progress
-        percent={completion.percent}
-        showInfo={false}
-        size={['100%', 4]}
-        strokeColor="#0b5f53"
-        railColor="#e0e8e6"
-        className="!m-0"
-      />
-      <span className="text-[11px] font-bold text-[#0b5f53] shrink-0">
-        {completion.percent}%
-      </span>
-    </div>
-  )
+  return <span className="text-xs text-[#526760]" title={`Mở hồ sơ ${hotel.name} để xem tiến độ đầy đủ`}>Xem trong hồ sơ</span>
 }
+
+import { useCurrentUser } from '@/features/auth'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
@@ -143,6 +109,7 @@ const STATUS_FILTER_OPTIONS: Array<{ label: string; value: HotelStatus | 'ALL' }
 ]
 
 export function HotelManagementListPage() {
+  const { isAdmin } = useCurrentUser()
   const navigate = useNavigate()
   const mode = 'api'
 
@@ -343,7 +310,7 @@ export function HotelManagementListPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {hotels.map((hotel) => {
               const cityName = getCityName(hotel)
-              const roomCount = hotel.roomTypeCount ?? 0
+              const roomCount = hotel.roomTypeCount
 
               return (
                 <div
@@ -399,7 +366,7 @@ export function HotelManagementListPage() {
                       <div className="flex items-center justify-between text-xs text-[#5f736e] pt-1 border-t border-[#f1f5f9]">
                         <span className="flex items-center gap-1.5 font-medium text-[#1e293b]">
                           <HomeOutlined className="text-[#0b5f53]" />
-                          <span>{roomCount} loại phòng</span>
+                          <span>{roomCount === undefined ? 'Chưa tải số hạng phòng' : `${roomCount} loại phòng`}</span>
                         </span>
                         <span className="text-[11.5px] font-medium text-[#64748b]">
                           {hotel.checkInTime ? `Nhận ${hotel.checkInTime.slice(0, 5)}` : 'Nhận 14:00'}
@@ -435,9 +402,9 @@ export function HotelManagementListPage() {
                         items: [
                           {
                             key: 'info',
-                            label: 'Chỉnh sửa thông tin',
+                            label: isAdmin ? 'Xem hồ sơ xét duyệt' : 'Chỉnh sửa thông tin',
                             icon: <SettingOutlined />,
-                            onClick: () => navigate(`/hotels/${hotel.id}/info`),
+                            onClick: () => navigate(`/hotels/${hotel.id}/${isAdmin ? 'review-requests' : 'info'}`),
                           },
                           {
                             key: 'pricing',
@@ -449,7 +416,7 @@ export function HotelManagementListPage() {
                             key: 'status',
                             label: hotel.status === 'ACTIVE' ? 'Tạm ngưng hoạt động' : 'Kích hoạt / Cập nhật',
                             icon: hotel.status === 'ACTIVE' ? <PauseCircleOutlined /> : <PlayCircleOutlined />,
-                            onClick: () => navigate(`/hotels/${hotel.id}/info`),
+                            onClick: () => navigate(`/hotels/${hotel.id}/${isAdmin ? 'review-requests' : 'info'}`),
                           },
                           ...(hotel.status === 'ACTIVE'
                             ? [
@@ -503,7 +470,7 @@ export function HotelManagementListPage() {
                   <th className="py-4 px-4">Tỉnh / Thành</th>
                   <th className="py-4 px-4">Tiêu chuẩn sao</th>
                   <th className="py-4 px-4">Trạng thái</th>
-                  <th className="py-4 px-4">Hoàn thiện</th>
+                  <th className="py-4 px-4">Hồ sơ</th>
                   <th className="py-4 px-4">Loại phòng</th>
                   <th className="py-4 px-5 text-right font-bold">Thao tác</th>
                 </tr>
@@ -511,7 +478,7 @@ export function HotelManagementListPage() {
               <tbody className="divide-y divide-[#f1f5f9]">
                 {hotels.map((hotel) => {
                   const cityName = getCityName(hotel)
-                  const roomCount = hotel.roomTypeCount ?? 0
+                  const roomCount = hotel.roomTypeCount
 
                   return (
                     <tr
@@ -576,7 +543,7 @@ export function HotelManagementListPage() {
                       {/* Loại phòng */}
                       <td className="py-3.5 px-4 font-semibold text-[#12211d]">
                         <span className="bg-[#f1f5f9] text-[#334155] px-2.5 py-1 rounded-lg text-xs font-semibold">
-                          {roomCount} loại phòng
+                          {roomCount === undefined ? 'Chưa tải số hạng phòng' : `${roomCount} loại phòng`}
                         </span>
                       </td>
 
