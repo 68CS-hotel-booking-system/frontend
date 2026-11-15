@@ -1,6 +1,7 @@
 // Client Home Features (Sovereign Editorial Template)
 export * from './model/client-home'
 export * from './model/client-search-schema'
+export * from './model/hotel-presentation'
 export * from './mocks/client-home-data'
 export * from './mocks/hotel-detail-data'
 export * from './api/client-home-api'
