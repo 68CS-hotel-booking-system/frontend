@@ -32,6 +32,22 @@ function renderComponent(ui: React.ReactElement, client: QueryClient) {
 }
 
 describe('HotelAmenitiesManager with Scoped Amenities API', () => {
+  it('keeps saved amenities visible without edit controls in read-only mode', () => {
+    const client = new QueryClient()
+    client.setQueryData(hotelManagementKeys.amenities('api:HOTEL'), catalogHotelAmenities)
+    client.setQueryData(hotelManagementKeys.scopedAmenities(hotelId, undefined), {
+      hotelId, roomId: null, catalogAmenities: [catalogHotelAmenities[0]],
+      customAmenities: [{ id: 'custom', name: 'Suối khoáng riêng', description: 'Có tại khách sạn', attached: true }],
+      inheritedAmenities: [],
+    })
+    const html = renderComponent(<HotelAmenitiesManager hotelId={hotelId} readOnly />, client)
+    expect(html).toContain('Bãi đỗ xe miễn phí')
+    expect(html).toContain('Suối khoáng riêng')
+    expect(html).not.toContain('type="checkbox"')
+    expect(html).not.toContain('Lưu lựa chọn')
+    expect(html).not.toContain('Thêm tiện ích riêng')
+    client.clear()
+  })
   it('renders hotel amenities with catalog and custom sections without draft warnings', () => {
     const client = new QueryClient()
 

@@ -70,6 +70,7 @@ export const MAIN_NAV_GROUPS: MainNavGroup[] = [
   {
     title: 'Quản lý cơ sở & Vận hành',
     items: [
+      { key: 'staff', label: 'Nhân sự khách sạn', to: '/staff', icon: TeamOutlined },
       {
         key: 'hotels',
         label: 'Khách sạn',
@@ -77,7 +78,6 @@ export const MAIN_NAV_GROUPS: MainNavGroup[] = [
         icon: ShopOutlined,
         matchPrefix: '/hotels',
       },
-      { key: 'hotel-review-requests', label: 'Xét duyệt khách sạn', to: '/admin/hotel-review-requests', icon: FileTextOutlined, adminOnly: true },
       {
         key: 'bookings',
         label: 'Đặt phòng',
@@ -137,6 +137,13 @@ export const MAIN_NAV_GROUPS: MainNavGroup[] = [
     title: 'Hệ thống & Quản trị',
     adminOnly: true,
     items: [
+      {
+        key: 'hotel-review-requests',
+        label: 'Xét duyệt khách sạn',
+        to: '/admin/hotel-review-requests',
+        icon: SafetyCertificateOutlined,
+        adminOnly: true,
+      },
       {
         key: 'users',
         label: 'Người dùng & Phân quyền',

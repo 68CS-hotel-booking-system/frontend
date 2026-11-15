@@ -9,16 +9,16 @@ import {
 } from '@ant-design/icons'
 import { Button, Card, Space, Tag } from 'antd'
 import { useNavigate } from 'react-router'
-import { useHotelWorkspace, HotelStatusBadge, CompletionChecklist } from '@/features/hotels'
+import { useHotelWorkspace, HotelStatusBadge, CompletionChecklist, HotelSalesControls, useHotelProfileAccess } from '@/features/hotels'
 import { useCurrentUser } from '@/features/auth'
-import { HotelReviewResultPanel, useHotelReviewRequests } from '@/features/hotel-review-requests'
+import { HotelReviewResultPanel } from '@/features/hotel-review-requests'
 import { PageHeader } from '@/shared/ui/PageHeader'
 
 export function HotelOverviewPage() {
   const { hotel, hotelId, completion, refetch } = useHotelWorkspace()
   const navigate = useNavigate()
   const { isAdmin } = useCurrentUser()
-  const latest = useHotelReviewRequests(hotelId, 0, 1)
+  const { canEditProfile } = useHotelProfileAccess(hotel)
 
   if (!hotel) return null
 
@@ -30,6 +30,7 @@ export function HotelOverviewPage() {
 
   return (
     <div className="hotel-overview-page max-w-6xl mx-auto space-y-6">
+      <HotelSalesControls hotelId={hotelId} status={hotel.status} />
       {/* 1. Header */}
       <PageHeader
         breadcrumbItems={breadcrumbItems}
@@ -38,7 +39,7 @@ export function HotelOverviewPage() {
         description="Bảng điều khiển cơ sở lưu trú, theo dõi tiến độ hoàn thiện hồ sơ và các chỉ số hoạt động."
         extra={
           <Space>
-            {!isAdmin && latest.isSuccess && latest.data.content[0]?.status !== 'PENDING' && <Button
+            {canEditProfile && <Button
               icon={<EditOutlined />}
               onClick={() => navigate(`/hotels/${hotelId}/info`)}
             >

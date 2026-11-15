@@ -5,7 +5,7 @@ import { amenitySchema } from './hotel'
 export const customAmenitySchema = z.object({
   id: z.string().uuid(),
   hotelId: z.string().uuid(),
-  roomId: z.string().uuid().nullable().optional(),
+  roomId: z.guid().nullable().optional(),
   name: z.string().min(1).max(100),
   description: z.string().nullable().optional(),
   attached: z.boolean(),
@@ -19,7 +19,7 @@ export type CustomAmenity = z.infer<typeof customAmenitySchema>
 /** Schema dữ liệu tiện ích tổng hợp trả về từ GET / PUT R */
 export const managementAmenitiesResponseSchema = z.object({
   hotelId: z.string().uuid(),
-  roomId: z.string().uuid().nullable().optional(),
+  roomId: z.guid().nullable().optional(),
   catalogAmenities: z.array(amenitySchema),
   customAmenities: z.array(customAmenitySchema),
   inheritedAmenities: z.array(amenitySchema),

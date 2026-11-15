@@ -10,6 +10,8 @@ export type ClientVibeKey =
 export type ClientBadgeClass = 'gold' | 'dark' | 'sage'
 
 export interface ClientStay {
+  source?: 'api' | 'preview'
+  starRating?: number | null
   id: string
   name: string
   city: string
