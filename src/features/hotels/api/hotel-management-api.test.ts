@@ -40,6 +40,18 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('management API compatibility with the implemented backend', () => {
+  it.each([
+    ['suspend', 'management', 'SUSPENDED'], ['resume', 'management', 'ACTIVE'],
+    ['lock', 'admin', 'LOCKED'], ['unlock', 'admin', 'ACTIVE'],
+  ] as const)('uses the correct scope for hotel %s and keeps the server state', async (action, scope, status) => {
+    respond({ ...hotel, status, version: 7 })
+    const { changeHotelSalesStatus } = await import('./hotel-management-api')
+    const result = await changeHotelSalesStatus(id, action, 'Lý do kiểm thử')
+    expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/${scope}/hotels/${id}/${action}`)
+    expect(fetcher.mock.calls[0][1]?.method).toBe('POST')
+    expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({ reason: 'Lý do kiểm thử' })
+    expect(result).toMatchObject({ status, version: 7 })
+  })
   it('reads a populated backend page and maps ownerId for the UI', async () => {
     respond({ content: [hotel], page: 1, size: 6, totalElements: 7, totalPages: 2, first: false, last: true })
     const { getManagementHotels } = await import('./hotel-management-api')

@@ -36,22 +36,30 @@ Chỉ copy env khi chưa có `.env.local`. Backend dev mặc định ở http://
 - Auth có feature riêng tại `features/auth`: đăng ký, xác minh email, login, refresh/logout, forgot/reset/change password và đọc user hiện tại.
 - Các route `/login`, `/register`, `/forgot-password`, `/verify-email`, `/reset-password` dùng feature auth, độc lập với trang diagnostics.
 - `/management/live` giữ 18 thao tác kiểm thử API đã có, dùng lại logic auth và contract khách sạn.
-- Các màn quản lý khách sạn mặc định dùng mock. Switch nguồn dữ liệu bật API tạo, danh sách và chi tiết; bộ lọc chưa có ở backend bị khóa.
-- Khi dùng API, tạo khách sạn cần Owner UUID và City UUID có thật. Backend tự sinh slug. Chưa có API danh mục cities để cấp lựa chọn.
-- Sửa khách sạn, danh mục/gắn tiện ích, giá theo ngày, hợp đồng và quyền tài chính chưa được backend hỗ trợ. FE khóa thao tác và báo rõ, không gửi request đến endpoint giả định.
-- Discovery còn dữ liệu preview/mock. Màn admin users dùng API thật cho danh sách, tìm kiếm,
+- Quản lý khách sạn có nguồn API: danh sách/chi tiết/tạo/sửa, danh mục thành phố/tiện ích, album ảnh, loại phòng/phòng vật lý, giá theo ngày, chính sách và lịch chặn phòng. Nguồn preview còn được ghi rõ ở những màn hỗ trợ chuyển nguồn.
+- Tạo khách sạn dùng danh mục cities và lựa chọn chủ sở hữu có thật. Backend sinh slug và kiểm tra quyền.
+- Tổng quan khách sạn có tạm ngừng/mở bán lại và khóa/gỡ khóa theo vai trò. Lỗi trạng thái, thiếu điều kiện mở bán và quyền được giữ từ backend.
+- Trang chủ lấy khách sạn đang bán từ API tìm kiếm, không thay lỗi/kết quả rỗng bằng mock. `/explore` tìm kiếm theo điểm đến, ngày, sức chứa, giá và số sao, sắp xếp/phân trang phía server. Ảnh bìa lấy qua media access; thiếu ảnh dùng hình trung tính.
+- `/stays/:hotelId` với UUID lấy khách sạn và hạng phòng thật, kiểm tra tồn -> báo giá -> tạo đơn. Thay ngày/số khách/số phòng/hạng phòng sẽ vô hiệu hóa báo giá cũ. Tổng tiền tạo đơn lấy từ báo giá server, không tính giá ở client. Những slug demo cũ được ghi rõ là minh họa và không tạo đơn.
+- `/my-bookings` hiển thị đơn thật, bộ lọc/phân trang/chi tiết, mở thanh toán VNPay và gửi khiếu nại. Chỉ chuyển sang URL HTTPS thuộc VNPay; trạng thái giao dịch lấy lại từ server ở `/payment/return`.
+- `/my-complaints` dùng API khiếu nại của chính tài khoản. Nhóm OTHER cần nội dung ít nhất 20 ký tự. Chưa có API xử lý khiếu nại dành cho admin.
+- `/bookings` và tab đặt phòng trong workspace khách sạn có danh sách/chi tiết, phân phòng, nhận/trả phòng, khách đến muộn/không đến. Server kiểm tra tồn, xung đột, quyền và trạng thái; thành công mới tải lại dữ liệu.
+- `/contracts` nối danh sách/tạo dự thảo/kích hoạt/chấm dứt hợp đồng; `/financial-access` nối quyền tài chính theo khách sạn. Chỉ vai trò được backend cho phép mới thực hiện được.
+- Màn admin users dùng API thật cho danh sách, tìm kiếm,
   bộ lọc, phân trang, số lượng theo tab, khóa/mở khóa, gửi lại email xác minh và cấp/thu hồi vai trò.
   Số lượng tab lấy từ `totalElements` của API danh sách; thao tác hàng loạt gọi API từng tài khoản
   và báo kết quả một phần khi có lỗi. Không chuyển sang mock khi kết nối thất bại.
-- Tạo người dùng từ admin chưa được BE triển khai nên nút được khóa; đã bỏ chức năng xuất CSV.
+- Tạo người dùng từ admin đã nối API, không cấp mật khẩu dùng chung. Người nhận xác minh email rồi dùng Quên mật khẩu để đặt mật khẩu riêng; cần cấu hình SMTP ở backend.
   Modal chi tiết dùng dữ liệu từ danh sách, chưa có API chi tiết người dùng riêng.
+- `/account` sửa tên/số điện thoại với `expectedVersion`, hiển thị mã tài khoản và dùng lại luồng đổi mật khẩu.
+- `/staff` lấy danh sách khách sạn thuộc quyền từ server, phân trang nhân sự và thêm/thu hồi phân công theo từng khách sạn. ADMIN được phân công quản lý; chủ khách sạn/quản lý chỉ phân công lễ tân. Dùng mã tài khoản từ hồ sơ hoặc màn admin, không nhận role toàn hệ thống từ client làm căn cứ cấp quyền.
 - `/system-status` gọi `GET /actuator/health` thật; backend dừng sẽ hiện lỗi, không tự chuyển sang mock.
 
 ## Xác thực
 
 `/admin/login` là màn hình đăng nhập riêng cho quản trị. Khách mở `/admin`, `/admin/overview` hoặc `/admin/users` được chuyển đến đây; sau login, FE gọi `/users/me` xác minh role `ADMIN` rồi quay về đường dẫn admin ban đầu (mặc định `/admin/overview`). Tài khoản thiếu quyền bị từ chối; lỗi xác minh cho phép thử lại hoặc đổi tài khoản. `/login` dành cho client vẫn giữ nguyên.
 
-Access/refresh token chỉ giữ trong memory; reload cần đăng nhập lại. Backend trả refresh token trong JSON, chưa có cookie HttpOnly. Refresh thủ công; không tự gửi lại mutation.
+Access token giữ trong memory. Refresh token của trình duyệt nằm trong cookie HttpOnly; khi tải trang, session manager gọi refresh để khôi phục phiên. Remember me điều khiển thời hạn cookie phía server. Các menu đăng xuất dùng API logout và broadcast xoá phiên/cache cho các tab. Không tự gửi lại mutation.
 Login/refresh không hiển thị token trong kết quả. Logout thành công, đổi/reset mật khẩu xóa phiên local và cache; logout lỗi giữ phiên.
 
 Link email chứa `?token=...` được đọc vào form rồi loại token khỏi URL. Mật khẩu mới dài 15–128 ký tự. Quyền ADMIN/HOTEL_OWNER luôn được backend kiểm tra.

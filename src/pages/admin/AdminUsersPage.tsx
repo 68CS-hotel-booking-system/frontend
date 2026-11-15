@@ -1,7 +1,7 @@
-import { message } from 'antd'
+import { Button, message } from 'antd'
 import { formatPhoneNumber, formatRoleLabel } from '@/shared/lib/format'
 import type { UserFilterTab } from '@/features/users'
-import { UserActionMenu, UserDetailModal, ChangeRoleModal, useAdminUsers } from '@/features/users'
+import { UserActionMenu, UserDetailModal, ChangeRoleModal, CreateUserModal, useAdminUsers } from '@/features/users'
 
 export function AdminUsersPage() {
   const {
@@ -53,6 +53,7 @@ export function AdminUsersPage() {
     roleFilterOptions,
     rolesLoading,
     rolesError,
+    isCreateModalOpen, setIsCreateModalOpen, handleCreateUser,
   } = useAdminUsers()
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -91,6 +92,7 @@ export function AdminUsersPage() {
             Theo dõi tài khoản, vai trò và trạng thái người dùng trên hệ thống StayHub.
           </p>
         </div>
+        <Button type="primary" disabled={isBusy} onClick={() => setIsCreateModalOpen(true)}>Thêm người dùng</Button>
       </div>
 
       {/* MAIN TABLE CONTAINER */}
@@ -1101,6 +1103,7 @@ export function AdminUsersPage() {
       )}
 
       {/* MODALS */}
+      <CreateUserModal open={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSubmit={handleCreateUser} />
       <UserDetailModal
         user={selectedUserForDetail}
         open={Boolean(selectedUserForDetail)}

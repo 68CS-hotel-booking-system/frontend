@@ -24,7 +24,7 @@ export function usePublicHotelDetailQuery(hotelId: string | undefined) {
     roomTypes: roomTypesQuery.data ?? [],
     isLoading: hotelQuery.isLoading || roomTypesQuery.isLoading,
     isError: hotelQuery.isError || roomTypesQuery.isError,
-    error: hotelQuery.error || roomTypesQuery.error,
+    error: hotelQuery.error ?? roomTypesQuery.error,
     refetch: () => {
       void hotelQuery.refetch()
       void roomTypesQuery.refetch()

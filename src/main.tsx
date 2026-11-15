@@ -10,6 +10,7 @@ import './shared/styles/global.css'
 import './shared/styles/admin-dashboard.css'
 import './shared/styles/admin-login.css'
 import './shared/styles/client-home.css'
+import './shared/styles/public-booking.css'
 
 document.title = env.appName
 const root = document.getElementById('root')

@@ -16,3 +16,7 @@ export async function createHotelContractDraft(hotelId: string, payload: CreateA
     body: { ...values, startsAt: new Date(values.startsAt).toISOString(), endsAt: new Date(values.endsAt).toISOString(), status: 'DRAFT' },
   })
 }
+
+export function changeContractStatus(hotelId: string, contractId: string, action: 'activate' | 'terminate', signal?: AbortSignal) {
+  return http.request(`/admin/hotels/${encodeURIComponent(hotelId)}/contracts/${encodeURIComponent(contractId)}/${action}`, { method: 'POST', signal, schema: contractDtoSchema })
+}

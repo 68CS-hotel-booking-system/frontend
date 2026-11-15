@@ -265,7 +265,7 @@ export function AuthModal({
             </h2>
             <p className="auth-modal-subtitle" id={subtitleId}>
               {mode === 'login'
-                ? 'Đăng nhập để xem đặt phòng và đồng bộ chỗ nghỉ yêu thích'
+                ? 'Đăng nhập để đặt phòng và theo dõi các đơn của bạn'
                 : 'Trở thành thành viên để nhận đặc quyền và ưu đãi lưu trú'}
             </p>
           </div>
