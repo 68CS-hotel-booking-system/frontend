@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { ApiError } from '@/shared/api/api-error'
-import { createBooking, getAvailability, quoteStay, stayFormSchema, type BookerForm, type StayForm } from '../api/booking-api'
+import { createBooking, getAvailability, quoteStay, stayFormSchema, type BookerForm, type PreparedBookingQuote, type StayForm } from '../api/booking-api'
 
 export function stayKey(stay: StayForm) {
   return JSON.stringify([stay.checkIn, stay.checkOut, stay.adults, stay.children, stay.quantity])
 }
-export function useBookingCheckout(hotelId: string, stay: StayForm) {
+export function useBookingCheckout(hotelId: string, stay: StayForm, preparedQuote?: PreparedBookingQuote | null) {
   const [roomTypeId, setRoomTypeId] = useState('')
   const [uncertain, setUncertain] = useState(false)
   const inFlight = useRef(false)
@@ -20,9 +20,10 @@ export function useBookingCheckout(hotelId: string, stay: StayForm) {
       items: [{ roomTypeId, quantity: value.quantity, adults: value.adults, children: value.children }] }
     return { input, signature: stayKey(value), roomTypeId, quote: await quoteStay(hotelId, input) }
   }, retry: false })
-  const currentQuote = selected && quote.data?.signature === signature && quote.data.roomTypeId === roomTypeId ? quote.data : undefined
+  const currentQuote = preparedQuote !== undefined ? preparedQuote ?? undefined
+    : selected && quote.data?.signature === signature && quote.data.roomTypeId === roomTypeId ? quote.data : undefined
   const create = useMutation({ mutationFn: (booker: BookerForm) => {
-    if (!currentQuote || !selected) throw new Error('Cần lấy lại báo giá cho lựa chọn hiện tại.')
+    if (!currentQuote) throw new Error('Cần lấy lại báo giá cho lựa chọn hiện tại.')
     return createBooking(hotelId, currentQuote.input, booker, currentQuote.quote.totalAmount)
   }, retry: false })
   async function submit(booker: BookerForm) {
