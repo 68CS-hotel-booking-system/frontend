@@ -1,6 +1,7 @@
 export { AuthPanel } from './components/AuthPanel'
 export { AuthForm } from './components/AuthForm'
 export { ProfileForm } from './components/ProfileForm'
+export { AccountPasswordForm } from './components/AccountPasswordForm'
 export { AccountRouteGuard } from './components/AccountRouteGuard'
 export { AdminLoginForm } from './components/AdminLoginForm'
 export { VerifyEmailView, type VerifyEmailViewProps } from './components/VerifyEmailView'

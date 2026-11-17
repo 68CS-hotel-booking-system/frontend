@@ -34,6 +34,15 @@ it('uses availability date names from the controller and checks total occupancy 
   await getAvailability(hotelId, { checkIn: input.checkIn, checkOut: input.checkOut, adults: 4, children: 1, quantity: 2 })
   expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/hotels/${hotelId}/availability?checkInDate=2030-01-10&checkOutDate=2030-01-12&adults=4&children=1&quantity=2`)
 })
+it('sends guest separately without replacing booker and retains the server-confirmed total', async () => {
+  const guest = { fullName: 'Người nhận phòng khác', email: 'guest@example.invalid', phone: '0911111111' }
+  response({ ...quote, id: roomId, bookingCode: 'BK-GUEST', customerId: hotelId, adults: 2, children: 0, status: 'PENDING_PAYMENT', expiresAt: null, createdAt: '2030-01-01T00:00:00Z', booker, guest, items: [{ ...quote.items[0], id: roomId }] })
+  const { createBooking } = await import('./booking-api')
+  const result = await createBooking(hotelId, input, booker, quote.totalAmount, undefined, guest)
+  expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({ hotelId, ...input, booker, guest, quotedTotalAmount: quote.totalAmount })
+  expect(result.guest.fullName).toBe(guest.fullName)
+  expect(result.booker.fullName).toBe(booker.fullName)
+})
 it('rejects reversed, past, too-long stays and missing adult per room before requesting', async () => {
   const { stayFormSchema, getAvailability } = await import('./booking-api')
   const stay = { checkIn: '2030-01-10', checkOut: '2030-01-12', adults: 2, children: 0, quantity: 1 }

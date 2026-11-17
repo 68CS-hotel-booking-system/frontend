@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Alert, Button, Descriptions, Drawer, Select, Space, Table, Tag } from 'antd'
-import { Link } from 'react-router'
 import { PaymentButton } from '@/features/payments'
 import { ComplaintForm } from '@/features/complaints'
 import { ErrorState } from '@/shared/ui/ErrorState'
@@ -28,7 +27,6 @@ export function BookingList({ hotelId }: { hotelId?: string }) {
       <Select id="booking-status" value={status} allowClear placeholder="Tất cả trạng thái" style={{ minWidth: 200 }}
         options={bookingStatuses.map((value) => ({ value, label: bookingStatusLabels[value] }))}
         onChange={(value) => { setStatus(value); setPage(0) }} />
-      {!hotelId && <Link to="/my-complaints">Khiếu nại của tôi</Link>}
     </Space>
     {query.isError ? <ErrorState error={query.error} onRetry={() => void query.refetch()} /> :
       <Table<BookingSummary> rowKey="id" loading={query.isPending} dataSource={query.data?.content ?? []} scroll={{ x: 720 }} locale={{ emptyText: 'Không có đơn đặt phòng phù hợp.' }}
