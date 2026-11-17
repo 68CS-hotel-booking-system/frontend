@@ -25,12 +25,17 @@ export function PaymentReturn() {
   const payment = query.data
   const pending = payment.status === 'PENDING'
   const success = payment.status === 'SUCCEEDED'
+  const review = success && !payment.bookingConfirmed
+  const expired = pending && payment.expired
   return <>
     <div role="status" aria-live="polite">
-      <Result status={pending ? 'info' : success ? 'success' : 'warning'}
-        title={pending ? 'Đang xác nhận thanh toán' : success ? 'Đã ghi nhận thanh toán' : 'Thanh toán chưa thành công'}
-        subTitle={pending ? 'Chúng tôi đang chờ xác nhận khoản thanh toán. Bạn có thể kiểm tra lại trạng thái bên dưới.'
-          : success ? 'Khoản thanh toán đã được ghi nhận. Bạn có thể tiếp tục theo dõi trạng thái đặt phòng.'
+      <Result status={review || expired ? 'warning' : pending ? 'info' : success ? 'success' : 'warning'}
+        title={review ? 'Đã nhận thanh toán, cần kiểm tra đặt phòng' : expired ? 'Đã hết hạn thanh toán'
+          : pending ? 'Đang xác nhận thanh toán' : success ? 'Đã ghi nhận thanh toán' : 'Thanh toán chưa thành công'}
+        subTitle={review ? 'Khoản thanh toán đã được ghi nhận nhưng chưa thể xác nhận phòng. Vui lòng liên hệ hỗ trợ kèm mã giao dịch bên dưới và không thanh toán lại.'
+          : expired ? 'Liên kết thanh toán đã hết hạn. Nếu bạn đã thanh toán, hãy kiểm tra lại trạng thái hoặc liên hệ hỗ trợ trước khi tạo đơn khác.'
+          : pending ? 'Chúng tôi đang chờ xác nhận khoản thanh toán. Bạn có thể kiểm tra lại trạng thái bên dưới.'
+          : success ? 'Khoản thanh toán đã được ghi nhận và đơn đặt phòng đã được xác nhận.'
             : 'Chưa ghi nhận thanh toán thành công cho giao dịch này. Vui lòng kiểm tra lại trước khi thanh toán lần nữa.'} />
     </div>
     <Descriptions column={1} items={[
