@@ -10,6 +10,8 @@ export const paymentSchema = z.object({
   status: z.enum(['PENDING', 'SUCCEEDED', 'FAILED']),
   paymentUrl: z.string().nullable(),
   expiresAt: z.iso.datetime({ offset: true }),
+  bookingConfirmed: z.boolean(),
+  expired: z.boolean(),
 })
 
 export async function getPayment(paymentId: string, signal?: AbortSignal) {
@@ -28,7 +30,7 @@ export function createVnpayPayment(bookingId: string, signal?: AbortSignal) {
 
 export function paymentRedirectUrl(value: string) {
   const url = new URL(value)
-  if (url.protocol !== 'https:' || (url.hostname !== 'vnpayment.vn' && !url.hostname.endsWith('.vnpayment.vn')) || url.username || url.password) {
+  if (url.protocol !== 'https:' || (url.hostname !== 'pay.vnpay.vn' && url.hostname !== 'vnpayment.vn' && !url.hostname.endsWith('.vnpayment.vn')) || url.username || url.password) {
     throw new ApiError('Địa chỉ thanh toán không hợp lệ.', { kind: 'invalid-response' })
   }
   return url.href
