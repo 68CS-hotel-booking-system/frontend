@@ -6,7 +6,7 @@ afterEach(() => vi.unstubAllGlobals())
 it('reads the owned payment using bearer auth and preserves server PENDING', async () => {
   fetcher.mockResolvedValue(new Response(JSON.stringify({ message: 'Payment', data: {
     id, bookingId: '22222222-2222-4222-8222-222222222222', amountVnd: 123456,
-    currency: 'VND', status: 'PENDING', paymentUrl: null, expiresAt: '2026-11-10T10:00:00Z',
+    currency: 'VND', status: 'PENDING', paymentUrl: null, expiresAt: '2026-11-10T10:00:00Z', bookingConfirmed: false, expired: false,
   } })))
   const { setSession } = await import('@/shared/api/session')
   setSession({ accessToken: 'qa-only', expiresAt: '2030-01-01T00:00:00Z' })
@@ -29,6 +29,7 @@ it('rejects malformed references before making a request', async () => {
 it('rejects unsafe payment redirects and accepts the VNPay sandbox', async () => {
   const { paymentRedirectUrl } = await import('./payment-api')
   expect(paymentRedirectUrl('https://sandbox.vnpayment.vn/paymentv2/vpcpay.html')).toContain('sandbox.vnpayment.vn')
+  expect(paymentRedirectUrl('https://pay.vnpay.vn/vpcpay.html')).toContain('pay.vnpay.vn')
   for (const url of ['javascript:alert(1)', 'http://sandbox.vnpayment.vn/', 'https://vnpayment.vn.evil.example/', 'https://user:password@sandbox.vnpayment.vn/']) {
     expect(() => paymentRedirectUrl(url)).toThrow()
   }
