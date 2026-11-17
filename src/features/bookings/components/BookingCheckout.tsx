@@ -7,28 +7,30 @@ import { useCurrentUser, useSession } from '@/features/auth'
 import { PaymentButton } from '@/features/payments'
 import { errorMessage } from '@/shared/api/api-error'
 import { applyApiFieldErrors } from '@/shared/lib/form-errors'
-import { bookerFormSchema, localDate, type BookerForm, type StayForm } from '../api/booking-api'
+import { bookerFormSchema, localDate, type BookerForm, type PreparedBookingQuote, type StayForm } from '../api/booking-api'
 import { useBookingCheckout } from '../hooks/use-booking-checkout'
 
-interface Props { hotelId: string; hotelName?: string; stay?: StayForm; initialStay?: Partial<StayForm>; onStayChange?: (stay: StayForm) => void }
+interface Props { hotelId: string; hotelName?: string; stay?: StayForm; initialStay?: Partial<StayForm>; onStayChange?: (stay: StayForm) => void; preparedQuote?: PreparedBookingQuote | null; onQuoteInvalidated?: () => void }
 const dateLabel = (date: string) => date.split('-').reverse().join('/')
 const money = (value: number, currency = 'VND') => new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(value)
 
-export function BookingCheckout({ hotelId, hotelName, stay: controlledStay, initialStay, onStayChange }: Props) {
+export function BookingCheckout({ hotelId, hotelName, stay: controlledStay, initialStay, onStayChange, preparedQuote, onQuoteInvalidated }: Props) {
   const [localStay, setLocalStay] = useState<StayForm>(() => ({ checkIn: localDate(), checkOut: localDate(1), adults: 1, children: 0, quantity: 1, ...initialStay }))
   const stay = controlledStay ?? localStay
   const changeStay = onStayChange ?? setLocalStay
-  const flow = useBookingCheckout(hotelId, stay)
+  const flow = useBookingCheckout(hotelId, stay, preparedQuote)
   const session = useSession()
   const { currentUser } = useCurrentUser()
   const location = useLocation()
-  const [confirm, setConfirm] = useState(false)
+  const [confirm, setConfirm] = useState<string | null>(null)
   const booker = useForm<BookerForm>({ resolver: zodResolver(bookerFormSchema), resetOptions: { keepDirtyValues: true }, values: {
     fullName: currentUser?.fullName ?? '', email: currentUser?.email ?? '', phone: currentUser?.phone ?? '',
   } })
   // RHF needs this subscription to preserve edited fields when the profile arrives.
   void booker.formState.dirtyFields
   const current = flow.currentQuote?.quote
+  const confirmationKey = flow.currentQuote ? JSON.stringify([hotelId, flow.currentQuote.input, current?.totalAmount, current?.currency]) : null
+  const prepared = preparedQuote !== undefined
   const pending = flow.availability.isPending || flow.quote.isPending || flow.busy
   function showCalendar() {
     document.getElementById('booking-calendar')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -36,14 +38,15 @@ export function BookingCheckout({ hotelId, hotelName, stay: controlledStay, init
   }
   function reserve() {
     if (!flow.validation.success || pending) return
+    if (prepared) { if (current) setConfirm(confirmationKey); return }
     if (!flow.checked) { flow.availability.mutate(stay); return }
     if (!flow.selected) return
-    if (current) { setConfirm(true); return }
-    flow.quote.mutate(stay, { onSuccess: () => setConfirm(true) })
+    if (current) { setConfirm(confirmationKey); return }
+    flow.quote.mutate(stay, { onSuccess: (result) => setConfirm(JSON.stringify([hotelId, result.input, result.quote.totalAmount, result.quote.currency])) })
   }
   const cta = flow.availability.isPending ? 'Đang kiểm tra phòng…' : flow.quote.isPending ? 'Đang lấy báo giá…' : !flow.checked ? 'Kiểm tra phòng trống' : !flow.selected ? 'Chọn hạng phòng bên dưới' : 'Đặt phòng'
-  return <aside className="lg:col-span-5 xl:col-span-4 relative" data-od-id="booking-rail" id="booking-rail">
-    <div className="stay-booking-card lg:sticky lg:top-28">
+  return <section className={prepared ? undefined : 'lg:col-span-5 xl:col-span-4 relative'} data-od-id="booking-rail" id="booking-rail" aria-label="Đặt phòng và thanh toán">
+    <div className={prepared ? undefined : 'stay-booking-card lg:sticky lg:top-28'}>
       {flow.create.data ? <div role="status" className="stay-booking-success">
         <h2>Đã tạo đơn {flow.create.data.bookingCode}</h2>
         <p>{dateLabel(flow.create.data.checkIn)} – {dateLabel(flow.create.data.checkOut)}</p>
@@ -53,6 +56,10 @@ export function BookingCheckout({ hotelId, hotelName, stay: controlledStay, init
         <p><Link to="/my-bookings">Xem đơn đặt phòng của tôi</Link></p>
         {flow.create.data.status === 'PENDING_PAYMENT' && <PaymentButton bookingId={flow.create.data.id} />}
       </div> : <>
+        {prepared ? <>
+          <button type="button" className="stay-reserve-button" onClick={reserve} disabled={pending || !flow.validation.success || !current}>Tiếp tục đặt phòng</button>
+          {!current && <p className="mt-2 text-sm">Chọn hạng phòng và kiểm tra báo giá để tiếp tục.</p>}
+        </> : <>
         <div className="stay-booking-price"><div>
           <strong>{flow.selected?.pricePerNight != null ? money(flow.selected.pricePerNight, flow.selected.currency) : 'Chọn kỳ nghỉ'}</strong>
           {flow.selected?.pricePerNight != null && <span> / đêm</span>}</div><small>{current ? 'Báo giá từ khách sạn' : 'Giá theo ngày & hạng phòng'}</small>
@@ -81,17 +88,18 @@ export function BookingCheckout({ hotelId, hotelName, stay: controlledStay, init
           <div><span>Giảm giá</span><span>−{money(current.discountAmount, current.currency)}</span></div>
           <div className="stay-price-total"><strong>Tổng thanh toán</strong><strong>{money(current.totalAmount, current.currency)}</strong></div>
         </div> : <p className="stay-booking-note">Chọn hạng phòng để nhận báo giá chính xác. Phụ thu và giảm giá được hiển thị theo báo giá của khách sạn.</p>}
+        </>}
         {flow.availability.isError && <Alert type="error" showIcon title="Không thể kiểm tra phòng" description={errorMessage(flow.availability.error)} />}
         {flow.quote.isError && <Alert type="error" showIcon title="Không thể lấy báo giá" description={errorMessage(flow.quote.error)} />}
         {flow.create.isError && <Alert type="error" showIcon title="Chưa thể xác nhận đặt phòng" description={errorMessage(flow.create.error)} />}
         {flow.uncertain && <Alert type="warning" title="Kết nối bị gián đoạn sau khi gửi đơn" description={<Link to="/my-bookings">Kiểm tra đơn của tôi trước khi tạo lại để tránh trùng đơn.</Link>} />}
       </>}
     </div>
-    <Modal open={confirm && Boolean(current) && !flow.create.data} onCancel={() => { if (!flow.create.isPending) setConfirm(false) }} footer={null} title="Xác nhận đặt phòng" className="stay-booking-modal" mask={{ closable: !flow.create.isPending }} destroyOnHidden>
+    <Modal open={confirm !== null && confirm === confirmationKey && Boolean(current) && !flow.create.data} onCancel={() => { if (!flow.create.isPending) setConfirm(null) }} footer={null} title="Xác nhận đặt phòng" className="stay-booking-modal" mask={{ closable: !flow.create.isPending }} destroyOnHidden>
       {current && <><h2>{hotelName}</h2><p>{dateLabel(stay.checkIn)} – {dateLabel(stay.checkOut)} · {stay.adults + stay.children} khách · {stay.quantity} phòng</p>
         <p className="stay-confirm-total">Tổng thanh toán <strong>{money(current.totalAmount, current.currency)}</strong></p>
         {!session ? <p><Link to={`/login?returnTo=${encodeURIComponent(location.pathname + location.search)}`}>Đăng nhập để xác nhận đặt phòng</Link></p> : <form noValidate onSubmit={booker.handleSubmit(async (value) => {
-          try { await flow.submit(value) } catch (error) { applyApiFieldErrors(error, booker.setError); setConfirm(false) }
+          try { await flow.submit(value) } catch (error) { applyApiFieldErrors(error, booker.setError); setConfirm(null); onQuoteInvalidated?.() }
         })}><fieldset disabled={flow.busy} className="stay-contact-fields"><legend>Thông tin người đặt và nhận phòng</legend>
           {(['fullName', 'email', 'phone'] as const).map((name) => <label key={name} htmlFor={`booker-${name}`}><span>{{ fullName: 'Họ và tên', email: 'Email liên hệ', phone: 'Số điện thoại liên hệ' }[name]}</span>
             <input {...booker.register(name)} id={`booker-${name}`} type={name === 'email' ? 'email' : name === 'phone' ? 'tel' : 'text'} autoComplete={name === 'fullName' ? 'name' : name === 'phone' ? 'tel' : 'email'} aria-invalid={Boolean(booker.formState.errors[name])} aria-describedby={booker.formState.errors[name] ? `booker-${name}-error` : undefined} />
@@ -100,5 +108,5 @@ export function BookingCheckout({ hotelId, hotelName, stay: controlledStay, init
         </fieldset></form>}
       </>}
     </Modal>
-  </aside>
+  </section>
 }

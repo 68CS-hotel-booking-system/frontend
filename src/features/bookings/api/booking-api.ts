@@ -53,6 +53,10 @@ export interface QuoteInput {
   checkIn: string; checkOut: string
   items: { roomTypeId: string; quantity: number; adults: number; children: number }[]
 }
+export interface PreparedBookingQuote {
+  input: QuoteInput
+  quote: { currency: string; nights: number; roomSubtotalAmount: number; surchargeAmount: number; discountAmount: number; totalAmount: number }
+}
 export const quoteSchema = z.object({
   hotelId: z.uuid(), checkIn: z.iso.date(), checkOut: z.iso.date(), nights: z.number().int(), currency: z.string(),
   roomSubtotalAmount: money, surchargeAmount: money, discountAmount: money, totalAmount: money,

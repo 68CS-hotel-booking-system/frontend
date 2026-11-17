@@ -55,3 +55,19 @@ it('loads photos from the current hotel gallery without navigation state', () =>
   expect(render(id)).toContain('https://example.test/cover.jpg')
   expect(render('33333333-3333-4333-8333-333333333333')).toContain('https://example.test/cover.jpg')
 })
+
+const hotelId = '11111111-1111-4111-8111-111111111111'
+const stay = { checkIn: '2030-01-10', checkOut: '2030-01-12', adults: 1, children: 0, quantity: 1 }
+
+it('requires a selected room and server quote before continuing to checkout', () => {
+  const client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, retry: false } } })
+  client.setQueryData(['hotels', 'public-detail', hotelId], { id: hotelId, name: 'Khách sạn test', address: 'Hà Nội', starRating: 4, checkInTime: '14:00', checkOutTime: '12:00', description: null })
+  client.setQueryData(['hotels', 'public-room-types', hotelId], [])
+  const params = new URLSearchParams({ ...stay, adults: String(stay.adults), children: '0', quantity: '1' })
+  const markup = renderToStaticMarkup(<QueryClientProvider client={client}><MemoryRouter initialEntries={[`/stays/${hotelId}?${params}`]}>
+    <Routes><Route path="/stays/:hotelId" element={<HotelDetailPage />} /></Routes>
+  </MemoryRouter></QueryClientProvider>)
+  expect(markup).toContain('aria-label="Đặt phòng của bạn"')
+  expect(markup.match(/<button[^>]*class="hotel-stay-continue"[^>]*>/)?.[0]).toContain('disabled')
+  expect(markup).not.toContain('Chức năng đặt phòng trực tuyến chưa sẵn sàng')
+})

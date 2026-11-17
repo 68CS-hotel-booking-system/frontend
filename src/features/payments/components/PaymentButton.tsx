@@ -17,6 +17,6 @@ export function PaymentButton({ bookingId, disabled = false }: { bookingId: stri
       } })
     }}>Thanh toán qua VNPay</Button>
     {mutation.isError && <Alert type="error" showIcon title="Chưa thể mở thanh toán" description={errorMessage(mutation.error)} />}
-    {mutation.data && <Link to={`/payment/return?paymentId=${mutation.data.id}`}>Kiểm tra trạng thái giao dịch</Link>}
+    {mutation.data && <Link to={`/payment/return?vnp_TxnRef=${mutation.data.id}`}>Kiểm tra trạng thái giao dịch</Link>}
   </Space>
 }
