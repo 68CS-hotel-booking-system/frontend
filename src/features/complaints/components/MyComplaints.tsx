@@ -14,10 +14,10 @@ export function MyComplaints() {
   const query = useQuery({ queryKey: ['complaints', 'mine', { page, status }], queryFn: ({ signal }) => listMyComplaints({ page, size: 10, status }, signal), retry: false })
   const detail = useQuery({ queryKey: ['complaints', 'detail', id], queryFn: ({ signal }) => getMyComplaint(id!, signal), enabled: Boolean(id), retry: false })
   return <section className="surface-card">
-    <div className="section-header"><h2>Khiếu nại của tôi</h2><Button loading={query.isFetching} onClick={() => void query.refetch()}>Làm mới</Button></div>
-    <Space style={{ marginBottom: 20 }}><label htmlFor="complaint-status">Trạng thái</label><Select id="complaint-status" allowClear placeholder="Tất cả" value={status} style={{ minWidth: 160 }}
+    <div className="section-header"><h2>Yêu cầu hỗ trợ</h2><Button loading={query.isFetching} onClick={() => void query.refetch()}>Làm mới</Button></div>
+    <Space wrap style={{ marginBottom: 20 }}><label htmlFor="complaint-status">Trạng thái</label><Select id="complaint-status" allowClear placeholder="Tất cả" value={status} style={{ minWidth: 160 }}
       options={Object.entries(statusLabels).map(([value, label]) => ({ value, label }))} onChange={(value) => { setStatus(value); setPage(0) }} /></Space>
-    {query.isError ? <ErrorState error={query.error} onRetry={() => void query.refetch()} /> : <Table rowKey="id" dataSource={query.data?.content} loading={query.isPending} pagination={{ current: page + 1, pageSize: 10, total: query.data?.totalElements, showSizeChanger: false, onChange: (value) => setPage(value - 1) }} columns={[
+    {query.isError ? <ErrorState error={query.error} onRetry={() => void query.refetch()} /> : <Table rowKey="id" scroll={{ x: 640 }} dataSource={query.data?.content} loading={query.isPending} pagination={{ current: page + 1, pageSize: 10, total: query.data?.totalElements, showSizeChanger: false, onChange: (value) => setPage(value - 1) }} columns={[
       { title: 'Loại', render: (_, item) => <Button type="link" onClick={() => setId(item.id)}>{complaintCategoryLabels[item.category]}</Button> },
       { title: 'Nội dung', dataIndex: 'content', ellipsis: true }, { title: 'Trạng thái', render: (_, item) => <Tag>{statusLabels[item.status]}</Tag> },
       { title: 'Ngày gửi', render: (_, item) => new Date(item.createdAt).toLocaleString('vi-VN') },

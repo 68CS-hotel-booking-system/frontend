@@ -102,31 +102,13 @@ export function ClientMobileMenu({
         </div>
 
         <nav aria-label="Điều hướng di động">
-          <a href="#destinations" onClick={() => handleNavClick('#destinations')}>
-            Điểm đến
-          </a>
-          <a href="#stays" onClick={() => handleNavClick('#stays')}>
-            Chỗ nghỉ
-          </a>
-          <a href="#journal" onClick={() => handleNavClick('#journal')}>
-            Trải nghiệm
-          </a>
-          <a href="#partner" onClick={() => handleNavClick('#partner')}>
-            Đối tác
-          </a>
-          {isAdmin && (
-            <NavLink
-              to="/admin/users"
-              className="flex items-center gap-2 text-base font-semibold text-[var(--accent)]"
-              onClick={onClose}
-            >
-              <DashboardOutlined />
-              <span>StayHub Admin</span>
-            </NavLink>
-          )}
+          <NavLink to="/" onClick={onClose}>Chỗ ở</NavLink>
+          <button type="button" onClick={() => { onClose(); void message.info('Trải nghiệm sẽ sớm được cập nhật.') }}>Trải nghiệm</button>
+          <button type="button" onClick={() => { onClose(); void message.info('Dịch vụ sẽ sớm được cập nhật.') }}>Dịch vụ</button>
         </nav>
 
         <div className="mobile-menu-foot">
+          {isAdmin && <NavLink to="/admin/users" onClick={onClose}><DashboardOutlined /> StayHub Admin</NavLink>}
           {session && <SpaceLinks onClose={onClose} />}
           {session ? (
             <div className="flex flex-col gap-2">

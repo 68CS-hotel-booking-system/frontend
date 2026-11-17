@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Alert } from 'antd'
 import { useLocation, useNavigate, useSearchParams } from 'react-router'
-import { AuthPanel, sanitizeReturnTo, useAuthStatus, useCurrentUser, useSession } from '@/features/auth'
+import { AuthModal, sanitizeReturnTo, useAuthStatus, useCurrentUser, useSession } from '@/features/auth'
 import { PageLoading } from '@/shared/ui/PageLoading'
 
 export function LoginPage() {
@@ -11,6 +11,7 @@ export function LoginPage() {
   const session = useSession()
   const { status } = useAuthStatus()
   const { currentUser, isChecking, isAdmin } = useCurrentUser()
+  const authenticated = useRef(false)
 
   const rawReturnTo = (location.state as { from?: string } | null)?.from ?? searchParams.get('returnTo')
   const returnTo = sanitizeReturnTo(rawReturnTo)
@@ -49,7 +50,7 @@ export function LoginPage() {
           />
         </div>
       )}
-      <AuthPanel initialAction="login" />
+      <AuthModal isOpen initialMode="login" variant="checkout" onClose={() => { if (!authenticated.current) void navigate('/', { replace: true }) }} onSuccess={() => { authenticated.current = true; if (!returnTo) void navigate('/', { replace: true }) }} />
     </div>
   )
 }

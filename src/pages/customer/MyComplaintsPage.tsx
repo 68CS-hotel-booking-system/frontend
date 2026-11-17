@@ -1,5 +1,5 @@
 import { MyComplaints } from '@/features/complaints'
-import { PageHeader } from '@/shared/ui/PageHeader'
+import { CustomerAccountLayout } from './CustomerAccountLayout'
 export function MyComplaintsPage() {
-  return <div className="management-page"><PageHeader title="Khiếu nại của tôi" description="Theo dõi các yêu cầu đã gửi cho đơn đặt phòng." /><MyComplaints /></div>
+  return <CustomerAccountLayout section="complaints" title="Khiếu nại của tôi" description="Xem tình trạng xử lý các yêu cầu hỗ trợ cho đơn đặt phòng."><MyComplaints /></CustomerAccountLayout>
 }

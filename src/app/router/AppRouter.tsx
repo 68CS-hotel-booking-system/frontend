@@ -51,6 +51,8 @@ import {
 import { NotFoundPage } from '@/pages/public/NotFoundPage'
 import { StayVibeHomePage } from '@/pages/public/StayVibeHomePage'
 import { HotelDetailPage } from '@/pages/public/HotelDetailPage'
+import { BookingCheckoutPage } from '@/pages/customer/BookingCheckoutPage'
+import { BookingConfirmationPage } from '@/pages/customer/BookingConfirmationPage'
 
 const router = createBrowserRouter(createRoutesFromElements(<>
         <Route path="admin/login" element={<AdminLoginPage />} />
@@ -168,6 +170,8 @@ const router = createBrowserRouter(createRoutesFromElements(<>
         {/* Public / Customer Main Layout Routes */}
         <Route element={<AppLayout />}>
           <Route element={<AccountRouteGuard />}>
+            <Route path="stays/:hotelId/checkout" element={<BookingCheckoutPage />} />
+            <Route path="stays/:hotelId/booking/:bookingId" element={<BookingConfirmationPage />} />
             <Route path="payment/return" element={<PaymentReturnPage />} />
             <Route path="account" element={<ProfilePage />} />
             <Route path="my-bookings" element={<MyBookingsPage />} />

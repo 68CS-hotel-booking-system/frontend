@@ -14,7 +14,7 @@ import {
   StarOutlined,
   UserOutlined,
 } from '@ant-design/icons'
-import { App, Button, Drawer, Dropdown, type MenuProps } from 'antd'
+import { App, Button, ConfigProvider, Drawer, Dropdown, type MenuProps } from 'antd'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import {
   StayVibeFooter,
@@ -33,6 +33,7 @@ import { formatRoleLabel } from '@/shared/lib/format'
 
 function ClientHomeLayout() {
   const { pathname, hash } = useLocation()
+  const isHotelDetail = pathname.startsWith('/stays/')
   useEffect(() => {
     if (!hash) return
     const frame = requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
@@ -52,7 +53,8 @@ function ClientHomeLayout() {
   } = useClientHomeContext()
 
   return (
-    <div className="client-theme min-h-screen flex flex-col bg-[var(--paper)] text-[var(--ink)]">
+    <ConfigProvider theme={{ token: { colorPrimary: '#ff385c', colorInfo: '#ff385c', colorText: '#222222', colorTextSecondary: '#717171', colorBorder: '#ebebeb', colorBgLayout: '#ffffff', fontFamily: isHotelDetail ? 'Inter, sans-serif' : "'Liberation Sans', Arial, sans-serif", borderRadius: 12, controlHeight: 44 }, components: { Button: { borderRadius: 12 }, Table: { headerBg: '#f7f7f7', headerColor: '#222222', borderColor: '#ebebeb', cellPaddingBlock: 18 }, Tabs: { inkBarColor: '#ff385c', itemSelectedColor: '#ff385c' } } }}>
+    <div className={`client-theme min-h-screen flex flex-col bg-[var(--paper)] text-[var(--ink)]${isHotelDetail ? ' hotel-detail-theme' : ''}`}>
       <ClientSvgSprite />
       <a className="skip-link" href="#main">
         Đến nội dung chính
@@ -90,6 +92,7 @@ function ClientHomeLayout() {
         }}
       />
     </div>
+    </ConfigProvider>
   )
 }
 
@@ -106,6 +109,7 @@ export function AppLayout() {
     location.pathname === '/' ||
     location.pathname === '/explore' ||
     location.pathname.startsWith('/stays/') ||
+    ['/my-bookings', '/my-complaints', '/account', '/staff', '/login', '/register', '/forgot-password', '/reset-password', '/payment/return'].includes(location.pathname) ||
     location.pathname.startsWith('/hotels')
 
   if (isHomeRoute) {

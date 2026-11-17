@@ -1,5 +1,5 @@
 import { BookingList } from '@/features/bookings'
-import { PageHeader } from '@/shared/ui/PageHeader'
+import { CustomerAccountLayout } from './CustomerAccountLayout'
 export function MyBookingsPage() {
-  return <div className="management-page"><PageHeader title="Đặt phòng của tôi" description="Theo dõi đơn, thanh toán và gửi yêu cầu hỗ trợ." /><BookingList /></div>
+  return <CustomerAccountLayout section="bookings" title="Đặt phòng của tôi" description="Theo dõi kỳ lưu trú, thanh toán và yêu cầu hỗ trợ của bạn."><BookingList /></CustomerAccountLayout>
 }
