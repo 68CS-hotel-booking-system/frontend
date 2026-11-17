@@ -9,10 +9,13 @@ export const paymentSchema = z.object({
   currency: z.literal('VND'),
   status: z.enum(['PENDING', 'SUCCEEDED', 'FAILED']),
   paymentUrl: z.string().nullable(),
+  qrContent: z.string().min(1).max(2048).nullable().default(null),
   expiresAt: z.iso.datetime({ offset: true }),
   bookingConfirmed: z.boolean(),
   expired: z.boolean(),
 })
+
+export type Payment = z.infer<typeof paymentSchema>
 
 export async function getPayment(paymentId: string, signal?: AbortSignal) {
   const id = z.uuid().parse(paymentId)
@@ -26,6 +29,11 @@ export async function getPayment(paymentId: string, signal?: AbortSignal) {
 export function createVnpayPayment(bookingId: string, signal?: AbortSignal) {
   const id = z.uuid().parse(bookingId)
   return http.request(`/payments/bookings/${id}/vnpay`, { method: 'POST', signal, schema: paymentSchema })
+}
+
+export function createVnpayQrPayment(bookingId: string, signal?: AbortSignal) {
+  const id = z.uuid().parse(bookingId)
+  return http.request(`/payments/bookings/${id}/vnpay?qr=true`, { method: 'POST', signal, schema: paymentSchema })
 }
 
 export function paymentRedirectUrl(value: string) {
