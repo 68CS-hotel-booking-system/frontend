@@ -41,3 +41,15 @@ it('rejects equal contract instants before sending the request', async () => {
     commissionBasis: 'BEFORE_DISCOUNT', startsAt: '2027-01-01T00:00', endsAt: '2027-01-01T00:00' })).rejects.toMatchObject({ name: 'ZodError' })
   expect(fetcher).not.toHaveBeenCalled()
 })
+
+it('activates and terminates through supported status commands without resending terms', async () => {
+  const { changeContractStatus } = await import('./contract-api')
+  for (const action of ['activate', 'terminate'] as const) {
+    respond({ ...contract, status: action === 'activate' ? 'ACTIVE' : 'TERMINATED' })
+    await changeContractStatus(id, id, action)
+    const [url, options] = fetcher.mock.calls.at(-1)!
+    expect(url).toBe(`/api/v1/admin/hotels/${id}/contracts/${id}/${action}`)
+    expect(options?.method).toBe('POST')
+    expect(options?.body).toBeUndefined()
+  }
+})

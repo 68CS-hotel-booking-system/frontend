@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Form, Input, Modal, Select } from 'antd'
+import { Button, Form, Input, Modal, Select } from 'antd'
+import { useId } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { type CreateUserFormValues, createUserSchema } from '../model/create-user-form-schema'
 
@@ -16,6 +17,7 @@ function CreateUserForm({
   onClose: () => void
   onSubmit: (values: CreateUserFormValues) => Promise<boolean>
 }) {
+  const id = useId()
   const {
     control,
     handleSubmit,
@@ -38,6 +40,7 @@ function CreateUserForm({
     <form onSubmit={handleSubmit(handleFormSubmit)} style={{ marginTop: '16px' }}>
       <Form.Item
         label="Họ và tên"
+        htmlFor={id + '-name'}
         validateStatus={errors.fullName ? 'error' : ''}
         help={errors.fullName?.message}
         required
@@ -49,6 +52,8 @@ function CreateUserForm({
           render={({ field }) => (
             <Input
               {...field}
+              id={id + '-name'}
+              autoComplete="name"
               placeholder="Ví dụ: Nguyễn Văn An"
               style={{ borderRadius: '8px', height: '38px' }}
             />
@@ -58,6 +63,7 @@ function CreateUserForm({
 
       <Form.Item
         label="Địa chỉ email"
+        htmlFor={id + '-email'}
         validateStatus={errors.email ? 'error' : ''}
         help={errors.email?.message}
         required
@@ -70,6 +76,8 @@ function CreateUserForm({
             <Input
               {...field}
               type="email"
+              id={id + '-email'}
+              autoComplete="email"
               placeholder="nguyenvanan@stayhub.vn"
               style={{ borderRadius: '8px', height: '38px' }}
             />
@@ -79,6 +87,7 @@ function CreateUserForm({
 
       <Form.Item
         label="Số điện thoại"
+        htmlFor={id + '-phone'}
         validateStatus={errors.phone ? 'error' : ''}
         help={errors.phone?.message}
         required
@@ -91,6 +100,8 @@ function CreateUserForm({
             <Input
               {...field}
               placeholder="0912345678"
+              id={id + '-phone'}
+              autoComplete="tel"
               style={{ borderRadius: '8px', height: '38px' }}
             />
           )}
@@ -99,6 +110,7 @@ function CreateUserForm({
 
       <Form.Item
         label="Vai trò"
+        htmlFor={id + '-role'}
         validateStatus={errors.role ? 'error' : ''}
         help={errors.role?.message}
         required
@@ -110,6 +122,7 @@ function CreateUserForm({
           render={({ field }) => (
             <Select
               {...field}
+              id={id + '-role'}
               style={{ width: '100%', height: '38px' }}
               options={[
                 { value: 'CUSTOMER', label: 'Khách hàng' },
@@ -143,22 +156,9 @@ function CreateUserForm({
         >
           Hủy bỏ
         </button>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          style={{
-            padding: '6px 16px',
-            fontSize: '13px',
-            fontWeight: 500,
-            borderRadius: '8px',
-            border: 'none',
-            backgroundColor: '#0E6B6F',
-            color: '#ffffff',
-            cursor: 'pointer',
-          }}
-        >
+        <Button type="primary" htmlType="submit" loading={isSubmitting}>
           Tạo người dùng
-        </button>
+        </Button>
       </div>
     </form>
   )
@@ -183,7 +183,7 @@ export function CreateUserModal({ open, onClose, onSubmit }: CreateUserModalProp
       open={open}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
     >
       <CreateUserForm onClose={onClose} onSubmit={onSubmit} />
     </Modal>

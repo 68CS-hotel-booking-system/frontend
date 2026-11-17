@@ -12,6 +12,21 @@ beforeEach(() => { vi.resetModules(); vi.stubGlobal('fetch', fetcher); fetcher.m
 afterEach(() => vi.unstubAllGlobals())
 
 describe('inventory API contracts', () => {
+  it('accepts seeded physical room IDs in calendars, blocks, assignments and readiness responses', async () => {
+    const demoRoomId = '47a5fc05-f674-bba7-66ff-c6965488b21b'
+    const room = {
+      roomId: demoRoomId, roomNumber: '101', floor: '1', readiness: 'READY',
+      operationalFrom: '2026-01-01T00:00:00Z', operationalUntil: null,
+      activeBlocks: [{ ...block, roomId: demoRoomId }],
+      activeAssignments: [{ id: roomId, bookingId: hotelId, roomId: demoRoomId, startDate: range.startDate, endDate: range.endDate, status: 'ACTIVE' }],
+    }
+    respond({ hotelId, ...range, roomTypes: [{ roomTypeId: typeId, roomTypeName: 'Standard', rooms: [room], dailySummaries: [] }] })
+    const { getRoomCalendar, changeInventory } = await import('./inventory-api')
+    const result = await getRoomCalendar(hotelId, range)
+    expect(result.roomTypes[0].rooms[0]).toEqual(room)
+    respond({ hotelId, ...room, roomTypeId: typeId, updatedAt: '2026-11-12T00:00:00Z' })
+    await expect(changeInventory(hotelId, { kind: 'readiness', roomId: demoRoomId, readiness: 'READY' })).resolves.toMatchObject({ roomId: demoRoomId })
+  })
   it('reads backend availability counts without recalculating them in FE', async () => {
     respond({ hotelId, ...range, roomTypes: [{ roomTypeId: typeId, roomTypeName: 'Double', rooms: [], dailySummaries: [{ date: block.startDate, operationalRooms: 10, blockedRooms: 2, reservedRooms: 3, availableRooms: 4 }] }] })
     const { getRoomCalendar } = await import('./inventory-api')

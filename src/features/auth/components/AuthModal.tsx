@@ -10,6 +10,7 @@ export interface AuthModalProps {
   initialMode?: AuthModalMode
   onClose: () => void
   onSuccess?: (user: unknown) => void
+  variant?: 'default' | 'checkout'
 }
 
 export function AuthModal({
@@ -17,6 +18,7 @@ export function AuthModal({
   initialMode = 'login',
   onClose,
   onSuccess,
+  variant = 'default',
 }: AuthModalProps) {
   const titleId = useId()
   const subtitleId = useId()
@@ -219,7 +221,7 @@ export function AuthModal({
 
   return (
     <div
-      className={`auth-modal-overlay ${isOpen && !isClosing ? 'is-open' : ''} ${isClosing ? 'is-closing' : ''}`}
+      className={`auth-modal-overlay ${variant === 'checkout' ? 'auth-modal-checkout' : ''} ${isOpen && !isClosing ? 'is-open' : ''} ${isClosing ? 'is-closing' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -251,21 +253,21 @@ export function AuthModal({
         {/* Nội dung modal */}
         <div className="auth-modal-body">
           {/* Huy hiệu thương hiệu */}
-          <div className="auth-modal-brand-badge auth-stagger-item auth-stagger-1">
+          {variant !== 'checkout' && <div className="auth-modal-brand-badge auth-stagger-item auth-stagger-1">
             <span className="auth-modal-compass" aria-hidden="true">
               <CompassOutlined />
             </span>
             <span className="auth-modal-brand-name">StayHub</span>
-          </div>
+          </div>}
 
           {/* Tiêu đề & phụ đề */}
           <div className="auth-modal-head auth-stagger-item auth-stagger-2">
             <h2 className="auth-modal-title" id={titleId}>
-              {mode === 'login' ? 'Đăng nhập tài khoản' : 'Tạo tài khoản mới'}
+              {variant === 'checkout' ? (mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản') : (mode === 'login' ? 'Đăng nhập tài khoản' : 'Tạo tài khoản mới')}
             </h2>
             <p className="auth-modal-subtitle" id={subtitleId}>
-              {mode === 'login'
-                ? 'Đăng nhập để xem đặt phòng và đồng bộ chỗ nghỉ yêu thích'
+              {variant === 'checkout' ? (mode === 'login' ? 'Đăng nhập để tiếp tục thanh toán.' : 'Tạo tài khoản để tiếp tục đặt phòng.') : mode === 'login'
+                ? 'Đăng nhập để đặt phòng và theo dõi các đơn của bạn'
                 : 'Trở thành thành viên để nhận đặc quyền và ưu đãi lưu trú'}
             </p>
           </div>

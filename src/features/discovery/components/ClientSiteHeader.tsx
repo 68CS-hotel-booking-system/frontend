@@ -1,12 +1,8 @@
-import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router'
-import { Dropdown, type MenuProps } from 'antd'
-import { DashboardOutlined, LogoutOutlined } from '@ant-design/icons'
-import { useCurrentUser, useSession } from '@/features/auth'
-import { setSession } from '@/shared/api/session'
-import { useQueryClient } from '@tanstack/react-query'
-import { formatRoleLabel } from '@/shared/lib/format'
-import { ClientIcon } from './ClientSiteIcons'
+import { App, Dropdown, type MenuProps } from 'antd'
+import { useAuthAction, useCurrentUser, useSession } from '@/features/auth'
+import { errorMessage } from '@/shared/api/api-error'
+import { ClientFigmaBrand, ClientFigmaIcon } from './ClientFigmaIcon'
 
 interface ClientSiteHeaderProps {
   savedCount: number
@@ -14,206 +10,47 @@ interface ClientSiteHeaderProps {
   pulseSaved: boolean
   onToggleSaved: () => void
   onOpenMobileMenu: () => void
+  isMobileMenuOpen?: boolean
   onOpenAuthModal?: (mode?: 'login' | 'register') => void
 }
 
-export function ClientSiteHeader({
-  savedCount,
-  isSavedActive,
-  pulseSaved,
-  onToggleSaved,
-  onOpenMobileMenu,
-  onOpenAuthModal,
-}: ClientSiteHeaderProps) {
+export function ClientSiteHeader({ savedCount, isSavedActive, onToggleSaved, onOpenMobileMenu, onOpenAuthModal }: ClientSiteHeaderProps) {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const logout = useAuthAction('logout')
+  const { message } = App.useApp()
   const session = useSession()
   const { currentUser, isAdmin } = useCurrentUser()
-  const [isScrolled, setIsScrolled] = useState(false)
-
-  useEffect(() => {
-    function handleScroll() {
-      setIsScrolled(window.scrollY > 20)
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll()
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const userFullName =
-    currentUser?.fullName ||
-    (currentUser?.email ? currentUser.email.split('@')[0] : 'Tài khoản')
-  const userEmail = currentUser?.email || ''
-  const userInitials =
-    userFullName
-      .split(' ')
-      .filter(Boolean)
-      .map((n) => n[0])
-      .slice(-2)
-      .join('')
-      .toUpperCase() || 'SH'
-
-  const handleLogout = () => {
-    setSession(null)
-    queryClient.clear()
-    navigate('/')
+  const userName = currentUser?.fullName || currentUser?.email || 'Tài khoản'
+  const openRoute = (path: string) => ({ onClick: () => void navigate(path) })
+  async function handleLogout() {
+    if (logout.isPending) return
+    try { await logout.mutateAsync({}); await navigate('/') }
+    catch (error) { void message.error(errorMessage(error)) }
   }
-
-  const accountMenuItems: MenuProps['items'] = [
-    {
-      key: 'user-profile-header',
-      label: (
-        <div className="py-1 px-1">
-          <div className="text-sm font-semibold text-[var(--ink)]">
-            {userFullName}
-          </div>
-          {userEmail && (
-            <div className="text-xs text-[var(--muted)] mt-0.5">
-              {userEmail}
-            </div>
-          )}
-          {currentUser?.roles && currentUser.roles.length > 0 && (
-            <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-              {currentUser.roles.map((role) => (
-                <span
-                  key={role}
-                  className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[var(--accent-pale)] text-[var(--accent)]"
-                >
-                  {formatRoleLabel(role)}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      ),
-      disabled: true,
-    },
-    { type: 'divider' },
-    ...(isAdmin
-      ? [
-          {
-            key: 'admin-portal-link',
-            icon: <DashboardOutlined className="!text-[var(--accent)]" />,
-            label: (
-              <NavLink
-                to="/admin/users"
-                className="font-semibold text-[var(--accent)]"
-              >
-                StayHub Admin
-              </NavLink>
-            ),
-          },
-          { type: 'divider' as const },
-        ]
-      : []),
-    {
-      key: 'logout-action',
-      icon: <LogoutOutlined className="!text-red-600" />,
-      label: <span className="text-red-600 font-medium">Đăng xuất tài khoản</span>,
-      onClick: handleLogout,
-    },
+  const items: MenuProps['items'] = [
+    ...(session ? [
+      { key: 'account', label: 'Tài khoản của tôi', ...openRoute('/account') },
+    ] : [
+      { key: 'login', label: 'Đăng nhập', onClick: () => onOpenAuthModal ? onOpenAuthModal('login') : navigate('/login') },
+      { key: 'register', label: 'Đăng ký', onClick: () => onOpenAuthModal ? onOpenAuthModal('register') : navigate('/register') },
+    ]),
+    ...(!session ? [
+      { type: 'divider' as const },
+      { key: 'saved', label: `${isSavedActive ? 'Xem tất cả chỗ nghỉ' : 'Chỗ nghỉ đã lưu'} (${savedCount})`, onClick: () => { if (window.location.pathname !== '/' && window.location.pathname !== '/explore') void navigate('/'); onToggleSaved() } },
+      { key: 'mobile-nav', label: 'Điều hướng', onClick: onOpenMobileMenu },
+    ] : []),
+    ...(isAdmin ? [{ key: 'admin', label: 'StayHub Admin', ...openRoute('/admin/users') }] : []),
+    ...(session ? [{ type: 'divider' as const }, { key: 'logout', label: logout.isPending ? 'Đang đăng xuất…' : 'Đăng xuất', disabled: logout.isPending, onClick: handleLogout }] : []),
   ]
-
-  return (
-    <header
-      className={`site-header ${isScrolled ? 'is-scrolled' : ''}`}
-      id="site-header"
-      data-od-id="site-header"
-    >
-      <div className="header-inner">
-        <a className="brand" href="#top" data-od-id="brand-logo" aria-label="StayHub — về đầu trang">
-          <span className="brand-mark">
-            <ClientIcon name="compass" />
-          </span>
-          <span className="brand-word">
-            <strong>StayHub</strong>
-            <span>Bộ sưu tập lưu trú</span>
-          </span>
-        </a>
-
-        <nav className="main-nav" aria-label="Điều hướng chính" data-od-id="main-nav">
-          <a href="#top">Khám phá</a>
-          <a href="#destinations">Điểm đến</a>
-          <a href="#stays">Chỗ nghỉ</a>
-          <a href="#journal">Trải nghiệm</a>
-          <a href="#partner">Đối tác</a>
-          {isAdmin && (
-            <NavLink
-              to="/admin/users"
-              className="text-xs font-semibold px-3 py-1.5 rounded-full bg-[var(--accent-pale)] text-[var(--accent)] hover:opacity-90 inline-flex items-center gap-1.5"
-            >
-              <DashboardOutlined />
-              <span>StayHub Admin</span>
-            </NavLink>
-          )}
-        </nav>
-
-        <div className="header-actions">
-          <span className="locale">
-            <ClientIcon name="globe" /> VI · VND
-          </span>
-
-          <button
-            className={`icon-btn ${isSavedActive ? 'is-active' : ''}`}
-            id="saved-btn"
-            type="button"
-            aria-label={savedCount ? `Xem ${savedCount} chỗ nghỉ đã lưu` : 'Xem chỗ nghỉ đã lưu'}
-            onClick={onToggleSaved}
-          >
-            <ClientIcon name="heart" />
-            <span
-              className={`saved-count ${savedCount === 0 ? 'is-empty' : ''} ${pulseSaved ? 'pulse' : ''}`}
-              id="saved-count"
-            >
-              {savedCount}
-            </span>
-          </button>
-
-          {session ? (
-            <Dropdown menu={{ items: accountMenuItems }} trigger={['click']} placement="bottomRight">
-              <button
-                type="button"
-                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1 rounded-full border border-[var(--line)] bg-[var(--white)] hover:bg-[var(--paper)] transition-colors cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-                aria-label={`Menu tài khoản ${userFullName}`}
-              >
-                <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-xs font-bold shrink-0">
-                  {userInitials}
-                </div>
-                <span className="hidden sm:inline text-xs font-semibold text-[var(--ink)] max-w-[120px] truncate">
-                  {userFullName}
-                </span>
-              </button>
-            </Dropdown>
-          ) : (
-            <a
-              href="/login"
-              className="login-btn login-btn-desktop"
-              id="login-btn"
-              data-od-id="login-btn"
-              onClick={(e) => {
-                if (onOpenAuthModal) {
-                  e.preventDefault()
-                  onOpenAuthModal('login')
-                }
-              }}
-            >
-              Đăng nhập
-            </a>
-          )}
-
-          <button
-            className="icon-btn menu-btn"
-            id="menu-btn"
-            type="button"
-            aria-label="Mở menu"
-            aria-expanded="false"
-            aria-controls="mobile-menu"
-            onClick={onOpenMobileMenu}
-          >
-            <ClientIcon name="menu" />
-          </button>
-        </div>
-      </div>
-    </header>
-  )
+  return <header className="cf-site-header" id="site-header"><div className="cf-header-inner">
+    <NavLink to="/" className="cf-brand" aria-label="StayHub — về trang chủ"><ClientFigmaBrand /></NavLink>
+    <nav className="cf-header-nav" aria-label="Điều hướng chính">
+      <NavLink to="/" className="cf-nav-stays">Chỗ ở</NavLink>
+      <button type="button" className="cf-nav-secondary" onClick={() => void message.info('Trải nghiệm sẽ sớm được cập nhật.')}>Trải nghiệm</button>
+      <button type="button" className="cf-nav-secondary" onClick={() => void message.info('Dịch vụ sẽ sớm được cập nhật.')}>Dịch vụ</button>
+    </nav>
+    <div className="cf-header-actions"><NavLink to="/hotels" className="cf-host-link">Đăng ký khách sạn</NavLink><button type="button" className="cf-locale" aria-label="Ngôn ngữ và tiền tệ" onClick={() => void message.info('Đang sử dụng Tiếng Việt và VND.')}><ClientFigmaIcon name="globe" /></button>
+      <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight" classNames={{ root: 'cf-account-dropdown' }}><button type="button" className="cf-account-button" aria-label={session ? `Menu tài khoản ${userName}` : 'Menu tài khoản'}><ClientFigmaIcon name="menu" /><span className="cf-account-avatar">{session ? <span>{userName.trim().charAt(0).toUpperCase()}</span> : <ClientFigmaIcon name="user" />}</span></button></Dropdown>
+    </div>
+  </div></header>
 }

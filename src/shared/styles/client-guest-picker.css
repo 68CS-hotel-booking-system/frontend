@@ -1,0 +1,32 @@
+/* Figma 17:1579 styling, with the two supported guest categories. */
+.client-guest-field { grid-column: 1 / -1; min-width: 0; }
+.client-guest-trigger { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 52px; padding: 10px; border: 1px solid #717171; border-radius: 8px; background: #fff; color: #222; font-family: 'Plus Jakarta Sans', sans-serif; text-align: left; cursor: pointer; }
+.client-guest-trigger > span:first-child { min-width: 0; }
+.client-guest-trigger small { display: block; margin: 0; color: #222; font-size: 9px; font-weight: 700; line-height: 9px; letter-spacing: .45px; text-transform: uppercase; }
+.client-guest-trigger strong { display: block; margin-top: 3px; font-size: 12px; font-weight: 400; line-height: 17px; }
+.client-guest-chevron { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 16px; width: 16px; height: 16px; }
+.client-guest-chevron img { display: block; max-width: none; transform: rotate(180deg); }
+.client-guest-trigger.is-open .client-guest-chevron img { transform: none; }
+.client-guest-popover { max-width: calc(100vw - 32px); }
+.client-guest-dropdown { display: flex; flex-direction: column; box-sizing: border-box; width: 100%; max-width: calc(100vw - 32px); height: auto; max-height: calc(100dvh - 32px); padding: 0; overflow: hidden; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff; box-shadow: 0 12px 28px rgb(0 0 0 / 18%); color: #222; font-family: 'Plus Jakarta Sans', sans-serif; }
+.client-guest-dropdown *, .client-guest-dropdown button { box-sizing: border-box; font-family: inherit; }
+.client-guest-dropdown:focus { outline: none; }
+.client-guest-scroll { flex: 1 1 auto; min-height: 0; padding: 16px 10px 0 16px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.client-guest-list { display: flex; flex-direction: column; gap: 8px; }
+.client-guest-list hr { flex-shrink: 0; width: 100%; height: 1px; margin: 0; border: 0; background: #ebebeb; }
+.client-guest-row { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; padding: 8px 0; }
+.client-guest-copy { display: flex; flex: 1; flex-direction: column; gap: 1px; min-width: 0; min-height: 36px; padding-right: 4px; }
+.client-guest-copy strong { display: block; color: #222; font-size: 13px; font-weight: 600; line-height: 18px; }
+.client-guest-copy small { display: block; margin: 0; color: #717171; font-size: 13px; font-weight: 400; line-height: 19.5px; }
+.client-guest-stepper { display: flex; flex: 0 0 auto; align-items: center; gap: 10px; }
+.client-guest-dropdown .client-guest-stepper .ant-btn { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 28px; width: 28px; min-width: 28px; max-width: 28px; min-inline-size: 28px; max-inline-size: 28px; height: 28px; padding: 0; border: 1px solid #b0b0b0; border-radius: 50%; background: #fff; color: #717171; box-shadow: none; }
+.client-guest-stepper .ant-btn img { display: block; flex-shrink: 0; max-width: none; }
+.client-guest-stepper .ant-btn:disabled { border-color: #e0e0e0; background: #fff; opacity: .25; cursor: not-allowed; }
+.client-guest-stepper .ant-btn:hover:not(:disabled) { border-color: #222; background: #fff; }
+.client-guest-stepper output { display: block; width: 16px; min-width: 16px; color: #222; font-size: 15px; font-weight: 400; line-height: 22.5px; text-align: center; }
+.client-guest-limit { display: flex; flex-direction: column; margin: 0; padding-top: 4px; color: #222; font-size: 12px; font-weight: 400; line-height: 17px; }
+.client-guest-error { margin: 0; color: #a42c22; font-size: 12px; line-height: 17px; }
+.client-guest-close { display: flex; flex-shrink: 0; justify-content: flex-end; padding: 11px 18px 4px 16px; background: #fff; }
+.client-guest-close .ant-btn { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 20px; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; color: #222; font-size: 13px; font-weight: 600; line-height: 19.5px; text-decoration: underline; text-underline-offset: 1px; box-shadow: none; }
+.client-guest-close .ant-btn:hover { background: transparent; color: #222; }
+.client-guest-dropdown button:focus-visible, .client-guest-trigger:focus-visible { outline: 2px solid #222; outline-offset: 3px; }

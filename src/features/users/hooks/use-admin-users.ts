@@ -3,7 +3,7 @@ import { useQueries, useQuery } from '@tanstack/react-query'
 import { message } from 'antd'
 import { useCurrentUser, useSession } from '@/features/auth'
 import { ApiError, errorMessage } from '@/shared/api/api-error'
-import { unsupportedApi } from '@/shared/api/unsupported-api'
+import type { CreateUserFormValues } from '../model/create-user-form-schema'
 import { listAdminRoles, listAdminUsers } from '../api/users-api'
 import type { AdminUsersQuery } from '../api/user-contracts'
 import type { AdminUser, UserFilterTab, UserRole } from '../model/user'
@@ -118,13 +118,9 @@ export function useAdminUsers() {
     if (!user || isBusy) return false
     return runAction({ kind: 'role', user, role })
   }
-  const handleCreateUser = async () => {
-    try {
-      await unsupportedApi('tạo tài khoản từ trang quản trị')
-    } catch (error) {
-      void message.error(errorMessage(error))
-    }
-    return false
+  const handleCreateUser = async (values: CreateUserFormValues) => {
+    if (isBusy) return false
+    return runAction({ kind: 'create', values })
   }
   const handleRetryConnection = async () => {
     const [result] = await Promise.all([

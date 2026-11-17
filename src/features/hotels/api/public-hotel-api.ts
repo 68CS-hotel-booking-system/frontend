@@ -25,6 +25,7 @@ export const publicRoomTypeSchema = z.object({
   description: z.string().nullable(),
   maxAdults: z.number(),
   maxChildren: z.number(),
+  maxOccupancy: z.number().optional(),
   amenities: z.array(amenitySchema).optional(),
 })
 

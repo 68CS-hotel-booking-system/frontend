@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router'
 import { DashboardOutlined, LogoutOutlined } from '@ant-design/icons'
-import { useCurrentUser, useSession } from '@/features/auth'
-import { setSession } from '@/shared/api/session'
-import { useQueryClient } from '@tanstack/react-query'
+import { App } from 'antd'
+import { useAuthAction, useCurrentUser, useSession } from '@/features/auth'
+import { errorMessage } from '@/shared/api/api-error'
 import { ClientIcon } from './ClientSiteIcons'
 
 interface ClientMobileMenuProps {
@@ -18,7 +18,8 @@ export function ClientMobileMenu({
   onOpenAuthModal,
 }: ClientMobileMenuProps) {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const logout = useAuthAction('logout')
+  const { message } = App.useApp()
   const session = useSession()
   const { currentUser, isAdmin } = useCurrentUser()
 
@@ -36,11 +37,13 @@ export function ClientMobileMenu({
     currentUser?.fullName ||
     (currentUser?.email ? currentUser.email.split('@')[0] : 'Tài khoản')
 
-  const handleLogout = () => {
-    setSession(null)
-    queryClient.clear()
-    onClose()
-    navigate('/')
+  const handleLogout = async () => {
+    if (logout.isPending) return
+    try {
+      await logout.mutateAsync({})
+      onClose()
+      await navigate('/')
+    } catch (error) { void message.error(errorMessage(error)) }
   }
 
   const handleNavClick = (href: string) => {
@@ -51,7 +54,7 @@ export function ClientMobileMenu({
         window.setTimeout(() => {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }, 50)
-      }
+      } else { navigate(`/${href}`) }
     } else {
       navigate(href)
     }
@@ -99,31 +102,14 @@ export function ClientMobileMenu({
         </div>
 
         <nav aria-label="Điều hướng di động">
-          <a href="#destinations" onClick={() => handleNavClick('#destinations')}>
-            Điểm đến
-          </a>
-          <a href="#stays" onClick={() => handleNavClick('#stays')}>
-            Chỗ nghỉ
-          </a>
-          <a href="#journal" onClick={() => handleNavClick('#journal')}>
-            Trải nghiệm
-          </a>
-          <a href="#partner" onClick={() => handleNavClick('#partner')}>
-            Đối tác
-          </a>
-          {isAdmin && (
-            <NavLink
-              to="/admin/users"
-              className="flex items-center gap-2 text-base font-semibold text-[var(--accent)]"
-              onClick={onClose}
-            >
-              <DashboardOutlined />
-              <span>StayHub Admin</span>
-            </NavLink>
-          )}
+          <NavLink to="/" onClick={onClose}>Chỗ ở</NavLink>
+          <button type="button" onClick={() => { onClose(); void message.info('Trải nghiệm sẽ sớm được cập nhật.') }}>Trải nghiệm</button>
+          <button type="button" onClick={() => { onClose(); void message.info('Dịch vụ sẽ sớm được cập nhật.') }}>Dịch vụ</button>
         </nav>
 
         <div className="mobile-menu-foot">
+          {isAdmin && <NavLink to="/admin/users" onClick={onClose}><DashboardOutlined /> StayHub Admin</NavLink>}
+          {session && <SpaceLinks onClose={onClose} />}
           {session ? (
             <div className="flex flex-col gap-2">
               <div className="text-xs font-semibold text-[var(--ink)] truncate">
@@ -165,4 +151,12 @@ export function ClientMobileMenu({
       </div>
     </>
   )
+}
+
+function SpaceLinks({ onClose }: { onClose: () => void }) {
+  return <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
+    <NavLink to="/account" onClick={onClose}>Tài khoản</NavLink>
+    <NavLink to="/my-bookings" onClick={onClose}>Đặt phòng của tôi</NavLink>
+    <NavLink to="/my-complaints" onClick={onClose}>Khiếu nại</NavLink>
+  </div>
 }

@@ -65,6 +65,15 @@ export { InheritedAmenitiesSection } from './components/InheritedAmenitiesSectio
 export { CustomAmenityCreateModal } from './components/CustomAmenityCreateModal'
 export { CustomAmenityEditModal } from './components/CustomAmenityEditModal'
 
+export { HotelSalesControls } from './components/HotelSalesControls'
+
+export { AdminHotelReviewQueue } from './components/AdminHotelReviewQueue'
+export { HotelReviewDetail } from './components/HotelReviewDetail'
+export { HotelReviewSubmission } from './components/HotelReviewSubmission'
+export { HotelReviewStatusBadge } from './components/HotelReviewStatusBadge'
+export { HotelProfileReadOnly } from './components/HotelProfileReadOnly'
+export { useHotelProfileAccess } from './hooks/use-hotel-profile-access'
+export { HotelProfileAccessNotice } from './components/HotelProfileAccessNotice'
 
 export { RoomTypeAmenitiesSummary } from './components/RoomTypeAmenitiesSummary'
 
