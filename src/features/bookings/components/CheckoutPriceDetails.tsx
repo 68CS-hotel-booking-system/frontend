@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { DownOutlined } from '@ant-design/icons'
 import { checkoutMoney, checkoutDate, type CheckoutQuote } from '../model/client-checkout'
 
 export function CheckoutPriceDetails({ quote }: { quote: CheckoutQuote }) {

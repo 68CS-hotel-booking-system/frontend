@@ -1,5 +1,4 @@
-import { useState, type ReactNode } from 'react'
-import { CheckOutlined, ClockCircleOutlined, CreditCardOutlined, LeftOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Alert } from 'antd'
