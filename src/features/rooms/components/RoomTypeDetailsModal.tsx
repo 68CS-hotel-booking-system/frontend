@@ -2,6 +2,7 @@ import { Button, Descriptions, Modal, Tag } from 'antd'
 import { RoomTypeAmenitiesSummary } from '@/features/hotels'
 import { formatCurrencyAmount } from '@/shared/lib/format'
 import type { ManagementRoomType } from '../api/room-type-api'
+import { RoomTypeImagesManager } from './RoomTypeImagesManager'
 
 export function RoomTypeDetailsModal({ hotelId, roomType, onClose, onEdit, onAmenities, onViewRooms, readOnly = false }: {
   hotelId: string
@@ -28,6 +29,7 @@ export function RoomTypeDetailsModal({ hotelId, roomType, onClose, onEdit, onAme
         { key: 'capacity', label: 'Sức chứa', children: `${roomType.maxAdults} người lớn · ${roomType.maxChildren} trẻ em` },
         { key: 'description', label: 'Mô tả', children: roomType.description || 'Chưa có mô tả' },
       ]} />
+      <RoomTypeImagesManager key={roomType.id} hotelId={hotelId} roomTypeId={roomType.id} readOnly={readOnly} />
       <section className="border-t border-[#dce7e3] pt-4 space-y-3" aria-label="Tiện ích chung của hạng phòng">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="m-0 text-base font-semibold">Tiện ích hạng phòng</h3>

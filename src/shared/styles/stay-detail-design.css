@@ -810,3 +810,74 @@
     .ref-brand-sub { display: none; }
   }
 }
+
+.hotel-room-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  min-width: 0;
+}
+
+.hotel-room-content .hotel-room-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.stay-room-photo {
+  position: relative;
+  flex: none;
+  width: clamp(96px, 13vw, 180px);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 0;
+  border-radius: 10px;
+  padding: 0;
+  background: #f4f4f4;
+  cursor: pointer;
+}
+
+.stay-room-photo img,
+.stay-room-gallery-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.stay-room-photo img { object-fit: cover; }
+
+.stay-room-photo > span {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #fff;
+  color: #222;
+  font-size: 12px;
+}
+
+.stay-room-gallery {
+  display: grid;
+  gap: 12px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.stay-room-gallery-image {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f4f4f4;
+}
+
+.stay-room-gallery-image img {
+  max-height: 60vh;
+  object-fit: contain;
+}
+
+@media (max-width: 639px) {
+  .hotel-room-content { display: block; }
+  .stay-room-photo { width: 100%; aspect-ratio: 16 / 9; margin-bottom: 12px; }
+}

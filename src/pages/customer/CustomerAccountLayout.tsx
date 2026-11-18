@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { App, Button, Dropdown, Typography } from 'antd'
 import { Link, useNavigate } from 'react-router'
-import { useAuthAction, useCurrentUser } from '@/features/auth'
+import { UserAvatar, useAuthAction, useCurrentUser } from '@/features/auth'
 import { errorMessage } from '@/shared/api/api-error'
 import { AccountIcon, type AccountIconName } from '@/shared/ui/AccountIcon'
 import '@/shared/styles/account.css'
@@ -68,7 +68,7 @@ export function CustomerAccountLayout({ section, title, description, mobileDescr
       <div className="account-layout">
         <aside className="account-sidebar" aria-label="Tài khoản của bạn">
           <div className="account-identity">
-            <span className="account-avatar" aria-hidden="true">{currentUser?.fullName.trim().charAt(0).toUpperCase() || 'N'}</span>
+            <span className="account-avatar" aria-hidden="true">{currentUser ? <UserAvatar userId={currentUser.id} name={currentUser.fullName} /> : 'N'}</span>
             <div className="account-identity-text">
               <button type="button" className="account-identity-name" aria-label={`Thông tin tài khoản ${currentUser?.fullName ?? ''}`} onClick={() => {
                 if (currentUser) modal.info({ title: 'Thông tin tài khoản', content: <div><p>{currentUser.email}</p><p>Mã tài khoản: <Typography.Text copyable className="account-member-id">{currentUser.id}</Typography.Text></p></div> })
