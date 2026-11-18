@@ -1,5 +1,14 @@
-import { AuthPanel } from '@/features/auth'
+import { useRef } from 'react'
+import { useNavigate } from 'react-router'
+import { AuthModal } from '@/features/auth'
 
 export function RegisterPage() {
-  return <AuthPanel initialAction="register" />
+  const navigate = useNavigate()
+  const signedIn = useRef(false)
+  return <AuthModal isOpen initialMode="register"
+    onClose={() => { if (!signedIn.current) void navigate('/', { replace: true }) }}
+    onSuccess={() => {
+      signedIn.current = true
+      void navigate('/account', { replace: true })
+    }} />
 }

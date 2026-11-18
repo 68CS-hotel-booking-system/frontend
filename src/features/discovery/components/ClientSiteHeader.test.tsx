@@ -6,10 +6,11 @@ import { ClientSiteHeader } from './ClientSiteHeader'
 
 const state = vi.hoisted(() => ({
   session: null as null | { accessToken: string },
+  user: null as null | { id: string; fullName: string; email: string },
   isOwner: false,
   isAdmin: false,
   navigate: vi.fn(),
-  items: [] as { key: string; label?: string; onClick?: () => void }[],
+  items: [] as { key: string; label?: ReactNode; onClick?: () => void }[],
 }))
 
 vi.mock('react-router', async (importOriginal) => ({
@@ -18,22 +19,32 @@ vi.mock('react-router', async (importOriginal) => ({
 }))
 vi.mock('@/features/auth', () => ({
   useSession: () => state.session,
-  useCurrentUser: () => ({ currentUser: null, isOwner: state.isOwner, isAdmin: state.isAdmin }),
+  useCurrentUser: () => ({ currentUser: state.user, isOwner: state.isOwner, isAdmin: state.isAdmin }),
+  UserAvatar: () => <span>Ảnh đại diện</span>,
   useAuthAction: () => ({ isPending: false, mutateAsync: vi.fn() }),
 }))
 vi.mock('antd', () => ({
   App: { useApp: () => ({ message: { info: vi.fn(), error: vi.fn() } }) },
   Dropdown: ({ menu, children }: { menu: { items: typeof state.items }; children: ReactNode }) => {
     state.items = menu.items
-    return children
+    return <>{children}{state.items.map(item => item.key && <div key={item.key}>{item.label}</div>)}</>
   },
 }))
 
 beforeEach(() => {
   state.session = null
+  state.user = null
   state.isOwner = false
   state.isAdmin = false
+  state.items = []
   state.navigate.mockReset()
+})
+
+it('renders an explicit sign-in button in place of the account menu for visitors', () => {
+  const html = renderHeader()
+  expect(html).toContain('aria-label="Đăng nhập"')
+  expect(html).toContain('aria-haspopup="dialog"')
+  expect(state.items).toEqual([])
 })
 
 function renderHeader() {
@@ -49,6 +60,17 @@ it('places the owner dashboard entry directly below the account entry', () => {
   expect(state.items.slice(0, 2).map(item => item.label)).toEqual(['Tài khoản của tôi', 'Khách sạn của tôi'])
   state.items[1].onClick?.()
   expect(state.navigate).toHaveBeenCalledWith('/admin/overview')
+})
+
+it('shows the signed-in guest identity in the avatar menu and opens their profile', () => {
+  state.session = { accessToken: 'test' }
+  state.user = { id: 'user-1', fullName: 'Khách StayHub', email: 'guest@example.test' }
+  const html = renderHeader()
+  expect(html).toContain('Menu tài khoản Khách StayHub')
+  expect(html).toContain('guest@example.test')
+  expect(html).toContain('Xem thông tin cá nhân')
+  state.items[0].onClick?.()
+  expect(state.navigate).toHaveBeenCalledWith('/account')
 })
 
 it.each(['guest', 'customer', 'admin'])('hides the owner entry and registration link for %s', (role) => {
