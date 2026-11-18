@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { App, Button, Dropdown, Typography } from 'antd'
 import { Link, useNavigate } from 'react-router'
 import { useAuthAction, useCurrentUser } from '@/features/auth'
-import { useClientHomeContext } from '@/features/discovery'
 import { errorMessage } from '@/shared/api/api-error'
 import { AccountIcon, type AccountIconName } from '@/shared/ui/AccountIcon'
 import '@/shared/styles/account.css'
@@ -22,17 +21,13 @@ export function CustomerAccountLayout({ section, title, description, mobileDescr
   const navigate = useNavigate()
   const logout = useAuthAction('logout')
   const { message, modal } = App.useApp()
-  const { filterState, toggleSavedOnly } = useClientHomeContext()
   const profileHref = checkoutReturn ? `/account?returnTo=${encodeURIComponent(checkoutReturn)}` : '/account'
   const securityHref = checkoutReturn ? `/account?section=security&returnTo=${encodeURIComponent(checkoutReturn)}` : '/account?section=security'
   const destinations: { key: string; label: string; icon: AccountIconName; href?: string; onClick?: () => void }[] = [
     { key: 'profile', label: 'Thông tin cá nhân', icon: 'user', href: profileHref },
     { key: 'security', label: 'Đăng nhập & bảo mật', icon: 'lock', href: securityHref },
     { key: 'bookings', label: 'Đặt phòng của tôi', icon: 'bed', href: '/my-bookings' },
-    { key: 'saved', label: 'Chỗ nghỉ đã lưu', icon: 'heart', onClick: () => {
-      void navigate('/')
-      if (!filterState.savedOnly) toggleSavedOnly()
-    } },
+    { key: 'saved', label: 'Chỗ nghỉ đã lưu', icon: 'heart', href: '/saved-stays' },
     { key: 'complaints', label: 'Khiếu nại của tôi', icon: 'chat', href: '/my-complaints' },
     { key: 'staff', label: 'Nhân sự khách sạn', icon: 'staff', href: '/staff' },
   ]

@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useId, useRef, useState } from 'react'
+import { DownOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Popover } from 'antd'
 import { canAccommodateGuests, type GuestCapacity, type GuestSelection } from '../model/guest-capacity'
 import '@/shared/styles/client-guest-picker.css'
@@ -55,12 +56,12 @@ export function ClientGuestPicker({ value, roomTypes, selectedRoomId, onChange, 
               <div className="client-guest-stepper">
                 <Button shape="circle" aria-label={`Giảm số ${categoryLabel.toLowerCase()}`} disabled={!Number.isInteger(count) || count <= minimum}
                   onClick={() => onChange({ ...value, [key]: count - 1 })}>
-                  <img src="/assets/guest-picker-figma/minus.svg" alt="" aria-hidden="true" />
+                  <MinusOutlined aria-hidden="true" />
                 </Button>
                 <output aria-live="polite" aria-label={`Số ${categoryLabel.toLowerCase()}`}>{Number.isFinite(count) ? count : '—'}</output>
                 <Button shape="circle" aria-label={`Tăng số ${categoryLabel.toLowerCase()}`} disabled={!canSelect(increment)}
                   onClick={() => onChange(increment)}>
-                  <img src="/assets/guest-picker-figma/plus.svg" alt="" aria-hidden="true" />
+                  <PlusOutlined aria-hidden="true" />
                 </Button>
               </div>
             </div>
@@ -78,7 +79,7 @@ export function ClientGuestPicker({ value, roomTypes, selectedRoomId, onChange, 
       classNames={{ root: `client-guest-popover${variant === 'reference' ? ' ref-theme ref-ui ref-guest-overlay' : ''}` }} styles={{ root: { width: mode === 'search' ? Math.max(320, popupWidth) : popupWidth || undefined }, container: { padding: 0, background: 'transparent', boxShadow: 'none' } }}>
       <button ref={trigger} type="button" className={`client-guest-trigger ${open ? 'is-open' : ''}${variant === 'reference' ? ' ref-seg-btn' : ''}`} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? id : undefined} onKeyDown={event => { if (event.key === 'Escape') close() }}>
         {variant === 'reference' ? <><span className="ref-seg-label">{label}</span><span className="ref-seg-value ref-is-set">{value.adults + value.children} khách</span></> : <><span><small>{label}</small><strong aria-live="polite" aria-atomic="true">{Number.isFinite(value.adults + value.children) ? value.adults + value.children : '—'} khách{showRoomCount ? ' · 1 phòng' : ''}</strong></span>
-        <span className="client-guest-chevron" aria-hidden="true"><img src="/assets/guest-picker-figma/chevron-up.svg" alt="" /></span></>}
+        <span className="client-guest-chevron" aria-hidden="true"><DownOutlined /></span></>}
       </button>
     </Popover>
   </div>

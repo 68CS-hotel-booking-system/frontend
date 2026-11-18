@@ -15,7 +15,7 @@ it('shows room cards and server prices while ignoring multiple-room links', () =
   expect(markup).toContain('Phòng có ban công')
   expect(markup).toContain('Wi-Fi')
   expect(markup).toContain('Bãi đỗ xe miễn phí')
-  expect(markup).toContain('/assets/detail-figma/imgSvg13.svg')
+  expect(markup).toContain('anticon-car')
   expect(markup).not.toContain('AirCover')
   expect(markup).not.toContain('Phí vệ sinh')
   expect(markup).not.toContain('Miễn phí hủy phòng')

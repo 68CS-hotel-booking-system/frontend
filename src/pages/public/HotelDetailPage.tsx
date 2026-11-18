@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Modal } from 'antd'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
 import { usePublicHotelDetailQuery } from '@/features/hotels'
 import { checkoutHref } from '@/features/bookings'
 import { AuthModal, useSession } from '@/features/auth'
@@ -8,11 +8,24 @@ import { ClientGuestPicker, ClientStayDatePicker, ClientHotelGallery, HotelDetai
 import '@/shared/styles/hotel-stay-detail.css'
 import '@/shared/styles/stay-detail-design.css'
 
+const detailSections = [
+  ['rooms', 'Hạng phòng'],
+  ['amenities', 'Tiện ích'],
+  ['about', 'Giới thiệu'],
+  ['reviews', 'Đánh giá'],
+  ['policies', 'Chính sách & Vị trí'],
+]
+
 const money = (amount: number, currency: string) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(amount)
 
 export function HotelDetailPage() {
   const { hotelId = '' } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnTo: unknown = location.state?.listingReturn
+  const listingReturn = typeof returnTo === 'string' && /^(?:\/|\/explore|\/saved-stays)(?:[?#].*)?$/.test(returnTo)
+    ? returnTo
+    : '/explore'
   const session = useSession()
   const [loginPrompt, setLoginPrompt] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null)
@@ -23,7 +36,14 @@ export function HotelDetailPage() {
   const roomId = url.get('roomTypeId') ?? ''
   const [amenitiesOpen, setAmenitiesOpen] = useState(false)
   const [descriptionOpen, setDescriptionOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState('rooms')
+  const activeSection = location.hash.replace(/^#stay-/, '') || 'rooms'
+  const detailReady = Boolean(detail.hotel)
+  useEffect(() => {
+    if (!detailReady || !location.hash.startsWith('#stay-')) return
+    const target = document.getElementById(location.hash.slice(1))
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    target?.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' })
+  }, [detailReady, location.hash])
   const filters = useRef<HTMLDivElement>(null)
   const [bookingOpen, setBookingOpen] = useState(false)
   const bookingClose = useRef<HTMLButtonElement>(null)
@@ -52,7 +72,7 @@ export function HotelDetailPage() {
     const next = new URLSearchParams(url)
     Object.entries(values).forEach(([key, value]) => next.set(key, value))
     next.delete('quantity')
-    setUrl(next, { replace: true })
+    setUrl(next, { replace: true, preventScrollReset: true, state: location.state })
   }
   const selected = detail.roomTypes.find(room => room.id === roomId)
   const currentQuote = valid && available && !inventory.isFetching && !inventory.isError && !quote.isFetching && !quote.isError ? quote.data : undefined
@@ -64,14 +84,14 @@ export function HotelDetailPage() {
   return <div className="stay-detail-design">
     <div className="wrap">
       <div className="crumb-row">
-        <Link className="crumb" to="/explore"><HotelDetailIcon name="back" />Khám phá khách sạn</Link>
+        <Link className="crumb" to={listingReturn} viewTransition><HotelDetailIcon name="back" />Quay lại danh sách</Link>
       </div>
       <header className="pdp-head">
         <div>
           <h1 className="pdp-title">{hotel.name}</h1>
           <div className="pdp-meta">
             {hotel.starRating != null && <><span>Khách sạn {hotel.starRating} sao</span><span className="dot-sep" aria-hidden="true">·</span></>}
-            <a className="meta-loc" href="#stay-policies">{hotel.address}</a>
+            <Link className="meta-loc" to={{ search: location.search, hash: '#stay-policies' }} state={location.state} preventScrollReset>{hotel.address}</Link>
           </div>
         </div>
         <div className="pdp-actions"><HotelDetailActions hotelId={hotelId} name={hotel.name} /></div>
@@ -80,8 +100,10 @@ export function HotelDetailPage() {
     </div>
     <div className="pdp-tabs-wrap">
       <nav className="wrap pdp-tabs" aria-label="Thông tin khách sạn">
-        {[['rooms', 'Hạng phòng'], ['amenities', 'Tiện ích'], ['about', 'Giới thiệu'], ['reviews', 'Đánh giá'], ['policies', 'Chính sách & vị trí']].map(([id, label]) => (
-          <a key={id} className="pdp-tab" href={`#stay-${id}`} aria-current={activeSection === id ? 'location' : undefined} onClick={() => setActiveSection(id)}>{label}</a>
+        {detailSections.map(([id, label]) => (
+          <Link key={id} className="pdp-tab" to={{ search: location.search, hash: `#stay-${id}` }}
+            state={location.state} preventScrollReset
+            aria-current={activeSection === id ? 'location' : undefined}>{label}</Link>
         ))}
       </nav>
     </div>

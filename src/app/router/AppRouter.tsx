@@ -3,7 +3,7 @@ import { PageLoading } from '@/shared/ui/PageLoading'
 
 import { HotelSearchPage } from '@/pages/public/HotelSearchPage'
 
-import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider } from 'react-router'
+import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider, ScrollRestoration } from 'react-router'
 import {
   BarChartOutlined,
   CreditCardOutlined,
@@ -12,6 +12,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons'
 import { AppLayout } from '@/app/layouts/AppLayout'
+import { ClientExperiences, ClientSavedStays, ClientTripServices } from '@/features/discovery'
 
 import { AdminRouteGuard } from '@/features/auth'
 import { AccountRouteGuard } from '@/features/auth'
@@ -173,7 +174,7 @@ const router = createBrowserRouter(createRoutesFromElements(<>
         </Route>
 
         {/* Public / Customer Main Layout Routes */}
-        <Route element={<AppLayout />}>
+        <Route element={<><ScrollRestoration /><AppLayout /></>}>
           <Route element={<AccountRouteGuard />}>
             <Route path="stays/:hotelId/checkout" element={<BookingCheckoutPage />} />
             <Route path="stays/:hotelId/booking/:bookingId" element={<BookingConfirmationPage />} />
@@ -185,6 +186,9 @@ const router = createBrowserRouter(createRoutesFromElements(<>
           </Route>
           <Route index element={<StayVibeHomePage />} />
           <Route path="explore" element={<HotelSearchPage />} />
+          <Route path="experiences" element={<ClientExperiences />} />
+          <Route path="services" element={<ClientTripServices />} />
+          <Route path="saved-stays" element={<ClientSavedStays />} />
           <Route path="stays/:hotelId" element={<HotelDetailPage />} />
           <Route path="system-status" element={<SystemStatusPage />} />
           <Route path="management/live" element={<Navigate to="/" replace />} />
