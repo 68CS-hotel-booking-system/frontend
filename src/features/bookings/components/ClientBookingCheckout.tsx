@@ -8,6 +8,7 @@ import { bookerFormSchema, type BookerForm } from '../api/booking-api'
 import { checkoutContacts, checkoutDetailHref, checkoutDate, checkoutMoney, type CheckoutSelection } from '../model/client-checkout'
 import { useClientCheckout } from '../hooks/use-client-checkout'
 import { CheckoutPriceDetails } from './CheckoutPriceDetails'
+import '@/shared/styles/checkout-reference.css'
 
 interface Props {
   selection: CheckoutSelection

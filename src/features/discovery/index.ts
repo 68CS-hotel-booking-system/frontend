@@ -20,7 +20,7 @@ export { ClientDestinationsSection } from './components/ClientDestinationsSectio
 export { ClientStaysSection } from './components/ClientStaysSection'
 export { ClientStayCard } from './components/ClientStayCard'
 export { ClientHotelCover } from './components/ClientHotelCover'
-export { ClientHotelGallery } from './components/ClientHotelGallery'
+export { ClientHotelGallery, ClientTripCover } from './components/ClientHotelGallery'
 export { ClientGuestPicker } from './components/ClientGuestPicker'
 export { ClientStayDatePicker } from './components/ClientStayDatePicker'
 export { ClientJournalSection } from './components/ClientJournalSection'

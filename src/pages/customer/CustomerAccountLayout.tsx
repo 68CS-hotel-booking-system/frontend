@@ -6,6 +6,7 @@ import { useClientHomeContext } from '@/features/discovery'
 import { errorMessage } from '@/shared/api/api-error'
 import { AccountIcon, type AccountIconName } from '@/shared/ui/AccountIcon'
 import '@/shared/styles/account.css'
+import '@/shared/styles/customer-account-reference.css'
 
 interface CustomerAccountLayoutProps {
   section: 'profile' | 'security' | 'bookings' | 'complaints' | 'staff'
@@ -26,7 +27,7 @@ export function CustomerAccountLayout({ section, title, description, mobileDescr
   const securityHref = checkoutReturn ? `/account?section=security&returnTo=${encodeURIComponent(checkoutReturn)}` : '/account?section=security'
   const destinations: { key: string; label: string; icon: AccountIconName; href?: string; onClick?: () => void }[] = [
     { key: 'profile', label: 'Thông tin cá nhân', icon: 'user', href: profileHref },
-    { key: 'security', label: 'Mật khẩu và bảo mật', icon: 'lock', href: securityHref },
+    { key: 'security', label: 'Đăng nhập & bảo mật', icon: 'lock', href: securityHref },
     { key: 'bookings', label: 'Đặt phòng của tôi', icon: 'bed', href: '/my-bookings' },
     { key: 'saved', label: 'Chỗ nghỉ đã lưu', icon: 'heart', onClick: () => {
       void navigate('/')
@@ -44,22 +45,31 @@ export function CustomerAccountLayout({ section, title, description, mobileDescr
       void message.error(errorMessage(error))
     }
   }
-  return <div className="customer-account-shell">
+  const referenceLayout = section === 'bookings' || section === 'profile' || section === 'security'
+  const breadcrumb = <nav className="account-breadcrumb" aria-label="Đường dẫn"><Link to={profileHref}>Tài khoản</Link><span aria-hidden="true">/</span><span aria-current="page">{title}</span></nav>
+  const signOut = <button type="button" className="account-nav-item account-sign-out" onClick={() => void handleLogout()} disabled={logout.isPending}>
+    <AccountIcon name="logout" /><span>{logout.isPending ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
+  </button>
+  return <div className={`customer-account-shell${referenceLayout ? ' customer-account-reference' : ''}${section === 'bookings' ? ' customer-account-trips' : ''}`}>
     <div className="account-page">
-      <Link className="account-back" to={checkoutReturn ?? '/'}>
-        <AccountIcon name="back" />
-        {checkoutReturn ? 'Quay lại xác nhận đặt phòng' : <><span className="account-desktop-copy">Khám phá khách sạn</span><span className="account-mobile-copy">Tài khoản</span></>}
-      </Link>
-      <div className="account-mobile-navigation">
-        <Dropdown trigger={['click']} menu={{ selectedKeys: [section], items: [
-          ...destinations.map(item => ({ key: item.key, label: item.label, icon: <AccountIcon name={item.icon} />,
-            onClick: item.href ? () => void navigate(item.href!) : item.onClick })),
-          { type: 'divider' },
-          { key: 'logout', label: logout.isPending ? 'Đang đăng xuất…' : 'Đăng xuất', disabled: logout.isPending, icon: <AccountIcon name="logout" />, onClick: () => void handleLogout() },
-        ] }} classNames={{ root: 'account-navigation-dropdown' }}>
-          <Button className="account-navigation-trigger" aria-label="Điều hướng tài khoản"><span>{title}</span><AccountIcon name="down" /></Button>
-        </Dropdown>
-      </div>
+      {referenceLayout && breadcrumb}
+      {referenceLayout && checkoutReturn && <Link className="account-back account-checkout-return" to={checkoutReturn}><AccountIcon name="back" />Quay lại xác nhận đặt phòng</Link>}
+      {!referenceLayout && <>
+        <Link className="account-back" to={checkoutReturn ?? '/'}>
+          <AccountIcon name="back" />
+          {checkoutReturn ? 'Quay lại xác nhận đặt phòng' : <><span className="account-desktop-copy">Khám phá khách sạn</span><span className="account-mobile-copy">Tài khoản</span></>}
+        </Link>
+        <div className="account-mobile-navigation">
+          <Dropdown trigger={['click']} menu={{ selectedKeys: [section], items: [
+            ...destinations.map(item => ({ key: item.key, label: item.label, icon: <AccountIcon name={item.icon} />,
+              onClick: item.href ? () => void navigate(item.href!) : item.onClick })),
+            { type: 'divider' },
+            { key: 'logout', label: logout.isPending ? 'Đang đăng xuất…' : 'Đăng xuất', disabled: logout.isPending, icon: <AccountIcon name="logout" />, onClick: () => void handleLogout() },
+          ] }} classNames={{ root: 'account-navigation-dropdown' }}>
+            <Button className="account-navigation-trigger" aria-label="Điều hướng tài khoản"><span>{title}</span><AccountIcon name="down" /></Button>
+          </Dropdown>
+        </div>
+      </>}
       <div className="account-layout">
         <aside className="account-sidebar" aria-label="Tài khoản của bạn">
           <div className="account-identity">
@@ -80,13 +90,12 @@ export function CustomerAccountLayout({ section, title, description, mobileDescr
                 <AccountIcon name={item.icon} /><span>{item.label}</span>
               </button>}
             </div>)}
+            {referenceLayout && <><hr />{signOut}</>}
           </nav>
-          <button type="button" className="account-nav-item account-sign-out" onClick={() => void handleLogout()} disabled={logout.isPending}>
-            <AccountIcon name="logout" /><span>{logout.isPending ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
-          </button>
+          {!referenceLayout && signOut}
         </aside>
         <section className="account-content" aria-labelledby="account-page-title">
-          <nav className="account-breadcrumb" aria-label="Đường dẫn"><Link to={profileHref}>Tài khoản</Link><span aria-hidden="true">/</span><span aria-current="page">{title}</span></nav>
+          {!referenceLayout && breadcrumb}
           <header className="account-heading">
             <h1 id="account-page-title">{title}</h1>
             <p className="account-desktop-copy">{description}</p>

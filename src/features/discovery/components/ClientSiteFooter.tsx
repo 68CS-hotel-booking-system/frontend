@@ -3,7 +3,7 @@ import { useCurrentUser, useSession } from '@/features/auth'
 import { ClientFigmaIcon } from './ClientFigmaIcon'
 
 export function ClientSiteFooter() {
-  const isHotelDetail = useLocation().pathname.startsWith('/stays/')
+  const isHotelDetail = /^\/stays\/[^/]+\/(checkout|booking)(?:\/|$)/.test(useLocation().pathname)
   const session = useSession()
   const { isOwner, isAdmin } = useCurrentUser()
   const groups = [

@@ -18,6 +18,15 @@ function Photo({ mediaId, alt, large = false }: { mediaId: string; alt: string; 
   return <img className={large ? 'max-h-[75vh] w-full object-contain' : 'h-full w-full object-cover'} src={image.data.url} alt={alt} loading={large ? 'eager' : 'lazy'} onError={() => setFailed(image.data!.url)} />
 }
 
+export function ClientTripCover({ hotelId }: { hotelId: string }) {
+  const { data } = usePublicGallery(hotelId)
+  const cover = data?.images.find(image => image.cover) ?? data?.images[0]
+  const image = useCover(cover?.mediaId)
+  const [failedUrl, setFailedUrl] = useState<string>()
+  const url = image.data?.url
+  return <img src={url && url !== failedUrl ? url : '/assets/hotel-placeholder.svg'} alt="" loading="lazy" onError={() => setFailedUrl(url)} />
+}
+
 export function ClientHotelGallery({ hotelId, hotelName }: { hotelId: string; hotelName: string }) {
   const gallery = usePublicGallery(hotelId)
   if (gallery.isPending) return <div className="hotel-gallery-placeholder" role="status">Đang tải ảnh khách sạn…</div>
@@ -85,12 +94,15 @@ export function GalleryView({ data, hotelName }: { data: PublicGallery; hotelNam
   }, [index, images, params, setParams, location.state])
   if (!images.length) return <div className="hotel-gallery-placeholder">Chưa có ảnh</div>
   const visible = images.slice(0, 5)
-  return <section aria-label="Ảnh khách sạn" className="hotel-detail-gallery relative my-7">
-    <div className="hotel-detail-gallery-grid grid h-72 gap-2 overflow-hidden rounded-2xl sm:h-[440px]" style={{ gridTemplateColumns: visible.length === 1 ? '1fr' : '1fr 1fr' }}>
-      <button type="button" className="min-h-0 overflow-hidden" aria-label="Mở ảnh đầu tiên" onClick={() => change(images[0].mediaId)}><Photo mediaId={images[0].mediaId} alt={hotelName} /></button>
-      {visible.length > 1 && <div className="hotel-detail-gallery-secondary grid min-h-0 gap-2" style={{ gridTemplateColumns: visible.length === 5 ? '1fr 1fr' : '1fr', gridTemplateRows: visible.length === 5 ? '1fr 1fr' : `repeat(${visible.length - 1}, minmax(0, 1fr))` }}>{visible.slice(1).map(p => <button key={p.mediaId} type="button" className="min-h-0 overflow-hidden" aria-label="Mở ảnh khách sạn" onClick={() => change(p.mediaId)}><Photo mediaId={p.mediaId} alt={hotelName} /></button>)}</div>}
+  return <section aria-label="Ảnh khách sạn" className="stay-gallery">
+    <div className="gallery">
+      {visible.map((photo, index) => (
+        <button key={photo.mediaId} type="button" className="gallery-btn" aria-label={`Xem ảnh ${index + 1}`} onClick={() => change(photo.mediaId)}>
+          <Photo mediaId={photo.mediaId} alt={hotelName} />
+        </button>
+      ))}
     </div>
-    <button type="button" className="hotel-detail-gallery-all absolute bottom-4 right-4 rounded-lg border bg-white px-4 py-2 font-semibold text-[#1a1918]" onClick={() => change()}><HotelDetailIcon name="photos" /><span>Xem tất cả {images.length} ảnh</span></button>
+    <button type="button" className="gallery-pill" onClick={() => change()}><HotelDetailIcon name="photos" /><span>Xem tất cả {images.length} ảnh</span></button>
     <Modal title={null} open={tour} onCancel={close} footer={null} width="100%" className="client-photo-tour" styles={{ container: { padding: 0 }, wrapper: { margin: 0 }, body: { padding: 0 } }}>
       <header className="photo-tour-header">
         <div className="photo-tour-header-inner">
