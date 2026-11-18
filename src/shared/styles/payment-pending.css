@@ -1,0 +1,142 @@
+.ref-theme:has(.pending-pay) { background: var(--ref-bg); }
+
+.pending-pay {
+  max-width: 1180px;
+  margin-inline: auto;
+  padding: 24px 40px 96px;
+  color: var(--ref-fg);
+  font: 400 16px/1.43 var(--ref-font-body);
+}
+
+.pending-pay :is(h1, h2, p, dl) { margin: 0; }
+.pending-pay a { color: inherit; text-underline-offset: 3px; }
+.pending-pay :is(a, button, input):focus-visible { outline: 2px solid var(--ref-fg); outline-offset: 3px; }
+.pending-pay-back { display: inline-flex; gap: 8px; align-items: center; min-height: 40px; font-size: 14px; font-weight: 600; }
+.pending-pay-back:hover { text-decoration: underline; }
+.pending-pay-heading { max-width: 720px; }
+.pending-pay-heading h1 {
+  margin: 10px 0 8px;
+  font: 600 32px/1.2 var(--ref-font-display);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.pending-pay-heading > p:not(.pending-pay-badge) { color: var(--ref-muted); }
+.pending-pay-heading .pending-pay-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--ref-surface-warm);
+  font-size: 12px;
+  font-weight: 600;
+}
+.pending-pay-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pending-pay-badge[data-status='PENDING_PAYMENT'] { background: #fff8ec; color: #8a5300; }
+.pending-pay-badge[data-status='CONFIRMED'] { background: #ecf7ec; color: #067409; }
+.pending-pay-heading .pending-pay-code { margin-top: 12px; font-size: 12px; }
+.pending-pay-code strong { margin-inline-start: 6px; color: var(--ref-fg); font-size: 14px; font-variant-numeric: tabular-nums; }
+
+.pending-pay-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 384px;
+  align-items: start;
+  gap: 64px;
+  margin-top: 32px;
+}
+
+.pending-pay-main { display: grid; gap: 32px; min-width: 0; }
+.pending-pay-main h2 { font: 600 20px/1.25 var(--ref-font-display); }
+.pending-pay-stay, .pending-pay-card {
+  border: 1px solid var(--ref-border);
+  border-radius: var(--ref-radius-md);
+  background: var(--ref-surface);
+}
+.pending-pay-stay { display: flex; align-items: center; gap: 16px; padding: 20px; }
+.pending-pay-stay img { flex: none; width: 96px; height: 96px; border-radius: var(--ref-radius-sm); object-fit: cover; }
+.pending-pay-stay div { min-width: 0; overflow-wrap: anywhere; }
+.pending-pay-stay h2 { font-size: 16px; }
+.pending-pay-stay p { margin-top: 6px; color: var(--ref-muted); font-size: 14px; }
+.pending-pay .pending-pay-info { margin-top: 12px; border-top: 1px solid var(--ref-border-soft); }
+.pending-pay-info > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: 16px;
+  padding-block: 13px;
+  border-bottom: 1px solid var(--ref-border-soft);
+  font-size: 15px;
+}
+.pending-pay-info dt { color: var(--ref-muted); }
+.pending-pay-info dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+
+.pending-pay-card { display: grid; gap: 16px; min-width: 0; padding: 24px; box-shadow: var(--ref-elev-raised); }
+.pending-pay-timer { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--ref-radius-sm); background: #fff8ec; color: #8a5300; }
+.pending-pay-timer svg { flex: none; margin-top: 2px; }
+.pending-pay-timer[data-state='urgent'] { background: #fff1ed; color: var(--ref-danger); }
+.pending-pay-timer[data-state='expired'] { background: var(--ref-surface-warm); color: var(--ref-muted); }
+.pending-pay-timer span { display: block; font-size: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+.pending-pay-timer strong { display: block; color: var(--ref-fg); font-size: 22px; font-variant-numeric: tabular-nums; line-height: 1.22; }
+.pending-pay-timer p, .pending-pay-note { margin-top: 4px; font-size: 12px; color: var(--ref-muted); overflow-wrap: anywhere; }
+.pending-pay-cost > div { display: flex; justify-content: space-between; gap: 12px; padding-block: 6px; font-size: 14px; }
+.pending-pay-cost dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.pending-pay-cost .pending-pay-total { align-items: baseline; margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--ref-border); font-size: 16px; font-weight: 600; }
+.pending-pay-cost .pending-pay-total:first-child { margin-top: 0; padding-top: 0; border: 0; }
+.pending-pay-total dd { font-size: 24px; font-weight: 700; }
+.pending-pay-methods { display: grid; min-width: 0; gap: 12px; margin: 0; padding: 0; border: 0; }
+.pending-pay-methods legend { margin-bottom: 8px; font-size: 14px; font-weight: 600; }
+.pending-pay-qr { display: grid; justify-items: center; gap: 8px; padding: 12px; border: 1px solid var(--ref-border); border-radius: var(--ref-radius-sm); text-align: center; }
+.pending-pay-qr strong { font-size: 14px; }
+.pending-pay-qr p { color: var(--ref-muted); font-size: 12px; }
+.pending-pay-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--ref-border);
+  border-radius: var(--ref-radius-md);
+  font-size: 14px;
+  cursor: pointer;
+}
+.pending-pay-option:has(input:checked) { border-color: var(--ref-fg); box-shadow: inset 0 0 0 1px var(--ref-fg); background: var(--ref-surface-warm); }
+.pending-pay-option:has(input:focus-visible) { outline: 2px solid var(--ref-fg); outline-offset: 2px; }
+.pending-pay-option input { width: 20px; height: 20px; flex: none; margin: 1px 0 0; accent-color: var(--ref-fg); }
+.pending-pay-option-body { min-width: 0; }
+.pending-pay-option-title { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; }
+.pending-pay-option-title strong { font-weight: 600; }
+.pending-pay-recommended { padding: 2px 6px; border-radius: 4px; background: #ecf7ec; color: #067409; font-size: 11px; font-weight: 600; }
+.pending-pay-option svg { flex: none; margin-left: auto; color: var(--ref-fg-2); }
+.pending-pay-option small { display: block; margin-top: 2px; color: var(--ref-muted); font-size: 12px; }
+.pending-pay :is(.pending-pay-primary, .pending-pay-secondary) {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 14px;
+  border: 1px solid var(--ref-border);
+  border-radius: var(--ref-radius-sm);
+  font: 600 14px/1.43 var(--ref-font-body);
+  cursor: pointer;
+}
+.pending-pay .pending-pay-primary { min-height: 48px; border-color: transparent; background: var(--ref-accent); color: var(--ref-accent-on); font-size: 16px; font-weight: 700; }
+.pending-pay .pending-pay-primary:hover:not(:disabled) { background: var(--ref-accent-hover); }
+.pending-pay .pending-pay-secondary { min-height: 40px; background: var(--ref-surface); color: var(--ref-fg); }
+.pending-pay-secondary:hover:not(:disabled) { border-color: var(--ref-fg); }
+.pending-pay :is(.pending-pay-primary, .pending-pay-secondary):disabled { background: var(--ref-border-soft); color: var(--ref-muted); cursor: not-allowed; }
+.pending-pay-status { justify-self: center; background: none; border: 0; min-height: 32px; color: var(--ref-fg); font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; }
+.pending-pay-status:disabled { color: var(--ref-muted); cursor: wait; }
+
+@media (max-width: 1023px) {
+  .pending-pay { padding-inline: 24px; }
+  .pending-pay-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .pending-pay-card { grid-row: 1; }
+}
+
+@media (max-width: 639px) {
+  .pending-pay { padding: 16px 16px 48px; }
+  .pending-pay-heading h1 { font-size: 26px; }
+  .pending-pay-grid { margin-top: 20px; }
+  .pending-pay-card { padding: 16px; }
+  .pending-pay-stay { padding: 16px; }
+  .pending-pay-stay img { width: 72px; height: 72px; }
+  .pending-pay-info > div { gap: 10px; font-size: 14px; }
+}
