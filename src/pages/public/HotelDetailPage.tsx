@@ -97,18 +97,11 @@ export function HotelDetailPage() {
           const state = valid && !inventory.isError ? inventory.data?.roomTypes.find(r => r.roomTypeId === room.id) : undefined
           const capacity = state?.maxOccupancy ?? room.maxOccupancy
           const selectedRoom = roomId === room.id
-          return <article key={room.id} className="room">
-            <div className="room-thumb"><HotelDetailIcon name="bed" /><span>Chưa có ảnh hạng phòng</span></div>
-            <div className="room-body">
-              <div className="room-name-row"><h3 className="room-name">{room.name}</h3>{selectedRoom && <span className="room-flag">Đang chọn</span>}</div>
-              {room.description && <p className="room-desc">{room.description}</p>}
-              <ul className="room-facts" aria-label="Sức chứa">
-                <li className="room-fact"><HotelDetailIcon name="guests" /><span>{room.maxAdults} người lớn · {room.maxChildren} trẻ em</span></li>
-                {capacity != null && <li className="room-fact">Tối đa {capacity} khách</li>}
-              </ul>
-              {!!room.amenities?.length && <ul className="room-facts" aria-label="Tiện ích hạng phòng">
-                {room.amenities.map(a => <li className="room-fact" key={a.id}><HotelAmenityIcon code={a.code} />{a.name}</li>)}
-              </ul>}
+          return <article key={room.id} className={`hotel-room-card${selectedRoom ? ' is-selected' : ''}`}>
+            <div className="hotel-room-info"><div className="hotel-room-title"><h3>{room.name}</h3>{selectedRoom && <span className="hotel-room-selected">Đang chọn</span>}</div>{room.description && <p>{room.description}</p>}
+              <ul className="hotel-room-chips" aria-label="Sức chứa"><li><HotelDetailIcon name="guests" /><span>{room.maxAdults} người lớn · {room.maxChildren} trẻ em</span></li>{capacity != null && <li>Tối đa {capacity} khách</li>}</ul>
+              {!!room.amenities?.length && <ul className="hotel-room-amenities" aria-label="Tiện ích hạng phòng">{room.amenities.map(a => <li key={a.id}><HotelAmenityIcon code={a.code} />{a.name}</li>)}</ul>}
+              <p className="hotel-room-status">{!valid ? 'Chọn ngày để kiểm tra phòng trống' : inventory.isFetching ? 'Đang kiểm tra phòng trống…' : inventory.isError ? 'Chưa xác định tình trạng phòng' : state?.isAvailable ? `Còn ${state.availableQuantity} phòng phù hợp` : 'Không có phòng phù hợp với lựa chọn này'}</p>
             </div>
             <div className="room-buy">
               <div className="room-buy-main">

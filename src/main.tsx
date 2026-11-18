@@ -14,6 +14,7 @@ import './shared/styles/public-booking.css'
 import './shared/styles/customer-pages.css'
 import './shared/styles/client-figma.css'
 import './shared/styles/client-reference.css'
+import './shared/styles/payment-pending.css'
 
 document.title = env.appName
 const root = document.getElementById('root')
