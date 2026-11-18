@@ -1,9 +1,8 @@
-import { HotelReviewRequestPage } from '@/pages/management/HotelReviewRequestPage'
+import { lazy, Suspense } from 'react'
+import { PageLoading } from '@/shared/ui/PageLoading'
+
 import { HotelSearchPage } from '@/pages/public/HotelSearchPage'
-import { SystemStatusPage } from '@/pages/public/SystemStatusPage'
-import { HotelModulePage } from '@/pages/management/HotelModulePage'
-import { MyBookingsPage } from '@/pages/customer/MyBookingsPage'
-import { MyComplaintsPage } from '@/pages/customer/MyComplaintsPage'
+
 import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider } from 'react-router'
 import {
   BarChartOutlined,
@@ -13,46 +12,52 @@ import {
   UserOutlined,
 } from '@ant-design/icons'
 import { AppLayout } from '@/app/layouts/AppLayout'
-import { AdminLayout } from '@/app/layouts/AdminLayout'
-import { HotelWorkspaceLayout } from '@/app/layouts/HotelWorkspaceLayout'
+
 import { AdminRouteGuard } from '@/features/auth'
 import { AccountRouteGuard } from '@/features/auth'
-import { ProfilePage } from '@/pages/customer/ProfilePage'
-import { PaymentReturnPage } from '@/pages/customer/PaymentReturnPage'
-import { HotelStaffPage } from '@/pages/management/HotelStaffPage'
-import { LoginPage } from '@/pages/auth/LoginPage'
-import { AdminLoginPage } from '@/pages/auth/AdminLoginPage'
-import { RegisterPage } from '@/pages/auth/RegisterPage'
-import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
-import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
-import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage'
-import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
-import { AdminHotelReviewRequestsPage } from '@/pages/admin/AdminHotelReviewRequestsPage'
-import { HotelReviewRequestsPage } from '@/pages/management/hotels/HotelReviewRequestsPage'
-import { HotelProfileEditGuard } from '@/pages/management/hotels/HotelProfileEditGuard'
-import { AdminOverviewPage } from '@/pages/admin/AdminOverviewPage'
-import { HotelManagementListPage } from '@/pages/management/HotelManagementListPage'
-import { ManagementPlaceholderPage } from '@/pages/management/ManagementPlaceholderPage'
-import {
-  HotelOverviewPage,
-  HotelInfoPage,
-  HotelPhotosPage,
-  HotelAmenitiesPage,
-  HotelRoomsPage,
-  HotelRoomCreatePage,
-  HotelRoomAmenitiesPage,
-  HotelPhysicalRoomAmenitiesPage,
-  HotelPricingPage,
-  HotelPoliciesPage,
-  HotelBookingsPage,
-  HotelReviewsPage,
-  HotelCreatePage,
-} from '@/pages/management/hotels'
+
 import { NotFoundPage } from '@/pages/public/NotFoundPage'
 import { StayVibeHomePage } from '@/pages/public/StayVibeHomePage'
-import { HotelDetailPage } from '@/pages/public/HotelDetailPage'
-import { BookingCheckoutPage } from '@/pages/customer/BookingCheckoutPage'
-import { BookingConfirmationPage } from '@/pages/customer/BookingConfirmationPage'
+
+const HotelReviewRequestPage = lazy(() => import('@/pages/management/HotelReviewRequestPage').then(module => ({ default: module.HotelReviewRequestPage })))
+const SystemStatusPage = lazy(() => import('@/pages/public/SystemStatusPage').then(module => ({ default: module.SystemStatusPage })))
+const HotelModulePage = lazy(() => import('@/pages/management/HotelModulePage').then(module => ({ default: module.HotelModulePage })))
+const MyBookingsPage = lazy(() => import('@/pages/customer/MyBookingsPage').then(module => ({ default: module.MyBookingsPage })))
+const MyComplaintsPage = lazy(() => import('@/pages/customer/MyComplaintsPage').then(module => ({ default: module.MyComplaintsPage })))
+const AdminLayout = lazy(() => import('@/app/layouts/AdminLayout').then(module => ({ default: module.AdminLayout })))
+const HotelWorkspaceLayout = lazy(() => import('@/app/layouts/HotelWorkspaceLayout').then(module => ({ default: module.HotelWorkspaceLayout })))
+const ProfilePage = lazy(() => import('@/pages/customer/ProfilePage').then(module => ({ default: module.ProfilePage })))
+const PaymentReturnPage = lazy(() => import('@/pages/customer/PaymentReturnPage').then(module => ({ default: module.PaymentReturnPage })))
+const HotelStaffPage = lazy(() => import('@/pages/management/HotelStaffPage').then(module => ({ default: module.HotelStaffPage })))
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then(module => ({ default: module.LoginPage })))
+const AdminLoginPage = lazy(() => import('@/pages/auth/AdminLoginPage').then(module => ({ default: module.AdminLoginPage })))
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage').then(module => ({ default: module.RegisterPage })))
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage').then(module => ({ default: module.ForgotPasswordPage })))
+const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })))
+const VerifyEmailPage = lazy(() => import('@/pages/auth/VerifyEmailPage').then(module => ({ default: module.VerifyEmailPage })))
+const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage').then(module => ({ default: module.AdminUsersPage })))
+const AdminHotelReviewRequestsPage = lazy(() => import('@/pages/admin/AdminHotelReviewRequestsPage').then(module => ({ default: module.AdminHotelReviewRequestsPage })))
+const HotelReviewRequestsPage = lazy(() => import('@/pages/management/hotels/HotelReviewRequestsPage').then(module => ({ default: module.HotelReviewRequestsPage })))
+const HotelProfileEditGuard = lazy(() => import('@/pages/management/hotels/HotelProfileEditGuard').then(module => ({ default: module.HotelProfileEditGuard })))
+const AdminOverviewPage = lazy(() => import('@/pages/admin/AdminOverviewPage').then(module => ({ default: module.AdminOverviewPage })))
+const HotelManagementListPage = lazy(() => import('@/pages/management/HotelManagementListPage').then(module => ({ default: module.HotelManagementListPage })))
+const ManagementPlaceholderPage = lazy(() => import('@/pages/management/ManagementPlaceholderPage').then(module => ({ default: module.ManagementPlaceholderPage })))
+const HotelOverviewPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelOverviewPage })))
+const HotelInfoPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelInfoPage })))
+const HotelPhotosPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelPhotosPage })))
+const HotelAmenitiesPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelAmenitiesPage })))
+const HotelRoomsPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelRoomsPage })))
+const HotelRoomCreatePage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelRoomCreatePage })))
+const HotelRoomAmenitiesPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelRoomAmenitiesPage })))
+const HotelPhysicalRoomAmenitiesPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelPhysicalRoomAmenitiesPage })))
+const HotelPricingPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelPricingPage })))
+const HotelPoliciesPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelPoliciesPage })))
+const HotelBookingsPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelBookingsPage })))
+const HotelReviewsPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelReviewsPage })))
+const HotelCreatePage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelCreatePage })))
+const HotelDetailPage = lazy(() => import('@/pages/public/HotelDetailPage').then(module => ({ default: module.HotelDetailPage })))
+const BookingCheckoutPage = lazy(() => import('@/pages/customer/BookingCheckoutPage').then(module => ({ default: module.BookingCheckoutPage })))
+const BookingConfirmationPage = lazy(() => import('@/pages/customer/BookingConfirmationPage').then(module => ({ default: module.BookingConfirmationPage })))
 
 const router = createBrowserRouter(createRoutesFromElements(<>
         <Route path="admin/login" element={<AdminLoginPage />} />
@@ -192,5 +197,5 @@ const router = createBrowserRouter(createRoutesFromElements(<>
   </>))
 
 export function AppRouter() {
-  return <RouterProvider router={router} />
+  return <Suspense fallback={<PageLoading />}><RouterProvider router={router} /></Suspense>
 }

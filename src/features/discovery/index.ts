@@ -29,9 +29,7 @@ export { ClientSiteFooter } from './components/ClientSiteFooter'
 export { ClientToast } from './components/ClientToast'
 
 // Backward compatibility exports for existing layouts and unit tests
-export { StayVibeFooter } from './components/StayVibeFooter'
 export {
-  STAYVIBE_FOOTER_GROUPS,
   BENTO_DESTINATIONS,
   STAYVIBE_FEATURED_HOTELS,
   VIBE_CATEGORIES,

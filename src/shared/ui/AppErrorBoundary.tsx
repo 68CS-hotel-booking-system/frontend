@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react'
-import { Button, Result } from 'antd'
+import { StatusMessage } from './StatusMessage'
 
 export class AppErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
@@ -11,12 +11,12 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, { faile
   render() {
     if (this.state.failed) {
       return (
-        <Result
-          status="500"
+        <StatusMessage
           title="Không thể mở trang"
-          subTitle="Trang gặp lỗi hiển thị. Bạn có thể tải lại để thử tiếp."
-          extra={<Button type="primary" onClick={() => window.location.reload()}>Tải lại trang</Button>}
-        />
+          description="Trang gặp lỗi hiển thị. Bạn có thể tải lại để thử tiếp."
+        >
+          <button type="button" onClick={() => window.location.reload()}>Tải lại trang</button>
+        </StatusMessage>
       )
     }
     return this.props.children
