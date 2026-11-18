@@ -1,6 +1,6 @@
 import type { FieldError } from './types'
 
-export type ApiErrorKind = 'http' | 'network' | 'timeout' | 'invalid-response'
+export type ApiErrorKind = 'http' | 'network' | 'timeout' | 'invalid-response' | 'unsupported'
 
 interface ApiErrorOptions {
   kind: ApiErrorKind

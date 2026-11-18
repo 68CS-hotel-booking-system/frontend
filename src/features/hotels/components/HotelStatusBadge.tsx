@@ -1,10 +1,11 @@
 import { Tag } from 'antd'
-import type { HotelStatus } from '../types/hotel-management'
+import type { HotelStatus } from '../model/hotel'
 
 const STATUS_META: Record<
   HotelStatus,
   { label: string; color: 'success' | 'processing' | 'default' | 'error' | 'warning' }
 > = {
+  LOCKED: { label: 'Bị khóa', color: 'error' },
   ACTIVE: { label: 'Đang hoạt động', color: 'success' },
   PENDING_APPROVAL: { label: 'Chờ phê duyệt', color: 'warning' },
   DRAFT: { label: 'Bản nháp', color: 'default' },

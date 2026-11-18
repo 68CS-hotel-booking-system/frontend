@@ -1,0 +1,26 @@
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+const fetcher = vi.fn<typeof fetch>()
+vi.mock('@/features/hotels', () => ({ getMediaAccess: vi.fn(), getCities: vi.fn() }))
+beforeEach(() => { vi.resetModules(); fetcher.mockReset(); vi.stubGlobal('fetch', fetcher) })
+afterEach(() => vi.unstubAllGlobals())
+it('sends supported search filters, dates, occupancy, amenities and zero-based page', async () => {
+  fetcher.mockResolvedValue(new Response(JSON.stringify({ message: 'ok', data: { content: [], page: 0, size: 12, totalElements: 0, totalPages: 0, first: true, last: true } })))
+  const { searchHotels } = await import('./search-api')
+  const result = await searchHotels({ citySlug: 'da-nang', checkIn: '2030-01-10', checkOut: '2030-01-12', guests: 2, minPrice: 0, amenityIds: ['a', 'b'], sort: 'price', page: 0, size: 12 }, new AbortController().signal)
+  const url = new URL(fetcher.mock.calls[0][0] as string, 'http://localhost')
+  expect(url.pathname).toBe('/api/v1/hotels/search')
+  expect(url.searchParams.get('checkIn')).toBe('2030-01-10')
+  expect(url.searchParams.get('minPrice')).toBe('0')
+  expect(url.searchParams.get('amenityIds')).toBe('a,b')
+  expect(result.content).toEqual([])
+})
+it('does not substitute mock stays on backend failure', async () => {
+  fetcher.mockResolvedValue(new Response(JSON.stringify({ detail: 'Không thể tìm kiếm.' }), { status: 500 }))
+  const { fetchClientStays } = await import('./client-home-api')
+  await expect(fetchClientStays()).rejects.toMatchObject({ status: 500 })
+})
+it('preserves empty business results without introducing mock hotels', async () => {
+  fetcher.mockResolvedValue(new Response(JSON.stringify({ message: 'ok', data: { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0, first: true, last: true } })))
+  const { fetchClientStays } = await import('./client-home-api')
+  expect(await fetchClientStays()).toEqual([])
+})

@@ -1,117 +1,134 @@
-import { z } from 'zod'
+import { ApiError } from '@/shared/api/api-error'
 import { http } from '@/shared/api/http'
-import {
-  type CreateAdminHotelFormValues,
-  dailyRoomRateSchema,
-  managementHotelDetailSchema,
-  type ManagementHotelListQuery,
-  managementHotelPageSchema,
-  type UpdateHotelAmenitiesFormValues,
-  type UpdateManagementHotelFormValues,
-} from '../types/hotel-management'
+import { z } from 'zod'
+import { amenitySchema } from '../model/hotel'
+import { validateHotelPatch } from '../model/hotel-update'
+import type { CreateAdminHotelFormValues, UpdateHotelAmenitiesFormValues } from '../model/hotel-form-schemas'
+import type { ManagementHotelDetail, ManagementHotelListQuery, ManagementHotelPage } from '../model/hotel'
+import { managementHotelPageResponseSchema, managementHotelResponseSchema, toManagementHotel } from './hotel-contract'
 
-/**
- * HT07: GET /api/v1/management/hotels — Danh sách khách sạn được phép vận hành (phân trang bắt đầu từ 0).
- */
-export function getManagementHotels(
+/** GET /api/v1/management/hotels — BE currently supports pagination only. */
+export async function getManagementHotels(
   query: ManagementHotelListQuery = {},
   signal?: AbortSignal,
-) {
-  const params = new URLSearchParams()
-  params.set('page', String(query.page ?? 0))
-  params.set('size', String(query.size ?? 6))
-  if (query.cityId) params.set('cityId', query.cityId)
-  if (query.status && query.status !== 'ALL') params.set('status', query.status)
-  if (query.keyword?.trim()) params.set('keyword', query.keyword.trim())
-
-  return http.request(`/management/hotels?${params.toString()}`, {
-    signal,
-    schema: managementHotelPageSchema,
+): Promise<ManagementHotelPage> {
+  const params = new URLSearchParams({
+    page: String(query.page ?? 0),
+    size: String(query.size ?? 6),
   })
+  const page = await http.request(`/management/hotels?${params}`, {
+    signal,
+    schema: managementHotelPageResponseSchema,
+  })
+  return { ...page, content: page.content.map(toManagementHotel) }
 }
 
-/**
- * HT06: POST /api/v1/admin/hotels — Tạo khách sạn mới và phân công Owner.
- */
-export function createAdminHotel(
+/** POST /api/v1/management/hotels — ownerId may be omitted for self-creation. */
+export async function createAdminHotel(
   payload: CreateAdminHotelFormValues,
   signal?: AbortSignal,
-) {
-  return http.request('/admin/hotels', {
-    method: 'POST',
-    body: payload,
-    signal,
-    schema: managementHotelDetailSchema,
-  })
+): Promise<ManagementHotelDetail> {
+  try {
+    const hotel = await http.request('/management/hotels', {
+      method: 'POST',
+      body: {
+        ownerId: payload.ownerUserId ? payload.ownerUserId : undefined,
+        cityId: payload.cityId,
+        name: payload.name,
+        description: payload.description,
+        address: payload.address,
+        contactPhone: payload.contactPhone?.trim() || undefined,
+        contactEmail: payload.contactEmail?.trim() || undefined,
+        latitude: payload.latitude,
+        longitude: payload.longitude,
+        starRating: payload.starRating,
+        checkInTime: payload.checkInTime,
+        checkOutTime: payload.checkOutTime,
+      },
+      signal,
+      schema: managementHotelResponseSchema,
+    })
+    return toManagementHotel(hotel)
+  } catch (error) {
+    if (error instanceof ApiError && error.errors.some((item) => item.field === 'ownerId')) {
+      throw new ApiError(error.message, {
+        kind: error.kind, status: error.status, code: error.code, traceId: error.traceId,
+        errors: error.errors.map((item) => ({
+          ...item, field: item.field === 'ownerId' ? 'ownerUserId' : item.field,
+        })),
+      })
+    }
+    throw error
+  }
 }
 
-/**
- * HT08: GET /api/v1/management/hotels/{hotelId} — Thông tin quản lý chi tiết khách sạn.
- */
-export function getManagementHotelDetail(hotelId: string, signal?: AbortSignal) {
-  return http.request(`/management/hotels/${encodeURIComponent(hotelId)}`, {
-    signal,
-    schema: managementHotelDetailSchema,
-  })
-}
-
-/**
- * HT09: PATCH /api/v1/management/hotels/{hotelId} — Sửa nội dung khách sạn.
- */
-export function updateManagementHotel(
+/** GET /api/v1/management/hotels/{hotelId}. */
+export async function getManagementHotelDetail(
   hotelId: string,
-  payload: UpdateManagementHotelFormValues,
   signal?: AbortSignal,
-) {
-  return http.request(`/management/hotels/${encodeURIComponent(hotelId)}`, {
+): Promise<ManagementHotelDetail> {
+  const hotel = await http.request(`/management/hotels/${encodeURIComponent(hotelId)}`, {
+    signal,
+    schema: managementHotelResponseSchema,
+  })
+  return toManagementHotel(hotel)
+}
+
+/** PATCH /api/v1/management/hotels/{hotelId}/approve — Admin duyệt khách sạn */
+export async function approveHotel(
+  hotelId: string,
+  signal?: AbortSignal,
+): Promise<ManagementHotelDetail> {
+  const hotel = await http.request(`/management/hotels/${encodeURIComponent(hotelId)}/approve`, {
     method: 'PATCH',
-    body: payload,
     signal,
-    schema: managementHotelDetailSchema,
+    schema: managementHotelResponseSchema,
   })
+  return toManagementHotel(hotel)
 }
 
-/**
- * HT14: PUT /api/v1/management/hotels/{hotelId}/amenities — Gắn tiện ích khách sạn.
- */
-export function updateHotelAmenities(
-  hotelId: string,
-  payload: UpdateHotelAmenitiesFormValues,
-  signal?: AbortSignal,
-) {
-  return http.request(
-    `/management/hotels/${encodeURIComponent(hotelId)}/amenities`,
-    {
-      method: 'PUT',
-      body: payload,
-      signal,
-      schema: z.array(z.string()),
-    },
-  )
-}
-
-/**
- * PR01: GET /api/v1/management/hotels/{hotelId}/room-types/{roomTypeId}/rates — Xem giá theo ngày.
- */
-export function getRoomTypeDailyRates(
-  params: {
-    hotelId: string
-    roomTypeId: string
-    startDate: string
-    endDate: string
-  },
-  signal?: AbortSignal,
-) {
-  const search = new URLSearchParams({
-    startDate: params.startDate,
-    endDate: params.endDate,
+export type HotelSalesAction = 'suspend' | 'resume' | 'lock' | 'unlock'
+export async function changeHotelSalesStatus(hotelId: string, action: HotelSalesAction, reason: string, signal?: AbortSignal) {
+  const scope = action === 'lock' || action === 'unlock' ? 'admin' : 'management'
+  const hotel = await http.request(`/${scope}/hotels/${encodeURIComponent(hotelId)}/${action}`, {
+    method: 'POST', body: { reason }, signal, schema: managementHotelResponseSchema,
   })
-  return http.request(
-    `/management/hotels/${encodeURIComponent(params.hotelId)}/room-types/${encodeURIComponent(params.roomTypeId)}/rates?${search.toString()}`,
-    {
-      signal,
-      schema: z.array(dailyRoomRateSchema),
-    },
-  )
+  return toManagementHotel(hotel)
 }
 
+export interface UpdateHotelPayload {
+  version: number
+  name?: string
+  description?: string
+  address?: string
+  contactPhone?: string
+  contactEmail?: string
+  latitude?: number
+  longitude?: number
+  starRating?: number
+  checkInTime?: string
+  checkOutTime?: string
+}
+
+export async function updateManagementHotel(hotelId: string, payload: UpdateHotelPayload, signal?: AbortSignal): Promise<ManagementHotelDetail> {
+  const result = await http.request(`/management/hotels/${encodeURIComponent(hotelId)}`, {
+    method: 'PATCH', body: validateHotelPatch(payload), signal, schema: managementHotelResponseSchema,
+  })
+  return toManagementHotel(result)
+}
+
+export async function updateHotelAmenities(hotelId: string, payload: UpdateHotelAmenitiesFormValues, signal?: AbortSignal): Promise<string[]> {
+  const result = await http.request(`/management/hotels/${encodeURIComponent(hotelId)}/amenities`, {
+    method: 'PUT', body: payload, signal, schema: z.array(amenitySchema),
+  })
+  return result.map((amenity) => amenity.id)
+}
+
+export async function updateRoomTypeAmenities(hotelId: string, roomTypeId: string, payload: UpdateHotelAmenitiesFormValues, signal?: AbortSignal): Promise<string[]> {
+  const result = await http.request(`/management/hotels/${encodeURIComponent(hotelId)}/room-types/${encodeURIComponent(roomTypeId)}/amenities`, {
+    method: 'PUT', body: payload, signal, schema: z.array(amenitySchema),
+  })
+  return result.map((amenity) => amenity.id)
+}
+
+export { getRoomTypeDailyRates, setRoomTypeDailyRates } from './room-rates-api'

@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "skills": {
+    "design-taste-frontend": {
+      "source": "Leonxlnx/taste-skill",
+      "sourceType": "github",
+      "skillPath": "skills/taste-skill/SKILL.md",
+      "computedHash": "bd5046fbf50f6622d48f39686e0e4ab81929bb60ed23d3f9a2eb7ac61e3a46da"
+    },
+    "ui-ux": {
+      "source": "evondev/evondevKit",
+      "sourceType": "github",
+      "skillPath": "skills/ui-ux/SKILL.md",
+      "computedHash": "f7651c6b69d1516acd8419b556ea4aecb896f6938092f87ced9dd9b3224456e4"
+    }
+  }
+}

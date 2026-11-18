@@ -3,7 +3,7 @@ import { DataModeContext, type DataSourceMode } from './data-mode-context'
 
 export function DataModeProvider({
   children,
-  initialMode = 'mock',
+  initialMode = 'api',
 }: {
   children: ReactNode
   initialMode?: DataSourceMode

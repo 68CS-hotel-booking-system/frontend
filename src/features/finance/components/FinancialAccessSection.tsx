@@ -23,20 +23,17 @@ import {
   Tag,
 } from 'antd'
 import { Controller, useForm, useWatch } from 'react-hook-form'
-import type { HotelCommissionContract } from '@/features/contracts/types/contract'
+import type { HotelCommissionContract } from '@/features/contracts'
 import { errorMessage } from '@/shared/api/api-error'
 import { applyApiFieldErrors } from '@/shared/lib/form-errors'
+import { useDataMode } from '@/shared/lib/data-mode-context'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
-import { MOCK_REPRESENTATIVE_CANDIDATES } from '../api/financial-access-mock'
-import {
-  useFinancialAccessQuery,
-  useUpdateFinancialAccessMutation,
-} from '../hooks/use-financial-access'
-import {
-  updateFinancialAccessFormSchema,
-  type UpdateFinancialAccessFormValues,
-} from '../types/financial-access'
+import { MOCK_REPRESENTATIVE_CANDIDATES } from '../mocks/financial-access-mock'
+import { useFinancialAccessQuery } from '../hooks/use-financial-access-query'
+import { useUpdateFinancialAccessMutation } from '../hooks/use-update-financial-access-mutation'
+import { updateFinancialAccessFormSchema, type UpdateFinancialAccessFormValues } from '../model/financial-access-form-schema'
+import { ApiFinancialAccessSection } from './ApiFinancialAccessSection'
 
 interface FinancialAccessSectionProps {
   hotelId: string
@@ -45,7 +42,12 @@ interface FinancialAccessSectionProps {
   contracts: HotelCommissionContract[]
 }
 
-export function FinancialAccessSection({
+export function FinancialAccessSection(props: FinancialAccessSectionProps) {
+  const { mode } = useDataMode()
+  return mode === 'api' ? <ApiFinancialAccessSection {...props} /> : <MockFinancialAccessSection {...props} />
+}
+
+function MockFinancialAccessSection({
   hotelId,
   hotelName,
   defaultOwnerUserId,
@@ -172,6 +174,7 @@ export function FinancialAccessSection({
 
   return (
     <section className="rates-scientific-panel" aria-labelledby="financial-access-title">
+      <Alert type="info" showIcon title="Dữ liệu mẫu: các quyền riêng và hợp đồng liên kết trong bản xem trước chưa có trong API." />
       {/* 1. Header tinh gọn của phân quyền tài chính */}
       <div className="rates-panel-header">
         <div>

@@ -1,43 +1,12 @@
 import { http } from '@/shared/api/http'
-import {
-  financialAccessGrantSchema,
-  type UpdateFinancialAccessFormValues,
-} from '../types/financial-access'
+import { financialAccessDetailSchema, financialAccessUpdateSchema, updateApiFinancialAccessFormSchema, type UpdateApiFinancialAccessFormValues } from '../model/financial-access-api-contract'
 
-/**
- * FN16: GET /api/v1/admin/hotels/{hotelId}/financial-access/{userId}
- * Đọc cấp quyền tài chính và phiên bản trước sửa.
- */
-export function getFinancialAccess(
-  params: { hotelId: string; userId: string },
-  signal?: AbortSignal,
-) {
-  return http.request(
-    `/admin/hotels/${encodeURIComponent(params.hotelId)}/financial-access/${encodeURIComponent(params.userId)}`,
-    {
-      signal,
-      schema: financialAccessGrantSchema,
-    },
-  )
+function accessPath(params: { hotelId: string; userId: string }) {
+  return `/admin/hotels/${encodeURIComponent(params.hotelId)}/financial-access/${encodeURIComponent(params.userId)}`
 }
-
-/**
- * FN00: PUT /api/v1/admin/hotels/{hotelId}/financial-access/{userId}
- * Cấp/thu hồi quyền đọc tài chính theo thỏa thuận (kèm kiểm tra phiên bản expectedVersion).
- */
-export function updateFinancialAccess(
-  params: { hotelId: string; userId: string },
-  payload: UpdateFinancialAccessFormValues,
-  signal?: AbortSignal,
-) {
-  return http.request(
-    `/admin/hotels/${encodeURIComponent(params.hotelId)}/financial-access/${encodeURIComponent(params.userId)}`,
-    {
-      method: 'PUT',
-      body: payload,
-      signal,
-      schema: financialAccessGrantSchema,
-    },
-  )
+export function getFinancialAccess(params: { hotelId: string; userId: string }, signal?: AbortSignal) {
+  return http.request(accessPath(params), { signal, schema: financialAccessDetailSchema })
 }
-
+export function updateFinancialAccess(params: { hotelId: string; userId: string }, payload: UpdateApiFinancialAccessFormValues, signal?: AbortSignal) {
+  return http.request(accessPath(params), { method: 'PUT', signal, body: updateApiFinancialAccessFormSchema.parse(payload), schema: financialAccessUpdateSchema })
+}

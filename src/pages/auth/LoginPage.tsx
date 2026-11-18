@@ -1,60 +1,56 @@
-import {
-  CompassOutlined,
-  SafetyCertificateOutlined,
-  ThunderboltOutlined,
-} from '@ant-design/icons'
-import { Button, Space, Tag } from 'antd'
-import { useNavigate } from 'react-router'
-import { EmptyState } from '@/shared/ui/EmptyState'
+import { useEffect, useRef } from 'react'
+import { Alert } from 'antd'
+import { useLocation, useNavigate, useSearchParams } from 'react-router'
+import { AuthModal, sanitizeReturnTo, useAuthStatus, useCurrentUser, useSession } from '@/features/auth'
+import { PageLoading } from '@/shared/ui/PageLoading'
 
 export function LoginPage() {
+  const location = useLocation()
   const navigate = useNavigate()
-  return (
-    <div className="management-page rates-management-page">
-      <header className="rates-page-header" aria-labelledby="login-page-title">
-        <div className="rates-page-header__content">
-          <span className="rates-page-header__kicker">
-            <SafetyCertificateOutlined aria-hidden="true" /> CỔNG ĐĂNG NHẬP ĐỐI TÁC &amp; HỘI VIÊN
-          </span>
-          <h1 id="login-page-title" className="rates-page-header__title">
-            Đăng nhập Không gian StayVibe Sovereign
-          </h1>
-          <p className="rates-page-header__desc">
-            Dịch vụ tài khoản và xác thực hiện đang được hoàn thiện kết nối với
-            hệ thống máy chủ. Bạn vẫn có thể tự do khám phá bộ sưu tập khu nghỉ
-            dưỡng.
-          </p>
-        </div>
-        <div className="rates-page-header__actions">
-          <Tag color="gold" style={{ fontSize: '13px', padding: '4px 12px' }}>
-            Đang hoàn thiện
-          </Tag>
-        </div>
-      </header>
+  const [searchParams] = useSearchParams()
+  const session = useSession()
+  const { status } = useAuthStatus()
+  const { currentUser, isChecking, isAdmin } = useCurrentUser()
+  const authenticated = useRef(false)
 
-      <div className="connection-panel">
-        <EmptyState
-          title="Chức năng đăng nhập đang được chuẩn bị"
-          description="Bạn có thể khám phá bộ sưu tập khu nghỉ dưỡng, kiểm tra trạng thái hệ thống hoặc trải nghiệm các phân hệ quản trị danh mục."
-          action={
-            <Space wrap>
-              <Button
-                type="primary"
-                icon={<CompassOutlined aria-hidden="true" />}
-                onClick={() => void navigate('/')}
-              >
-                Khám phá Khu nghỉ dưỡng
-              </Button>
-              <Button
-                icon={<ThunderboltOutlined aria-hidden="true" />}
-                onClick={() => void navigate('/system-status')}
-              >
-                Kiểm tra trạng thái hệ thống
-              </Button>
-            </Space>
-          }
-        />
-      </div>
+  const rawReturnTo = (location.state as { from?: string } | null)?.from ?? searchParams.get('returnTo')
+  const returnTo = sanitizeReturnTo(rawReturnTo)
+
+  useEffect(() => {
+    // Chỉ chuyển hướng khi có session, hoàn tất kiểm tra tài khoản và có returnTo nội bộ hợp lệ
+    if (!session || isChecking || !currentUser || !returnTo) return
+
+    // Nếu quay lại khu vực /admin, bắt buộc phải có role ADMIN
+    if (returnTo.startsWith('/admin')) {
+      if (isAdmin) {
+        navigate(returnTo, { replace: true })
+      }
+      // Tài khoản không có role ADMIN tuyệt đối không được chuyển vào admin
+    } else {
+      navigate(returnTo, { replace: true })
+    }
+  }, [session, isChecking, currentUser, isAdmin, returnTo, navigate])
+
+  if (returnTo && status === 'restoring') {
+    return <PageLoading />
+  }
+
+  const hasForbiddenAdminAttempt =
+    Boolean(session && !isChecking && currentUser && returnTo?.startsWith('/admin') && !isAdmin)
+
+  return (
+    <div style={{ width: '100%' }}>
+      {hasForbiddenAdminAttempt && (
+        <div style={{ maxWidth: 640, margin: '0 auto 16px' }} role="alert">
+          <Alert
+            type="warning"
+            showIcon
+            title="Tài khoản không có quyền quản trị viên"
+            description={`Tài khoản ${currentUser?.email ?? ''} không có quyền ADMIN để truy cập ${returnTo}.`}
+          />
+        </div>
+      )}
+      <AuthModal isOpen initialMode="login" variant="checkout" onClose={() => { if (!authenticated.current) void navigate('/', { replace: true }) }} onSuccess={() => { authenticated.current = true; if (!returnTo) void navigate('/', { replace: true }) }} />
     </div>
   )
 }
