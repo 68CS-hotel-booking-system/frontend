@@ -7,9 +7,12 @@ import { HotelDetailPage } from './HotelDetailPage'
 it('shows room cards and server prices while ignoring multiple-room links', () => {
   const id = '11111111-1111-4111-8111-111111111111'
   const roomId = '22222222-2222-4222-8222-222222222222'
+  const photoId = '33333333-3333-4333-8333-333333333333'
   const client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity } } })
   client.setQueryData(['hotels', 'public-detail', id], { id, name: 'Khách sạn A', address: 'Hà Nội', checkInTime: '14:00', checkOutTime: '12:00', amenities: [{ id: 'parking', code: 'FREE_PARKING', name: 'Bãi đỗ xe miễn phí', category: 'HOTEL' }] })
   client.setQueryData(['hotels', 'public-room-types', id], [{ id: roomId, name: 'Deluxe', description: 'Phòng có ban công', maxAdults: 2, maxChildren: 1, amenities: [{ id: 'wifi', name: 'Wi-Fi' }] }])
+  client.setQueryData(['room-type-images', id, roomId, 'public'], [{ mediaId: photoId }])
+  client.setQueryData(['signed-media-image', `public-room:${id}:${roomId}`, photoId], { url: 'https://example.test/deluxe.jpg' })
   client.setQueryData(['discovery', 'availability', id, { checkIn: '2099-01-10', checkOut: '2099-01-12', adults: 2, children: 0, quantity: 1 }], { roomTypes: [{ roomTypeId: roomId, maxOccupancy: 2, isAvailable: true, availableQuantity: 3, pricePerNight: 1200000, totalEstimatedPrice: 2400000, currency: 'VND' }] })
   const markup = renderToStaticMarkup(<QueryClientProvider client={client}><MemoryRouter initialEntries={[`/stays/${id}?checkIn=2099-01-10&checkOut=2099-01-12&adults=2&quantity=8`]}><Routes><Route path="/stays/:hotelId" element={<HotelDetailPage />} /></Routes></MemoryRouter></QueryClientProvider>)
   expect(markup).toContain('Phòng có ban công')
@@ -30,6 +33,8 @@ it('shows room cards and server prices while ignoring multiple-room links', () =
   const roomSection = markup.slice(markup.indexOf('id="stay-rooms"'), markup.indexOf('id="stay-amenities"'))
   const priceCard = markup.slice(markup.indexOf('<aside id="stay-booking"'), markup.indexOf('</aside>'))
   expect(roomSection).not.toContain('type="date"')
+  expect(roomSection).toContain('https://example.test/deluxe.jpg')
+  expect(roomSection).toContain('Xem 1 ảnh của Deluxe')
   expect(priceCard.match(/class="hotel-stay-date-trigger"/g)).toHaveLength(2)
   expect(priceCard).toContain('10/01/2099')
   expect(priceCard).toContain('12/01/2099')

@@ -3,6 +3,7 @@ import { Modal } from 'antd'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
 import { usePublicHotelDetailQuery } from '@/features/hotels'
 import { checkoutHref } from '@/features/bookings'
+import { PublicRoomTypePhotos } from '@/features/rooms'
 import { AuthModal, useSession } from '@/features/auth'
 import { ClientGuestPicker, ClientStayDatePicker, ClientHotelGallery, HotelDetailActions, HotelDetailIcon, HotelAmenityIcon, useStayQuote, type StayParams } from '@/features/discovery'
 import '@/shared/styles/hotel-stay-detail.css'
@@ -120,10 +121,13 @@ export function HotelDetailPage() {
           const capacity = state?.maxOccupancy ?? room.maxOccupancy
           const selectedRoom = roomId === room.id
           return <article key={room.id} className={`hotel-room-card${selectedRoom ? ' is-selected' : ''}`}>
+            <div className="hotel-room-content">
+            <PublicRoomTypePhotos hotelId={hotelId} roomTypeId={room.id} name={room.name} />
             <div className="hotel-room-info"><div className="hotel-room-title"><h3>{room.name}</h3>{selectedRoom && <span className="hotel-room-selected">Đang chọn</span>}</div>{room.description && <p>{room.description}</p>}
               <ul className="hotel-room-chips" aria-label="Sức chứa"><li><HotelDetailIcon name="guests" /><span>{room.maxAdults} người lớn · {room.maxChildren} trẻ em</span></li>{capacity != null && <li>Tối đa {capacity} khách</li>}</ul>
               {!!room.amenities?.length && <ul className="hotel-room-amenities" aria-label="Tiện ích hạng phòng">{room.amenities.map(a => <li key={a.id}><HotelAmenityIcon code={a.code} />{a.name}</li>)}</ul>}
               <p className="hotel-room-status">{!valid ? 'Chọn ngày để kiểm tra phòng trống' : inventory.isFetching ? 'Đang kiểm tra phòng trống…' : inventory.isError ? 'Chưa xác định tình trạng phòng' : state?.isAvailable ? `Còn ${state.availableQuantity} phòng phù hợp` : 'Không có phòng phù hợp với lựa chọn này'}</p>
+            </div>
             </div>
             <div className="room-buy">
               <div className="room-buy-main">

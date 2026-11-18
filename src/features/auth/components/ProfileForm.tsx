@@ -1,11 +1,14 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Alert, Button, Input, Tooltip } from 'antd'
+import { Alert, Button, Input } from 'antd'
 import { Controller, useForm } from 'react-hook-form'
 import { errorMessage } from '@/shared/api/api-error'
 import { applyApiFieldErrors } from '@/shared/lib/form-errors'
+import { acceptedImageTypes, imageUploadError } from '@/shared/lib/image-upload'
 import { AccountIcon } from '@/shared/ui/AccountIcon'
 import { useProfileMutation } from '../hooks/use-profile'
+import { useUploadUserAvatar } from '../hooks/use-user-avatar'
+import { UserAvatar } from './UserAvatar'
 import { profileRequestSchema, type CurrentUser, type UpdateProfileRequest } from '../api/auth-contracts'
 import '@/shared/styles/customer-profile.css'
 
@@ -28,6 +31,9 @@ function UnavailableField({ id, label, placeholder, wide = false, select = false
 
 export function ProfileForm({ user }: { user: CurrentUser }) {
   const mutation = useProfileMutation()
+  const avatarUpload = useUploadUserAvatar(user.id)
+  const photoInput = useRef<HTMLInputElement>(null)
+  const [photoError, setPhotoError] = useState<string>()
   const [saved, setSaved] = useState(false)
   const submitting = useRef(false)
   const form = useForm<UpdateProfileRequest>({
@@ -57,10 +63,21 @@ export function ProfileForm({ user }: { user: CurrentUser }) {
     <section className="profile-card" aria-labelledby="profile-form-title">
       <h2 id="profile-form-title">Hồ sơ của bạn</h2>
       <div className="account-photo-row">
-        <span className="account-avatar account-avatar--large" aria-hidden="true">{user.fullName.trim().charAt(0).toUpperCase() || 'N'}</span>
+        <span className="account-avatar account-avatar--large" aria-hidden="true"><UserAvatar userId={user.id} name={user.fullName} /></span>
         <div className="account-photo-actions">
-          <Tooltip title="Tính năng đổi ảnh chưa khả dụng."><span className="account-photo-button"><Button htmlType="button" disabled aria-describedby="profile-photo-unavailable" icon={<AccountIcon name="upload" />}>Đổi ảnh</Button></span></Tooltip>
-          <p id="profile-photo-unavailable">JPG hoặc PNG, tối đa 5 MB. Đổi ảnh chưa khả dụng.</p>
+          <input ref={photoInput} type="file" accept={acceptedImageTypes} hidden onChange={event => {
+            const file = event.currentTarget.files?.[0]
+            event.currentTarget.value = ''
+            if (!file || avatarUpload.isPending) return
+            avatarUpload.reset()
+            const error = imageUploadError(file)
+            setPhotoError(error ?? undefined)
+            if (!error) avatarUpload.mutate(file)
+          }} />
+          <span className="account-photo-button"><Button htmlType="button" loading={avatarUpload.isPending} aria-describedby="profile-photo-hint" icon={<AccountIcon name="upload" />} onClick={() => photoInput.current?.click()}>Đổi ảnh</Button></span>
+          <p id="profile-photo-hint">JPG, PNG hoặc WebP, tối đa 5 MB.</p>
+          {(photoError || avatarUpload.isError) && <p className="account-field-error" role="alert">{photoError || errorMessage(avatarUpload.error)}</p>}
+          {avatarUpload.isSuccess && <p role="status">Đã cập nhật ảnh đại diện.</p>}
         </div>
       </div>
       <div className="account-field-grid profile-grid">
@@ -106,7 +123,7 @@ export function ProfileForm({ user }: { user: CurrentUser }) {
         <UnavailableField id="profile-birth-date" label="Ngày sinh" placeholder="dd/mm/yyyy" suffix={<AccountIcon name="calendar" />} />
         <UnavailableField id="profile-gender" label="Giới tính" placeholder="Chọn giới tính" select />
       </div>
-      <p className="account-privacy-note"><AccountIcon name="lock-small" />Bạn có thể cập nhật họ tên và số điện thoại. Các trường hồ sơ còn lại chưa hỗ trợ chỉnh sửa.</p>
+      <p className="account-privacy-note"><AccountIcon name="lock-small" />Bạn có thể cập nhật ảnh đại diện, họ tên và số điện thoại.</p>
     </section>
     <section className="profile-card" aria-labelledby="profile-address-title">
       <h2 id="profile-address-title">Địa chỉ</h2>

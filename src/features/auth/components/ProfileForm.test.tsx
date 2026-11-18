@@ -18,6 +18,8 @@ it('shows the signed-in profile, verification status and unavailable sections', 
   expect(html).toContain('qa@example.invalid')
   expect(html).toContain('Đã xác minh')
   expect(html).toContain('Xác minh danh tính')
+  expect(html).toContain('Đổi ảnh')
+  expect(html).toContain('accept="image/jpeg,image/png,image/webp"')
   expect(html.match(/<input[^>]*id="profile-address"[^>]*>/)?.[0]).toContain('disabled')
   expect(html.match(/<input[^>]*id="profile-phone"[^>]*>/)?.[0]).not.toContain('disabled')
   expect(html.match(/<input[^>]*id="profile-phone"[^>]*>/)?.[0]).toContain('value="0900000000"')

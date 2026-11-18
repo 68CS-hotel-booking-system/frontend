@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router'
 import { App, Dropdown, type MenuProps } from 'antd'
-import { useAuthAction, useCurrentUser, useSession } from '@/features/auth'
+import { UserAvatar, useAuthAction, useCurrentUser, useSession } from '@/features/auth'
 import { errorMessage } from '@/shared/api/api-error'
 import { ClientReferenceBrand, ClientReferenceIcon } from './ClientReferenceIcon'
 import { clientNavigation, isStaySection } from '../model/client-navigation'
@@ -58,7 +58,13 @@ export function ClientSiteHeader({ savedCount, onOpenMobileMenu, isMobileMenuOpe
         {savedCount > 0 && <span aria-hidden="true">{savedCount}</span>}
       </NavLink>
       <Dropdown open={menuOpen} onOpenChange={setMenuOpen} menu={{ items, onClick: () => setMenuOpen(false) }} trigger={['click']} placement="bottomRight" classNames={{ root: 'cf-account-dropdown ref-theme ref-account-dropdown' }}>
-        <button type="button" className="ref-user-pill" aria-label={session ? `Menu tài khoản ${userName}` : 'Menu tài khoản'}><span className="ref-user-initial" aria-hidden="true">{session ? userName.trim().charAt(0).toUpperCase() : <ClientReferenceIcon name="user" />}</span></button>
+        <button type="button" className="ref-user-pill" aria-label={session ? `Menu tài khoản ${userName}` : 'Menu tài khoản'}>
+          <span className="ref-user-initial" aria-hidden="true">
+            {session
+              ? (currentUser ? <UserAvatar userId={currentUser.id} name={userName} /> : userName.trim().charAt(0).toUpperCase())
+              : <ClientReferenceIcon name="user" />}
+          </span>
+        </button>
       </Dropdown>
       <button type="button" className="stayhub-icon-link stayhub-mobile-trigger" id="client-mobile-menu-trigger"
         aria-label="Mở menu điều hướng" aria-haspopup="dialog" aria-expanded={isMobileMenuOpen}

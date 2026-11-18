@@ -87,28 +87,7 @@ export async function getHotelImages(
   })
 }
 
-export const mediaAccessResponseSchema = z.object({
-  mediaId: z.string().uuid(),
-  url: z.string(),
-  expiresAt: z.string().optional(),
-})
-
-export type MediaAccessDto = z.infer<typeof mediaAccessResponseSchema>
-
-/**
- * Get direct/presigned access URL for a media item.
- * GET /api/v1/media/{mediaId}/access
- */
-export async function getMediaAccess(
-  mediaId: string,
-  signal?: AbortSignal,
-): Promise<MediaAccessDto> {
-  return http.request(`/media/${encodeURIComponent(mediaId)}/access`, {
-    method: 'GET',
-    signal,
-    schema: mediaAccessResponseSchema,
-  })
-}
+export { getMediaAccess, mediaAccessResponseSchema, type MediaAccessDto } from '@/shared/api/media-access'
 
 const galleryWrites = new Map<string, Promise<unknown>>()
 
