@@ -30,6 +30,9 @@ export function AuthModal({
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
 
   const cardRef = useRef<HTMLDivElement>(null)
+  const positionerRef = useRef<HTMLDivElement>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
   const formContainerRef = useRef<HTMLDivElement>(null)
   const previousActiveElement = useRef<HTMLElement | null>(null)
   const [formHeight, setFormHeight] = useState<number | undefined>(undefined)
@@ -144,6 +147,55 @@ export function AuthModal({
     }
   }, [mounted, isOpen])
 
+  useEffect(() => {
+    const viewport = window.visualViewport
+    const positioner = positionerRef.current
+    const body = bodyRef.current
+    if (!mounted || !viewport || !positioner || !body) return
+
+    let frame = 0
+    const updateViewport = () => {
+      // The on-screen keyboard can shrink only the visual viewport.
+      const atDefaultScale = viewport.scale === 1
+      positioner.style.setProperty(
+        '--auth-viewport-top',
+        atDefaultScale ? `${viewport.offsetTop}px` : '',
+      )
+      positioner.style.setProperty(
+        '--auth-viewport-height',
+        atDefaultScale ? `${viewport.height}px` : '',
+      )
+
+      const focused = document.activeElement
+      if (!atDefaultScale || !(focused instanceof HTMLInputElement) || !body.contains(focused)) return
+
+      const field = focused.getBoundingClientRect()
+      const scrollArea = body.getBoundingClientRect()
+      const topOverflow = field.top - scrollArea.top - 12
+      const bottomOverflow = field.bottom - scrollArea.bottom + 12
+      if (topOverflow < 0) {
+        body.scrollTop += topOverflow
+      } else if (bottomOverflow > 0) {
+        body.scrollTop += bottomOverflow
+      }
+    }
+
+    function scheduleViewportUpdate() {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(updateViewport)
+    }
+
+    updateViewport()
+    viewport.addEventListener('resize', scheduleViewportUpdate)
+    viewport.addEventListener('scroll', scheduleViewportUpdate)
+
+    return () => {
+      viewport.removeEventListener('resize', scheduleViewportUpdate)
+      viewport.removeEventListener('scroll', scheduleViewportUpdate)
+      cancelAnimationFrame(frame)
+    }
+  }, [mounted])
+
   // Xử lý phím Escape
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -156,7 +208,7 @@ export function AuthModal({
       // Focus trap (giữ phím Tab bên trong modal)
       if (e.key === 'Tab' && cardRef.current) {
         const focusableElements = cardRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          ':is(button, [href], input:not([type="hidden"]), select, textarea, [tabindex]):not(:disabled, [tabindex="-1"])',
         )
         if (focusableElements.length === 0) return
 
@@ -180,30 +232,23 @@ export function AuthModal({
   )
 
   useEffect(() => {
-    if (mounted) {
-      window.addEventListener('keydown', handleKeyDown)
-      // Tự động focus ô Email khi modal mở ra
-      const timer = setTimeout(() => {
-        if (cardRef.current) {
-          const emailInput = cardRef.current.querySelector<HTMLInputElement>(
-            'input[type="email"]',
-          )
-          if (emailInput) {
-            emailInput.focus()
-          } else {
-            const firstInput = cardRef.current.querySelector<HTMLInputElement>(
-              'input:not([disabled])',
-            )
-            firstInput?.focus()
-          }
-        }
-      }, 50)
-      return () => {
-        window.removeEventListener('keydown', handleKeyDown)
-        clearTimeout(timer)
-      }
-    }
-  }, [mounted, handleKeyDown])
+    if (!mounted || !isOpen) return
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [mounted, isOpen, handleKeyDown])
+
+  useEffect(() => {
+    const body = bodyRef.current
+    if (!mounted || !isOpen || !body) return
+
+    body.scrollTop = 0
+    const email = window.matchMedia('(pointer: coarse)').matches
+      ? null
+      : body.querySelector<HTMLInputElement>('input[type="email"]')
+    // Keep the keyboard closed on touch devices until the user taps a field.
+    const target = email ?? closeButtonRef.current
+    target?.focus({ preventScroll: true })
+  }, [mounted, isOpen, mode])
 
   if (!mounted) return null
 
@@ -235,65 +280,68 @@ export function AuthModal({
       />
 
       {/* Thẻ Modal chính */}
-      <div
-        className="auth-modal-card"
-        ref={cardRef}
-        style={{ transformOrigin }}
-      >
-        {/* Nút đóng góc phải */}
-        <button
-          type="button"
-          className="auth-modal-close-btn"
-          onClick={onClose}
-          aria-label="Đóng cửa sổ đăng nhập"
+      <div className="auth-modal-positioner" ref={positionerRef}>
+        <div
+          className="auth-modal-card"
+          ref={cardRef}
+          style={{ transformOrigin }}
         >
-          <CloseOutlined />
-        </button>
-
-        {/* Nội dung modal */}
-        <div className="auth-modal-body">
-          {/* Huy hiệu thương hiệu */}
-          {variant !== 'checkout' && <div className="auth-modal-brand-badge auth-stagger-item auth-stagger-1">
-            <span className="auth-modal-compass" aria-hidden="true">
-              <CompassOutlined />
-            </span>
-            <span className="auth-modal-brand-name">StayHub</span>
-          </div>}
-
-          {/* Tiêu đề & phụ đề */}
-          <div className="auth-modal-head auth-stagger-item auth-stagger-2">
-            <h2 className="auth-modal-title" id={titleId}>
-              {variant === 'checkout' ? (mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản') : (mode === 'login' ? 'Đăng nhập tài khoản' : 'Tạo tài khoản mới')}
-            </h2>
-            <p className="auth-modal-subtitle" id={subtitleId}>
-              {variant === 'checkout' ? (mode === 'login' ? 'Đăng nhập để tiếp tục thanh toán.' : 'Tạo tài khoản để tiếp tục đặt phòng.') : mode === 'login'
-                ? 'Đăng nhập để đặt phòng và theo dõi các đơn của bạn'
-                : 'Trở thành thành viên để nhận đặc quyền và ưu đãi lưu trú'}
-            </p>
-          </div>
-
-          {/* Form đăng nhập hoặc đăng ký với container chuyển đổi chiều cao mượt mà */}
-          <div
-            className="auth-modal-height-animator"
-            style={{ height: formHeight ? `${formHeight}px` : undefined }}
+          {/* Nút đóng góc phải */}
+          <button
+            ref={closeButtonRef}
+            type="button"
+            className="auth-modal-close-btn"
+            onClick={onClose}
+            aria-label="Đóng"
           >
-            <div ref={formContainerRef} className="auth-form-slide">
-              {mode === 'login' ? (
-                <ClientLoginForm
-                  key="modal-login-form"
-                  defaultEmail={persistedEmail}
-                  onSuccess={handleLoginSuccess}
-                  onSwitchToRegister={(email) => handleSwitchMode('register', email)}
-                  inModal
-                />
-              ) : (
-                <ClientRegisterForm
-                  key="modal-register-form"
-                  defaultEmail={persistedEmail}
-                  onSwitchToLogin={(email) => handleSwitchMode('login', email)}
-                  inModal
-                />
-              )}
+            <CloseOutlined />
+          </button>
+
+          {/* Nội dung modal */}
+          <div className="auth-modal-body" ref={bodyRef}>
+            {/* Huy hiệu thương hiệu */}
+            {variant !== 'checkout' && <div className="auth-modal-brand-badge auth-stagger-item auth-stagger-1">
+              <span className="auth-modal-compass" aria-hidden="true">
+                <CompassOutlined />
+              </span>
+              <span className="auth-modal-brand-name">StayHub</span>
+            </div>}
+
+            {/* Tiêu đề & phụ đề */}
+            <div className="auth-modal-head auth-stagger-item auth-stagger-2">
+              <h2 className="auth-modal-title" id={titleId}>
+                {variant === 'checkout' ? (mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản') : (mode === 'login' ? 'Đăng nhập tài khoản' : 'Tạo tài khoản mới')}
+              </h2>
+              <p className="auth-modal-subtitle" id={subtitleId}>
+                {variant === 'checkout' ? (mode === 'login' ? 'Đăng nhập để tiếp tục thanh toán.' : 'Tạo tài khoản để tiếp tục đặt phòng.') : mode === 'login'
+                  ? 'Đăng nhập để đặt phòng và theo dõi các đơn của bạn'
+                  : 'Trở thành thành viên để nhận đặc quyền và ưu đãi lưu trú'}
+              </p>
+            </div>
+
+            {/* Form đăng nhập hoặc đăng ký với container chuyển đổi chiều cao mượt mà */}
+            <div
+              className="auth-modal-height-animator"
+              style={{ height: formHeight ? `${formHeight}px` : undefined }}
+            >
+              <div ref={formContainerRef} className="auth-form-slide">
+                {mode === 'login' ? (
+                  <ClientLoginForm
+                    key="modal-login-form"
+                    defaultEmail={persistedEmail}
+                    onSuccess={handleLoginSuccess}
+                    onSwitchToRegister={(email) => handleSwitchMode('register', email)}
+                    inModal
+                  />
+                ) : (
+                  <ClientRegisterForm
+                    key="modal-register-form"
+                    defaultEmail={persistedEmail}
+                    onSwitchToLogin={(email) => handleSwitchMode('login', email)}
+                    inModal
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
