@@ -47,15 +47,15 @@ it('renders an explicit sign-in button in place of the account menu for visitors
   expect(state.items).toEqual([])
 })
 
-function renderHeader() {
-  return renderToStaticMarkup(<MemoryRouter><ClientSiteHeader savedCount={0}
+function renderHeader(path = '/') {
+  return renderToStaticMarkup(<MemoryRouter initialEntries={[path]}><ClientSiteHeader savedCount={0}
     onOpenMobileMenu={vi.fn()} /></MemoryRouter>)
 }
 
 it('places the owner dashboard entry directly below the account entry', () => {
   state.session = { accessToken: 'test' }
   state.isOwner = true
-  const html = renderHeader()
+  const html = renderHeader('/account')
   expect(html).not.toContain('Đăng ký khách sạn')
   expect(state.items.slice(0, 2).map(item => item.label)).toEqual(['Tài khoản của tôi', 'Khách sạn của tôi'])
   state.items[1].onClick?.()
@@ -65,7 +65,7 @@ it('places the owner dashboard entry directly below the account entry', () => {
 it('shows the signed-in guest identity in the avatar menu and opens their profile', () => {
   state.session = { accessToken: 'test' }
   state.user = { id: 'user-1', fullName: 'Khách StayHub', email: 'guest@example.test' }
-  const html = renderHeader()
+  const html = renderHeader('/account')
   expect(html).toContain('Menu tài khoản Khách StayHub')
   expect(html).toContain('guest@example.test')
   expect(html).toContain('Xem thông tin cá nhân')
@@ -76,9 +76,18 @@ it('shows the signed-in guest identity in the avatar menu and opens their profil
 it.each(['guest', 'customer', 'admin'])('hides the owner entry and registration link for %s', (role) => {
   state.session = role === 'guest' ? null : { accessToken: 'test' }
   state.isAdmin = role === 'admin'
-  expect(renderHeader()).not.toContain('Đăng ký khách sạn')
+  expect(renderHeader('/account')).not.toContain('Đăng ký khách sạn')
   expect(state.items.some(item => item.key === 'my-hotels')).toBe(false)
   expect(state.items.some(item => item.key === 'admin')).toBe(role === 'admin')
+})
+
+it.each(['/', '/experiences', '/my-bookings', '/account?section=security'])('links the signed-in avatar directly to the profile from %s', (path) => {
+  state.session = { accessToken: 'test' }
+  state.user = { id: 'user-1', fullName: 'Khách StayHub', email: 'guest@example.test' }
+  const html = renderHeader(path)
+  expect(html).toContain('href="/account"')
+  expect(html).toContain('aria-label="Xem thông tin cá nhân của Khách StayHub"')
+  expect(state.items).toEqual([])
 })
 
 it('links experiences, services and saved stays to their own routes', () => {
