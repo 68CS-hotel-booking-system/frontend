@@ -1,11 +1,9 @@
 :root { --client-surface: #fff; --client-surface-muted: #f7f7f7; --client-media-surface: #f5f5f5; --client-ink: #222; --client-price: #171717; --client-muted: #626262; --client-line: #ebebeb; --client-selected: #ededed; --client-control: #b0b0b0; --client-control-muted: #e0e0e0; --client-rule: #d4d4d4; --client-skeleton: #e5e5e5; --client-accent: #ff385c; --client-accent-hover: #e31c5f; --client-action: #c90848; --client-accent-soft: #fff1f3; --client-error: #b42318; }
-@font-face { font-family: 'Liberation Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url('/assets/client-figma/LiberationSans-Regular.ttf') format('truetype'); }
-@font-face { font-family: 'Liberation Sans'; font-style: normal; font-weight: 700; font-display: swap; src: url('/assets/client-figma/LiberationSans-Bold.ttf') format('truetype'); }
 
-.client-theme { --paper: var(--client-surface); --paper-deep: var(--client-surface-muted); --paper-trans: var(--client-surface); --ink: var(--client-ink); --ink-soft: var(--client-ink); --muted: var(--client-muted); --meta: var(--client-muted); --line: var(--client-line); --line-soft: var(--client-line); --accent: var(--client-accent); --accent-hover: var(--client-accent-hover); --accent-active: var(--client-action); --accent-pale: var(--client-accent-soft); --price: var(--client-price); --sans: 'Liberation Sans', Arial, sans-serif; --serif: 'Liberation Sans', Arial, sans-serif; font-family: var(--sans); font-size: 14px; line-height: 1.5; background: var(--client-surface); color: var(--client-ink); }
+.client-theme { --paper: var(--client-surface); --paper-deep: var(--client-surface-muted); --paper-trans: var(--client-surface); --ink: var(--client-ink); --ink-soft: var(--client-ink); --muted: var(--client-muted); --meta: var(--client-muted); --line: var(--client-line); --line-soft: var(--client-line); --accent: var(--client-accent); --accent-hover: var(--client-accent-hover); --accent-active: var(--client-action); --accent-pale: var(--client-accent-soft); --price: var(--client-price); --sans: 'Be Vietnam Pro', Arial, sans-serif; --serif: 'Be Vietnam Pro', Arial, sans-serif; font-family: var(--sans); font-size: 14px; line-height: 1.5; background: var(--client-surface); color: var(--client-ink); }
 .client-theme > #main { padding: 0; outline: none; }
 .cf-icon { display: block; max-width: none; flex-shrink: 0; }
-.cf-site-header, .cf-listings-page, .cf-site-footer { font-family: 'Liberation Sans', Arial, sans-serif; color: var(--client-ink); }
+.cf-site-header, .cf-listings-page, .cf-site-footer { font-family: 'Be Vietnam Pro', Arial, sans-serif; color: var(--client-ink); }
 .cf-site-header *, .cf-listings-page *, .cf-site-footer * { box-sizing: border-box; }
 .cf-site-header a, .cf-listings-page a, .cf-site-footer a { color: inherit; text-decoration: none; }
 .cf-site-header button, .cf-listings-page button, .cf-site-footer button { font-family: inherit; cursor: pointer; }
@@ -40,7 +38,7 @@
 .cf-destination-select .ant-select-content { padding-inline: 0; }
 .cf-destination-select .ant-select-placeholder { color: var(--client-muted); }
 .cf-destination-select input:focus { outline: none; box-shadow: none; }
-.cf-destination-popup { padding: 8px; border: 1px solid var(--client-line); border-radius: 16px; font-family: 'Liberation Sans', Arial, sans-serif; }
+.cf-destination-popup { padding: 8px; border: 1px solid var(--client-line); border-radius: 16px; font-family: 'Be Vietnam Pro', Arial, sans-serif; }
 .cf-destination-popup .ant-select-item { min-height: 44px; padding: 12px; border-radius: 8px; color: var(--client-ink); }
 .cf-destination-popup.ant-select-dropdown .ant-select-item.ant-select-item-option-active:not(.ant-select-item-option-disabled) { background: var(--client-surface-muted); }
 .cf-destination-popup.ant-select-dropdown .ant-select-item.ant-select-item-option-selected:not(.ant-select-item-option-disabled) { background: var(--client-selected); font-weight: 700; }
@@ -67,7 +65,7 @@
 .cf-search-submit { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--client-accent); box-shadow: 0 4px 6px -1px #0000001a, 0 2px 4px -2px #0000001a; }
 .cf-search-submit:hover { background: var(--client-accent-hover); }
 .cf-search-error { color: var(--client-error); max-width: 896px; margin: 12px auto 0; }
-.cf-guest-content { width: 320px; max-width: calc(100vw - 64px); padding: 8px; font-family: 'Liberation Sans', Arial, sans-serif; }
+.cf-guest-content { width: 320px; max-width: calc(100vw - 64px); padding: 8px; font-family: 'Be Vietnam Pro', Arial, sans-serif; }
 .cf-guest-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
 .cf-guest-row strong { display: block; font-size: 16px; }
 .cf-guest-row small { display: block; margin-top: 4px; color: var(--client-muted); font-size: 13px; }
@@ -139,7 +137,7 @@
 .cf-footer-legal button { color: inherit; font: inherit; }
 .cf-footer-locale { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
 .cf-footer-locale button { display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--client-ink); }
-.cf-filters-form { display: grid; gap: 20px; padding-top: 20px; font-family: 'Liberation Sans', Arial, sans-serif; }
+.cf-filters-form { display: grid; gap: 20px; padding-top: 20px; font-family: 'Be Vietnam Pro', Arial, sans-serif; }
 .cf-filters-form label { display: grid; gap: 8px; }
 .cf-filters-form input, .cf-filters-form select { min-height: 44px; padding: 10px 12px; border: 1px solid var(--client-control); border-radius: 8px; font: inherit; background: var(--client-surface); }
 .cf-filters-form label > span { color: var(--client-error); }

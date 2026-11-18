@@ -37,8 +37,8 @@ beforeEach(() => {
 })
 
 function renderHeader() {
-  return renderToStaticMarkup(<MemoryRouter><ClientSiteHeader savedCount={0} isSavedActive={false}
-    pulseSaved={false} onToggleSaved={vi.fn()} onOpenMobileMenu={vi.fn()} /></MemoryRouter>)
+  return renderToStaticMarkup(<MemoryRouter><ClientSiteHeader savedCount={0}
+    onOpenMobileMenu={vi.fn()} /></MemoryRouter>)
 }
 
 it('places the owner dashboard entry directly below the account entry', () => {
@@ -59,9 +59,11 @@ it.each(['guest', 'customer', 'admin'])('hides the owner entry and registration 
   expect(state.items.some(item => item.key === 'admin')).toBe(role === 'admin')
 })
 
-it('shows the requested experiences and services navigation alongside stays', () => {
+it('links experiences, services and saved stays to their own routes', () => {
   const html = renderHeader()
   expect(html).toContain('Trải nghiệm')
   expect(html).toContain('Dịch vụ')
-  expect(html).toContain('id="client-account-menu-trigger"')
+  expect(html).toContain('href="/experiences"')
+  expect(html).toContain('href="/services"')
+  expect(html).toContain('href="/saved-stays"')
 })

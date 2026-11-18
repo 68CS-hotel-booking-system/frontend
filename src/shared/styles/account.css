@@ -9,7 +9,6 @@
 .account-table { overflow-x: auto; }
 .account-table-hint { display: none; }
 .account-member-id { overflow-wrap: anywhere; font-size: 12px; }
-@font-face { font-family: Inter; font-style: normal; font-weight: 100 900; font-display: swap; src: url('/assets/detail-figma/Inter-Variable.ttf') format('truetype'); }
 
 /* Figma 3:188: 1120px = 240px navigation + 48px gap + 832px content. */
 .customer-account-shell { --account-ink: #222; --account-muted: #717171; --account-line: #ddd; --account-rule: #ebebeb; --account-control: #b0b0b0; --account-accent: #ff385c; --account-soft: #f7f7f7; --account-active: #f3f3f3; background: #fff; color: var(--account-ink); font-family: Inter, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.5; }

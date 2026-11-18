@@ -1,5 +1,6 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react'
 import { Modal, Popover } from 'antd'
+import { CloseOutlined, LeftOutlined, QuestionCircleOutlined, RightOutlined } from '@ant-design/icons'
 import { displayStayDate, isStayDate, selectStayDate, stayNights, type StayDateRange } from '../model/stay-date-selection'
 import '@/shared/styles/client-stay-calendar.css'
 
@@ -9,7 +10,11 @@ const iso = (date: Date) => date.toISOString().slice(0, 10)
 const monthOf = (date: string) => new Date(`${date.slice(0, 7)}-01T00:00:00Z`)
 const shiftMonth = (date: Date, step: number) => new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + step, 1))
 const longDate = (date: string) => `${Number(date.slice(8))} thg ${Number(date.slice(5, 7))} ${date.slice(0, 4)}`
-const asset = (name: string) => <img src={`/assets/calendar-figma/${name}.svg`} alt="" />
+const calendarIcons = { close: CloseOutlined, previous: LeftOutlined, next: RightOutlined, keyboard: QuestionCircleOutlined }
+function asset(name: keyof typeof calendarIcons) {
+  const Icon = calendarIcons[name]
+  return <Icon aria-hidden="true" />
+}
 
 export function ClientStayDatePicker(props: Props) {
   const [open, setOpen] = useState(false)
