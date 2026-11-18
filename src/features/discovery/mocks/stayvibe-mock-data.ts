@@ -1,4 +1,4 @@
-import type { VibeCategoryItem, BentoDestinationItem, StayVibeHotelItem, FooterLinkGroup } from '../model/discovery'
+import type { VibeCategoryItem, BentoDestinationItem, StayVibeHotelItem } from '../model/discovery'
 
 /**
  * Dữ liệu mẫu (Mock Data) phục vụ dựng khung giao diện (UI Skeleton) theo design.md.
@@ -63,26 +63,3 @@ export const QUICK_LOCATION_SUGGESTIONS: string[] = [
   'Đà Lạt',
 ]
 
-export const STAYVIBE_FOOTER_GROUPS: FooterLinkGroup[] = [
-  {
-    id: 'discover',
-    title: 'Khám phá theo phong cách',
-    links: [
-      { label: 'Glamping & Săn mây Đà Lạt', href: '#vibe-section', badge: 'Hot' },
-    ],
-  },
-  {
-    id: 'partner-ops',
-    title: 'Dành cho Đối tác & Quản trị',
-    links: [
-      { label: 'Quản lý khách sạn', href: '/management/hotels' },
-    ],
-  },
-  {
-    id: 'transparency',
-    title: 'Hỗ trợ & Chính sách',
-    links: [
-      { label: 'Chính sách hoàn hủy linh hoạt', href: '#hotels-section' },
-    ],
-  },
-]

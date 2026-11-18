@@ -51,12 +51,3 @@ export interface StayVibeHotelItem {
   images: string[]
 }
 
-export interface FooterLinkGroup {
-  id: string
-  title: string
-  links: Array<{
-    label: string
-    href: string
-    badge?: string
-  }>
-}

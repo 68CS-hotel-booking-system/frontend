@@ -8,8 +8,8 @@ const categories = [
   { key: 'children', label: 'Trẻ em', description: 'Độ tuổi 2 – 12' },
 ] as const
 
-export function ClientGuestPicker({ value, roomTypes, selectedRoomId, onChange, label = 'Khách / phòng', showRoomCount = false }: {
-  value: GuestSelection; roomTypes: GuestCapacity[]; selectedRoomId: string; onChange: (value: GuestSelection) => void; label?: string; showRoomCount?: boolean
+export function ClientGuestPicker({ value, roomTypes, selectedRoomId, onChange, label = 'Khách / phòng', showRoomCount = false, mode = 'capacity', variant = 'default' }: {
+  value: GuestSelection; roomTypes: GuestCapacity[]; selectedRoomId: string; onChange: (value: GuestSelection) => void; label?: string; showRoomCount?: boolean; mode?: 'capacity' | 'search'; variant?: 'default' | 'reference'
 }) {
   const [open, setOpen] = useState(false)
   const trigger = useRef<HTMLButtonElement>(null)
@@ -26,8 +26,11 @@ export function ClientGuestPicker({ value, roomTypes, selectedRoomId, onChange, 
   const id = useId()
   const selected = roomTypes.find(room => room.id === selectedRoomId)
   const candidates = selected ? [selected] : roomTypes
-  const supported = canAccommodateGuests(candidates, value)
-  const capacity = selected
+  const canSelect = (guests: GuestSelection) => mode === 'search'
+    ? Number.isInteger(guests.adults) && Number.isInteger(guests.children) && guests.adults >= 1 && guests.children >= 0 && guests.adults + guests.children <= 50
+    : canAccommodateGuests(candidates, guests)
+  const supported = canSelect(value)
+  const capacity = mode === 'search' ? 'Tìm chỗ nghỉ cho một phòng, tối đa 50 khách.' : selected
     ? selected.maxOccupancy !== undefined
       ? `Chỗ ở này cho phép tối đa ${selected.maxOccupancy} khách/phòng.`
       : `Tối đa ${selected.maxAdults} người lớn, ${selected.maxChildren} trẻ em/phòng.`
@@ -55,7 +58,7 @@ export function ClientGuestPicker({ value, roomTypes, selectedRoomId, onChange, 
                   <img src="/assets/guest-picker-figma/minus.svg" alt="" aria-hidden="true" />
                 </Button>
                 <output aria-live="polite" aria-label={`Số ${categoryLabel.toLowerCase()}`}>{Number.isFinite(count) ? count : '—'}</output>
-                <Button shape="circle" aria-label={`Tăng số ${categoryLabel.toLowerCase()}`} disabled={!canAccommodateGuests(candidates, increment)}
+                <Button shape="circle" aria-label={`Tăng số ${categoryLabel.toLowerCase()}`} disabled={!canSelect(increment)}
                   onClick={() => onChange(increment)}>
                   <img src="/assets/guest-picker-figma/plus.svg" alt="" aria-hidden="true" />
                 </Button>
@@ -70,12 +73,12 @@ export function ClientGuestPicker({ value, roomTypes, selectedRoomId, onChange, 
     <div className="client-guest-close"><Button type="text" onClick={close}>Đóng</Button></div>
   </div>
   return <div className="client-guest-field">
-    <Popover content={content} trigger="click" placement="bottomRight" arrow={false} align={{ offset: [0, 0] }} autoAdjustOverflow={false} open={open} onOpenChange={setOpen}
+    <Popover content={content} trigger="click" placement="bottomRight" arrow={false} align={{ offset: [0, 0] }} autoAdjustOverflow={mode === 'search'} open={open} onOpenChange={setOpen}
       afterOpenChange={isOpen => { if (isOpen) dialog.current?.focus({ preventScroll: true }) }}
-      classNames={{ root: 'client-guest-popover' }} styles={{ root: { width: popupWidth || undefined }, container: { padding: 0, background: 'transparent', boxShadow: 'none' } }}>
-      <button ref={trigger} type="button" className={`client-guest-trigger ${open ? 'is-open' : ''}`} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? id : undefined} onKeyDown={event => { if (event.key === 'Escape') close() }}>
-        <span><small>{label}</small><strong aria-live="polite" aria-atomic="true">{Number.isFinite(value.adults + value.children) ? value.adults + value.children : '—'} khách{showRoomCount ? ' · 1 phòng' : ''}</strong></span>
-        <span className="client-guest-chevron" aria-hidden="true"><img src="/assets/guest-picker-figma/chevron-up.svg" alt="" /></span>
+      classNames={{ root: `client-guest-popover${variant === 'reference' ? ' ref-theme ref-ui ref-guest-overlay' : ''}` }} styles={{ root: { width: mode === 'search' ? Math.max(320, popupWidth) : popupWidth || undefined }, container: { padding: 0, background: 'transparent', boxShadow: 'none' } }}>
+      <button ref={trigger} type="button" className={`client-guest-trigger ${open ? 'is-open' : ''}${variant === 'reference' ? ' ref-seg-btn' : ''}`} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? id : undefined} onKeyDown={event => { if (event.key === 'Escape') close() }}>
+        {variant === 'reference' ? <><span className="ref-seg-label">{label}</span><span className="ref-seg-value ref-is-set">{value.adults + value.children} khách</span></> : <><span><small>{label}</small><strong aria-live="polite" aria-atomic="true">{Number.isFinite(value.adults + value.children) ? value.adults + value.children : '—'} khách{showRoomCount ? ' · 1 phòng' : ''}</strong></span>
+        <span className="client-guest-chevron" aria-hidden="true"><img src="/assets/guest-picker-figma/chevron-up.svg" alt="" /></span></>}
       </button>
     </Popover>
   </div>

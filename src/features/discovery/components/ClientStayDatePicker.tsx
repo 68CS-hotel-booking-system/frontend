@@ -3,7 +3,7 @@ import { Modal, Popover } from 'antd'
 import { displayStayDate, isStayDate, selectStayDate, stayNights, type StayDateRange } from '../model/stay-date-selection'
 import '@/shared/styles/client-stay-calendar.css'
 
-type Props = StayDateRange & { today: string; onChange: (dates: StayDateRange) => void }
+type Props = StayDateRange & { today: string; onChange: (dates: StayDateRange) => void; variant?: 'split' | 'combined' }
 const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']
 const iso = (date: Date) => date.toISOString().slice(0, 10)
 const monthOf = (date: string) => new Date(`${date.slice(0, 7)}-01T00:00:00Z`)
@@ -13,21 +13,24 @@ const asset = (name: string) => <img src={`/assets/calendar-figma/${name}.svg`} 
 
 export function ClientStayDatePicker(props: Props) {
   const [open, setOpen] = useState(false)
+  const [initialSelecting, setInitialSelecting] = useState<'checkIn' | 'checkOut'>('checkIn')
   const trigger = useRef<HTMLButtonElement>(null)
   const dialogId = useId()
   return <>
-    {(['checkIn', 'checkOut'] as const).map(key => <button type="button" key={key} className="hotel-stay-date-trigger" aria-label={key === 'checkIn' ? 'Nhận phòng' : 'Trả phòng'} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? dialogId : undefined} onClick={event => { trigger.current = event.currentTarget; setOpen(true) }}>
+    {props.variant === 'combined' ? <button type="button" className="ref-seg-btn" aria-label="Nhận phòng · Trả phòng" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? dialogId : undefined} onClick={event => { trigger.current = event.currentTarget; setInitialSelecting('checkIn'); setOpen(true) }}>
+      <span className="ref-seg-label">Nhận phòng · Trả phòng</span><span className={`ref-seg-value${props.checkIn ? ' ref-is-set' : ''}`}>{props.checkIn ? `${displayStayDate(props.checkIn)} – ${props.checkOut ? displayStayDate(props.checkOut) : 'Chọn ngày trả phòng'}` : 'Thêm ngày'}</span>
+    </button> : (['checkIn', 'checkOut'] as const).map(key => <button type="button" key={key} className="hotel-stay-date-trigger" aria-label={key === 'checkIn' ? 'Nhận phòng' : 'Trả phòng'} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? dialogId : undefined} onClick={event => { trigger.current = event.currentTarget; setInitialSelecting(key === 'checkOut' && isStayDate(props.checkIn) ? 'checkOut' : 'checkIn'); setOpen(true) }}>
       <span>{key === 'checkIn' ? 'Nhận phòng' : 'Trả phòng'}</span><span>{displayStayDate(props[key])}</span>
     </button>)}
-    {open && <StayDateDialog {...props} dialogId={dialogId} onClose={() => { setOpen(false); requestAnimationFrame(() => trigger.current?.focus({ preventScroll: true })) }} />}
+    {open && <StayDateDialog {...props} initialSelecting={initialSelecting} dialogId={dialogId} onClose={() => { setOpen(false); requestAnimationFrame(() => trigger.current?.focus({ preventScroll: true })) }} />}
   </>
 }
 
-function StayDateDialog({ checkIn: initialCheckIn, checkOut: initialCheckOut, today, onChange, onClose, dialogId }: Props & { dialogId: string; onClose: () => void }) {
+function StayDateDialog({ checkIn: initialCheckIn, checkOut: initialCheckOut, today, onChange, onClose, dialogId, initialSelecting }: Props & { dialogId: string; onClose: () => void; initialSelecting: 'checkIn' | 'checkOut' }) {
   // Keep the visible selection immediate while the URL navigation commits its transition.
   const [{ checkIn, checkOut }, setDates] = useState({ checkIn: initialCheckIn, checkOut: initialCheckOut })
   const updateDates = (dates: StayDateRange) => { setDates(dates); onChange(dates) }
-  const [selecting, setSelecting] = useState<'checkIn' | 'checkOut'>('checkIn')
+  const [selecting, setSelecting] = useState(initialSelecting)
   const [month, setMonth] = useState(() => monthOf(isStayDate(checkIn) && checkIn >= today ? checkIn : today))
   const calendar = useRef<HTMLDivElement>(null)
   const statusId = useId()

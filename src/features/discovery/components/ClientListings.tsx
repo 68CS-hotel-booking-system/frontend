@@ -1,54 +1,57 @@
 import { useState } from 'react'
+import { useCurrentUser } from '@/features/auth'
 import { Link } from 'react-router'
-import { Alert, Modal, Pagination } from 'antd'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { Pagination } from 'antd'
 import { useClientListings } from '../hooks/use-client-listings'
 import { useClientHomeContext } from '../hooks/use-client-home-context'
-import { listingFiltersSchema, type ListingFilters } from '../model/client-listing-search'
+import { countListingFilters, updateListingFilters, type ListingFilters } from '../model/client-listing-search'
 import { ClientListingCard, ClientListingSkeleton } from './ClientListingCard'
 import { ClientListingSearchBar } from './ClientListingSearchBar'
-import { ClientFigmaIcon } from './ClientFigmaIcon'
+import { ClientReferenceIcon } from './ClientReferenceIcon'
+import { ClientFilterDrawer } from './ClientFilterDrawer'
 
-const CITY_ORDER = ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Đà Lạt', 'Huế', 'Phú Quốc', 'Cần Thơ', 'Hải Phòng', 'Nha Trang', 'Hội An', 'Sa Pa']
+const CITY_ORDER = ['Hà Nội', 'TP. Hồ Chí Minh', 'Thành phố Hồ Chí Minh', 'Đà Nẵng', 'Hội An', 'Huế', 'Đà Lạt', 'Phú Quốc', 'Cần Thơ', 'Hải Phòng', 'Nha Trang', 'Sa Pa']
 
 export function ClientListings({ showPromotion = true }: { showPromotion?: boolean }) {
   const flow = useClientListings()
+  const { isAuthorized } = useCurrentUser()
   const { savedIds, toggleSaved, filterState } = useClientHomeContext()
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const filters = useForm<ListingFilters>({ resolver: zodResolver(listingFiltersSchema), values: flow.parsed?.filters ?? { sort: 'name' } })
+  const currentFilters = flow.parsed?.filters ?? { sort: 'name' as const }
+  const filterCount = countListingFilters(currentFilters)
   const orderedCities = [...(flow.cities.data ?? [])].sort((a, b) => {
     const ai = CITY_ORDER.indexOf(a.name), bi = CITY_ORDER.indexOf(b.name)
     return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi)
   })
   const hotels = flow.query.data?.content.filter(h => !filterState.savedOnly || savedIds.has(h.id)) ?? []
-  const activeFilters = Boolean(flow.params.get('minPrice') || flow.params.get('maxPrice') || flow.params.get('starRating'))
-  function applyFilters(value: ListingFilters) {
-    const next = new URLSearchParams(flow.params)
-    for (const key of ['minPrice', 'maxPrice', 'starRating', 'sort'] as const) { next.delete(key); if (value[key] !== undefined) next.set(key, String(value[key])) }
-    next.delete('page'); next.delete('quantity'); flow.setParams(next); setFiltersOpen(false)
-  }
-  return <div className="cf-listings-page" id="top">
-    <h1 className="sr-only">Tìm khách sạn và chỗ nghỉ trên StayHub</h1>
+  function applyFilters(value: ListingFilters) { flow.setParams(updateListingFilters(flow.params, value)); setFiltersOpen(false) }
+  const title = filterState.savedOnly ? 'Chỗ nghỉ đã lưu' : flow.chosenCity ? `Chỗ nghỉ tại ${flow.chosenCity.name}` : 'Chỗ nghỉ tại Việt Nam'
+  const subtitle = !flow.parsed ? 'Kiểm tra lại thông tin tìm kiếm' : flow.query.isPending ? 'Đang tìm chỗ nghỉ…' : flow.query.isError ? 'Chưa tải được kết quả' : filterState.savedOnly ? `${hotels.length} chỗ nghỉ đã lưu trên trang này` : `${flow.query.data?.totalElements ?? 0} chỗ nghỉ phù hợp`
+  return <div className="ref-ui ref-listings" id="top">
     <ClientListingSearchBar form={flow.form} cities={flow.cities.data ?? []} onSubmit={flow.submit} />
-    <section className="cf-city-section" aria-label="Lọc theo thành phố"><div className="cf-city-inner"><div className="cf-city-list"><button type="button" className={!flow.params.get('cityId') && !flow.params.get('citySlug') ? 'is-active' : ''} onClick={() => flow.selectCity('')}>Tất cả</button>{orderedCities.map(city => <button type="button" key={city.id} className={flow.chosenCity?.id === city.id ? 'is-active' : ''} onClick={() => flow.selectCity(city.id)}>{city.name}</button>)}</div><button type="button" className={`cf-filter-button${activeFilters ? ' is-active' : ''}`} onClick={() => setFiltersOpen(true)}><ClientFigmaIcon name="filters" />Bộ lọc{activeFilters && <span className="cf-filter-dot" />}</button></div></section>
-    <section className="cf-results" id="stays" aria-label="Danh sách khách sạn">
-      {!flow.parsed && <Alert type="warning" showIcon title="Thông tin tìm kiếm chưa hợp lệ" description="Chọn lại ngày lưu trú, số khách hoặc bộ lọc." action={<button onClick={() => flow.setParams({})}>Đặt lại</button>} />}
-      {flow.cities.isError && <Alert type="error" title="Không tải được thành phố" action={<button onClick={() => void flow.cities.refetch()}>Thử lại</button>} />}
-      {flow.parsed && flow.query.isPending && <div className="cf-listing-grid" role="status" aria-label="Đang tải khách sạn">{Array.from({ length: 8 }, (_, i) => <ClientListingSkeleton key={i} />)}</div>}
-      {flow.query.isError && <div className="cf-empty" role="alert"><h2>Không thể tải danh sách chỗ nghỉ</h2><p>Vui lòng kiểm tra kết nối và thử lại.</p><button type="button" onClick={() => void flow.query.refetch()}>Thử lại</button></div>}
-      {flow.query.data && !flow.query.isError && flow.parsed && (hotels.length ? <div className="cf-listing-grid" role="list">{hotels.map(hotel => <ClientListingCard key={hotel.id} hotel={hotel} stay={flow.parsed!.stay} saved={savedIds.has(hotel.id)} onToggleSaved={() => toggleSaved(hotel.id)} />)}</div> : <div className="cf-empty"><h2>{filterState.savedOnly ? 'Trang này chưa có chỗ nghỉ đã lưu' : 'Không tìm thấy chỗ nghỉ phù hợp'}</h2><p>Thử đổi điểm đến, ngày lưu trú hoặc bộ lọc.</p><button type="button" onClick={() => flow.setParams({})}>Xóa bộ lọc tìm kiếm</button></div>)}
-      {flow.query.data && flow.query.data.totalPages > 1 && <nav className="cf-pagination" aria-label="Phân trang khách sạn"><Pagination current={flow.query.data.page + 1} pageSize={8} total={flow.query.data.totalElements} showSizeChanger={false} onChange={page => { const next = new URLSearchParams(flow.params); next.set('page', String(page - 1)); flow.setParams(next); document.getElementById('stays')?.scrollIntoView({ block: 'start' }) }} /></nav>}
+    <nav className="ref-city-bar" aria-label="Lọc theo thành phố"><div className="ref-city-rail">
+      <button type="button" className="ref-city-chip" aria-pressed={!flow.params.get('cityId') && !flow.params.get('citySlug')} onClick={() => flow.selectCity('')}>Tất cả</button>
+      {orderedCities.map(city => <button type="button" key={city.id} className="ref-city-chip" aria-pressed={flow.chosenCity?.id === city.id} onClick={() => flow.selectCity(city.id)}>{city.name}</button>)}
+    </div></nav>
+    <section className="ref-results ref-wrap" id="stays" aria-labelledby="client-results-title" tabIndex={-1}>
+      <div className="ref-toolbar"><div><h1 className="ref-results-title" id="client-results-title">{title}</h1><span className="ref-results-sub" role="status" aria-live="polite">{subtitle}</span></div>
+        <div className="ref-toolbar-actions"><div className="ref-sort-wrap"><label htmlFor="client-sort">Sắp xếp</label><select id="client-sort" className="ref-sort-select" value={currentFilters.sort} onChange={event => flow.setParams(updateListingFilters(flow.params, { ...currentFilters, sort: event.target.value as ListingFilters['sort'] }))}>
+          <option value="name">Tên khách sạn</option><option value="price">Giá thấp đến cao</option><option value="rating">Hạng sao cao nhất</option>
+        </select></div><button type="button" className="ref-filter-btn" aria-haspopup="dialog" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(true)}><ClientReferenceIcon name="filters" size={16} />Bộ lọc{filterCount > 0 && <span className="ref-filter-count">{filterCount}</span>}</button></div>
+      </div>
+      {!flow.parsed && <div className="ref-inline-error" role="alert"><p>Thông tin tìm kiếm chưa hợp lệ. Hãy chọn lại ngày, số khách hoặc bộ lọc.</p><button className="ref-btn ref-btn-secondary" onClick={() => flow.setParams({})}>Đặt lại</button></div>}
+      {flow.cities.isError && <div className="ref-inline-error" role="alert"><p>Không tải được thành phố.</p><button className="ref-btn ref-btn-secondary" onClick={() => void flow.cities.refetch()}>Thử lại</button></div>}
+      {flow.parsed && flow.query.isPending && <div className="ref-grid" role="status" aria-label="Đang tải khách sạn">{Array.from({ length: 8 }, (_, i) => <ClientListingSkeleton key={i} />)}</div>}
+      {flow.query.isError && <div className="ref-empty" role="alert"><h2 className="ref-empty-title">Không thể tải danh sách chỗ nghỉ</h2><p className="ref-empty-text">Vui lòng kiểm tra kết nối và thử lại.</p><button className="ref-btn ref-btn-secondary" type="button" onClick={() => void flow.query.refetch()}>Thử lại</button></div>}
+      {flow.query.data && !flow.query.isError && flow.parsed && (hotels.length ? <div className="ref-grid" role="list">{hotels.map(hotel => <ClientListingCard key={hotel.id} hotel={hotel} stay={flow.parsed!.stay} saved={savedIds.has(hotel.id)} onToggleSaved={() => toggleSaved(hotel.id)} />)}</div> : <div className="ref-empty">
+        <ClientReferenceIcon name="search" size={72} /><h2 className="ref-empty-title">{filterState.savedOnly ? 'Chưa có chỗ nghỉ đã lưu trên trang này' : 'Không tìm thấy chỗ nghỉ phù hợp'}</h2><p className="ref-empty-text">Thử đổi điểm đến, ngày lưu trú hoặc bỏ bớt bộ lọc.</p><button className="ref-btn ref-btn-primary" type="button" onClick={() => flow.setParams({})}>Xóa bộ lọc tìm kiếm</button>
+      </div>)}
+      {flow.query.data && flow.query.data.totalPages > 1 && <nav className="ref-pagination" aria-label="Phân trang khách sạn"><Pagination current={flow.query.data.page + 1} pageSize={8} total={flow.query.data.totalElements} showSizeChanger={false} onChange={page => { const next = new URLSearchParams(flow.params); next.set('page', String(page - 1)); flow.setParams(next); document.getElementById('stays')?.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }) }} /></nav>}
     </section>
-    {showPromotion && <section className="cf-host-section" id="partner" aria-label="Dành cho chủ khách sạn"><div className="cf-host-banner"><img className="cf-host-image" src="/assets/client-figma/host-banner.png" alt="" /><div className="cf-host-content"><div><p>Dành cho chủ nhà</p><h2>Gia tăng thu nhập cùng StayHub <br />bằng cách đón tiếp du khách toàn <br />cầu.</h2></div><Link to="/hotels" className="cf-primary">Đăng ký khách sạn</Link></div></div></section>}
-    <Modal title="Bộ lọc" open={filtersOpen} onCancel={() => setFiltersOpen(false)} footer={null} className="cf-filters-modal" destroyOnHidden>
-      <form className="cf-filters-form" noValidate onSubmit={filters.handleSubmit(applyFilters)}>
-        {(['minPrice', 'maxPrice'] as const).map(key => <label key={key}>{key === 'minPrice' ? 'Giá tối thiểu (VND/đêm)' : 'Giá tối đa (VND/đêm)'}<input type="number" min="0" {...filters.register(key, { setValueAs: v => v === '' ? undefined : Number(v) })} />{filters.formState.errors[key] && <span role="alert">{filters.formState.errors[key]?.message}</span>}</label>)}
-        <label>Tiêu chuẩn sao<select {...filters.register('starRating', { setValueAs: v => v === '' ? undefined : Number(v) })}><option value="">Tất cả</option>{[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>Từ {n} sao</option>)}</select></label>
-        <label>Sắp xếp<select {...filters.register('sort')}><option value="name">Tên khách sạn</option><option value="price">Giá thấp đến cao</option><option value="rating">Tiêu chuẩn sao</option></select></label>
-        <div className="cf-filter-actions"><button type="button" onClick={() => filters.reset({ sort: 'name', minPrice: undefined, maxPrice: undefined, starRating: undefined })}>Xóa lựa chọn</button><button className="cf-primary" type="submit">Áp dụng bộ lọc</button></div>
-      </form>
-    </Modal>
+    {showPromotion && isAuthorized && <section className="ref-host-section" id="host"><div className="ref-wrap"><div className="ref-host-card">
+      <div className="ref-host-copy"><p className="ref-eyebrow">Dành cho chủ khách sạn</p><h2 className="ref-host-title">Quản lý khách sạn của bạn cùng StayHub.</h2><p className="ref-host-text">Cập nhật thông tin khách sạn, quản lý phòng và bảng giá trên cùng một nền tảng.</p><Link to="/admin/overview" className="ref-btn ref-btn-primary">Khách sạn của tôi</Link></div>
+      <div className="ref-host-media"><img className="ref-od-media ref-od-media-cover" src="/assets/client-reference/host-cta.jpg" width={960} height={1200} alt="Đèn lồng trên phố cổ Hội An về đêm" loading="lazy" decoding="async" /></div>
+    </div></div></section>}
+    {filtersOpen && <ClientFilterDrawer initial={currentFilters} onApply={applyFilters} onClose={() => setFiltersOpen(false)} />}
   </div>
 }
-

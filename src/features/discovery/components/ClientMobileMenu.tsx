@@ -1,10 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router'
-import { DashboardOutlined, LogoutOutlined } from '@ant-design/icons'
+import { CloseOutlined, LogoutOutlined } from '@ant-design/icons'
 import { App } from 'antd'
 import { useAuthAction, useCurrentUser, useSession } from '@/features/auth'
 import { errorMessage } from '@/shared/api/api-error'
-import { ClientIcon } from './ClientSiteIcons'
+import { ClientReferenceBrand } from './ClientReferenceIcon'
 
 interface ClientMobileMenuProps {
   isOpen: boolean
@@ -12,32 +12,31 @@ interface ClientMobileMenuProps {
   onOpenAuthModal?: (mode?: 'login' | 'register') => void
 }
 
-export function ClientMobileMenu({
-  isOpen,
-  onClose,
-  onOpenAuthModal,
-}: ClientMobileMenuProps) {
+export function ClientMobileMenu({ isOpen, onClose, onOpenAuthModal }: ClientMobileMenuProps) {
   const navigate = useNavigate()
   const logout = useAuthAction('logout')
   const { message } = App.useApp()
   const session = useSession()
-  const { currentUser, isAdmin } = useCurrentUser()
+  const { currentUser, isAdmin, isOwner } = useCurrentUser()
+  const dialog = useRef<HTMLDialogElement>(null)
+  const closeButton = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && isOpen) {
-        onClose()
-      }
+    if (!isOpen || !dialog.current) return
+    const panel = dialog.current
+    const returnFocus = document.getElementById('client-account-menu-trigger')
+    const previousOverflow = document.body.style.overflow
+    panel.showModal()
+    closeButton.current?.focus()
+    document.body.style.overflow = 'hidden'
+    return () => {
+      panel.close()
+      document.body.style.overflow = previousOverflow
+      if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true })
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
+  }, [isOpen])
 
-  const userFullName =
-    currentUser?.fullName ||
-    (currentUser?.email ? currentUser.email.split('@')[0] : 'Tài khoản')
-
-  const handleLogout = async () => {
+  async function handleLogout() {
     if (logout.isPending) return
     try {
       await logout.mutateAsync({})
@@ -46,117 +45,47 @@ export function ClientMobileMenu({
     } catch (error) { void message.error(errorMessage(error)) }
   }
 
-  const handleNavClick = (href: string) => {
-    onClose()
-    if (href.startsWith('#')) {
-      const el = document.getElementById(href.replace('#', ''))
-      if (el) {
-        window.setTimeout(() => {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }, 50)
-      } else { navigate(`/${href}`) }
-    } else {
-      navigate(href)
-    }
-  }
-
-  return (
-    <>
-      <div
-        className={`mobile-menu-backdrop ${isOpen ? 'is-open' : ''}`}
-        id="mobile-menu-backdrop"
-        aria-hidden={!isOpen}
-        onClick={onClose}
-      />
-      <div
-        className={`mobile-menu ${isOpen ? 'is-open' : ''}`}
-        id="mobile-menu"
-        aria-hidden={!isOpen}
-        role="dialog"
-        aria-label="Menu điều hướng di động"
-      >
-        <div className="mobile-menu-head">
-          <a
-            className="brand"
-            href="#top"
-            aria-label="StayHub — về đầu trang"
-            onClick={() => handleNavClick('#top')}
-          >
-            <span className="brand-mark">
-              <ClientIcon name="compass" />
-            </span>
-            <span className="brand-word">
-              <strong>StayHub</strong>
-              <span>Bộ sưu tập lưu trú</span>
-            </span>
-          </a>
-          <button
-            className="icon-btn"
-            id="menu-close"
-            type="button"
-            aria-label="Đóng menu"
-            onClick={onClose}
-          >
-            <ClientIcon name="close" />
-          </button>
-        </div>
-
-        <nav aria-label="Điều hướng di động">
-          <NavLink to="/" onClick={onClose}>Chỗ ở</NavLink>
-          <button type="button" onClick={() => { onClose(); void message.info('Trải nghiệm sẽ sớm được cập nhật.') }}>Trải nghiệm</button>
-          <button type="button" onClick={() => { onClose(); void message.info('Dịch vụ sẽ sớm được cập nhật.') }}>Dịch vụ</button>
-        </nav>
-
-        <div className="mobile-menu-foot">
-          {isAdmin && <NavLink to="/admin/users" onClick={onClose}><DashboardOutlined /> StayHub Admin</NavLink>}
-          {session && <SpaceLinks onClose={onClose} />}
-          {session ? (
-            <div className="flex flex-col gap-2">
-              <div className="text-xs font-semibold text-[var(--ink)] truncate">
-                {userFullName}
-              </div>
-              <button
-                type="button"
-                className="login-btn !text-red-600 !border-red-300 hover:!bg-red-50 flex items-center justify-center gap-2"
-                onClick={handleLogout}
-              >
-                <LogoutOutlined />
-                <span>Đăng xuất</span>
-              </button>
-            </div>
-          ) : (
-            <button
-              className="login-btn"
-              id="mobile-login-btn"
-              type="button"
-              onClick={() => {
-                onClose()
-                if (onOpenAuthModal) {
-                  onOpenAuthModal('login')
-                } else {
-                  navigate('/login')
-                }
-              }}
-            >
-              Đăng nhập tài khoản
-            </button>
-          )}
-          <p
-            className="collection-note"
-            style={{ color: 'var(--muted)', fontSize: '12.5px', margin: 0 }}
-          >
-            VI · VND &nbsp;·&nbsp; Hỗ trợ 24/7
-          </p>
-        </div>
-      </div>
-    </>
-  )
-}
-
-function SpaceLinks({ onClose }: { onClose: () => void }) {
-  return <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
-    <NavLink to="/account" onClick={onClose}>Tài khoản</NavLink>
-    <NavLink to="/my-bookings" onClick={onClose}>Đặt phòng của tôi</NavLink>
-    <NavLink to="/my-complaints" onClick={onClose}>Khiếu nại</NavLink>
-  </div>
+  return <dialog ref={dialog} className={`mobile-menu cf-mobile-dialog ref-theme ref-ui ${isOpen ? 'is-open' : ''}`}
+    id="mobile-menu" aria-label="Menu điều hướng di động" aria-modal="true"
+    onCancel={event => { event.preventDefault(); onClose() }}
+    onKeyDown={event => {
+      if (event.key !== 'Tab') return
+      const targets = event.currentTarget.querySelectorAll<HTMLElement>('a[href], button:not(:disabled)')
+      const first = targets[0], last = targets[targets.length - 1]
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+    }}
+    onClick={event => {
+      if (event.target !== event.currentTarget) return
+      const rect = event.currentTarget.getBoundingClientRect()
+      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) onClose()
+    }}>
+    <div className="mobile-menu-head">
+      <NavLink to="/" className="ref-brand" aria-label="StayHub — về trang chủ" onClick={onClose}><ClientReferenceBrand /></NavLink>
+      <button ref={closeButton} className="cf-mobile-close" type="button" aria-label="Đóng menu" onClick={onClose}><CloseOutlined aria-hidden="true" /></button>
+    </div>
+    <nav aria-label="Điều hướng di động">
+      <NavLink to="/" onClick={onClose}>Chỗ ở</NavLink>
+      <NavLink to="/explore" onClick={onClose}>Tìm chỗ nghỉ</NavLink>
+      {['Trải nghiệm', 'Dịch vụ'].map(label => <button type="button" key={label} onClick={() => { onClose(); void message.info(`${label} đang được phát triển.`) }}>{label}</button>)}
+      {session && <>
+        <NavLink to="/account" onClick={onClose}>Tài khoản của tôi</NavLink>
+        {isOwner && <NavLink to="/admin/overview" onClick={onClose}>Khách sạn của tôi</NavLink>}
+        <NavLink to="/my-bookings" onClick={onClose}>Đặt phòng của tôi</NavLink>
+        <NavLink to="/my-complaints" onClick={onClose}>Khiếu nại của tôi</NavLink>
+      </>}
+      {isAdmin && <NavLink to="/admin/users" onClick={onClose}>StayHub Admin</NavLink>}
+    </nav>
+    <div className="mobile-menu-foot">
+      {session ? <>
+        <p className="cf-mobile-user">{currentUser?.fullName || currentUser?.email || 'Tài khoản'}</p>
+        <button type="button" className="login-btn" disabled={logout.isPending} onClick={handleLogout}><LogoutOutlined /> {logout.isPending ? 'Đang đăng xuất…' : 'Đăng xuất'}</button>
+      </> : <button className="login-btn" type="button" onClick={() => {
+        onClose()
+        if (onOpenAuthModal) onOpenAuthModal('login')
+        else void navigate('/login')
+      }}>Đăng nhập tài khoản</button>}
+      <p className="cf-mobile-locale">Tiếng Việt · VND</p>
+    </div>
+  </dialog>
 }

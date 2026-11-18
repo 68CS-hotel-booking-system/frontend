@@ -1,10 +1,11 @@
 import { Link, useSearchParams } from 'react-router'
-import { Alert, Button, Descriptions, Result, Space, Typography } from 'antd'
+import { Alert, Button, Descriptions, Space, Typography } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import { ApiError } from '@/shared/api/api-error'
 import { formatCurrencyAmount } from '@/shared/lib/format'
 import { PageLoading } from '@/shared/ui/PageLoading'
 import { ErrorState } from '@/shared/ui/ErrorState'
+import { StatusMessage } from '@/shared/ui/StatusMessage'
 import { usePayment } from '../hooks/use-payment'
 import { returnReference } from '../model/return-reference'
 
@@ -28,11 +29,11 @@ export function PaymentReturn() {
   const review = success && !payment.bookingConfirmed
   const expired = pending && payment.expired
   return <>
-    <div role="status" aria-live="polite">
-      <Result status={review || expired ? 'warning' : pending ? 'info' : success ? 'success' : 'warning'}
+    <div className="payment-status" role="status" aria-live="polite">
+      <StatusMessage headingLevel={2}
         title={review ? 'Đã nhận thanh toán, cần kiểm tra đặt phòng' : expired ? 'Đã hết hạn thanh toán'
           : pending ? 'Đang xác nhận thanh toán' : success ? 'Đã ghi nhận thanh toán' : 'Thanh toán chưa thành công'}
-        subTitle={review ? 'Khoản thanh toán đã được ghi nhận nhưng chưa thể xác nhận phòng. Vui lòng liên hệ hỗ trợ kèm mã giao dịch bên dưới và không thanh toán lại.'
+        description={review ? 'Khoản thanh toán đã được ghi nhận nhưng chưa thể xác nhận phòng. Vui lòng liên hệ hỗ trợ kèm mã giao dịch bên dưới và không thanh toán lại.'
           : expired ? 'Liên kết thanh toán đã hết hạn. Nếu bạn đã thanh toán, hãy kiểm tra lại trạng thái hoặc liên hệ hỗ trợ trước khi tạo đơn khác.'
           : pending ? 'Chúng tôi đang chờ xác nhận khoản thanh toán. Bạn có thể kiểm tra lại trạng thái bên dưới.'
           : success ? 'Khoản thanh toán đã được ghi nhận và đơn đặt phòng đã được xác nhận.'

@@ -26,6 +26,35 @@ export const listingStaySchema = z.object({
 export type ListingStay = z.infer<typeof listingStaySchema>
 export type ListingFilters = z.infer<typeof listingFiltersSchema>
 
+// Empty editable prices use a string so controlled inputs reset without falling
+// back to a previous numeric default. Only validated numbers reach the API.
+export const listingFilterDraftSchema = z.object({
+  minPrice: z.union([z.number(), z.literal('')]),
+  maxPrice: z.union([z.number(), z.literal('')]),
+  starRating: z.number().optional(),
+  sort: z.enum(['name', 'price', 'rating']),
+}).transform((value): ListingFilters => ({
+  ...value,
+  minPrice: value.minPrice === '' ? undefined : value.minPrice,
+  maxPrice: value.maxPrice === '' ? undefined : value.maxPrice,
+})).pipe(listingFiltersSchema)
+export type ListingFilterDraft = z.input<typeof listingFilterDraftSchema>
+
+export function countListingFilters(value: ListingFilters) {
+  return Number(value.minPrice !== undefined || value.maxPrice !== undefined) + Number(value.starRating !== undefined)
+}
+
+export function updateListingFilters(params: URLSearchParams, value: ListingFilters) {
+  const next = new URLSearchParams(params)
+  next.delete('page')
+  next.delete('quantity')
+  for (const key of ['minPrice', 'maxPrice', 'starRating', 'sort'] as const) {
+    next.delete(key)
+    if (value[key] !== undefined) next.set(key, String(value[key]))
+  }
+  return next
+}
+
 export function parseListingSearch(params: URLSearchParams) {
   const stay = listingStaySchema.safeParse({ cityId: params.get('cityId') ?? '', checkIn: params.get('checkIn') ?? '', checkOut: params.get('checkOut') ?? '', adults: Number(params.get('adults') ?? 2), children: Number(params.get('children') ?? 0) })
   const filters = listingFiltersSchema.safeParse({ minPrice: params.has('minPrice') ? Number(params.get('minPrice')) : undefined, maxPrice: params.has('maxPrice') ? Number(params.get('maxPrice')) : undefined, starRating: params.has('starRating') ? Number(params.get('starRating')) : undefined, sort: params.get('sort') ?? 'name' })
