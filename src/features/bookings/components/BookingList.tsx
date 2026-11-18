@@ -6,20 +6,16 @@ import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
 import { bookingStatuses, type BookingDetail, type BookingSummary } from '../api/booking-api'
 import { useBooking, useBookings } from '../hooks/use-bookings'
+import { bookingStatusLabels } from '../model/booking-display'
+import { checkoutMoney as amount } from '../model/client-checkout'
 import { StayOperations } from './StayOperations'
 
-const bookingStatusLabels: Record<string, string> = {
-  PENDING_PAYMENT: 'Chờ thanh toán', CONFIRMED: 'Đã xác nhận', CHECKED_IN: 'Đã nhận phòng', CHECKED_OUT: 'Đã trả phòng',
-  CANCELLED: 'Đã hủy', EXPIRED: 'Hết hạn', NO_SHOW: 'Khách không đến',
-}
-const amount = (value: number, currency: string) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(value)
 export function BookingList({ hotelId }: { hotelId?: string }) {
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(10)
   const [status, setStatus] = useState<string>()
   const [selectedId, setSelectedId] = useState<string>()
   const query = useBookings({ page, size, status }, hotelId)
-  const detail = useBooking(selectedId, hotelId)
   return <section className="surface-card">
     <div className="section-header"><h2>{hotelId ? 'Đơn đặt phòng của khách sạn' : 'Đơn đặt phòng của tôi'}</h2>
       <Button onClick={() => void query.refetch()} loading={query.isFetching}>Làm mới</Button></div>
@@ -38,11 +34,16 @@ export function BookingList({ hotelId }: { hotelId?: string }) {
           { title: 'Trạng thái', render: (_, item) => <Tag>{bookingStatusLabels[item.status] ?? item.status}</Tag> },
         ]} pagination={{ current: page + 1, pageSize: size, total: query.data?.totalElements ?? 0, showSizeChanger: true,
           onChange: (next, nextSize) => { setPage(nextSize === size ? next - 1 : 0); setSize(nextSize) } }} />}
-    <Drawer title="Chi tiết đặt phòng" open={Boolean(selectedId)} onClose={() => setSelectedId(undefined)} size="min(736px, 100vw)" destroyOnHidden>
+    <BookingDetailsDrawer selectedId={selectedId} onClose={() => setSelectedId(undefined)} hotelId={hotelId} />
+  </section>
+}
+
+export function BookingDetailsDrawer({ selectedId, onClose, hotelId }: { selectedId?: string; onClose: () => void; hotelId?: string }) {
+  const detail = useBooking(selectedId, hotelId)
+  return <Drawer title="Chi tiết đặt phòng" open={Boolean(selectedId)} onClose={onClose} size="min(736px, 100vw)" destroyOnHidden>
       {detail.isPending ? <PageLoading /> : detail.isError ? <ErrorState error={detail.error} onRetry={() => void detail.refetch()} /> : detail.data &&
         <BookingDetails key={detail.data.id} booking={detail.data} hotelId={hotelId} />}
-    </Drawer>
-  </section>
+  </Drawer>
 }
 function BookingDetails({ booking, hotelId }: { booking: BookingDetail; hotelId?: string }) {
   return <Space orientation="vertical" size="large" style={{ width: '100%' }}>

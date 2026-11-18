@@ -3,6 +3,7 @@ import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { useCurrentUser } from '@/features/auth'
 import { usePublicHotelDetailQuery } from '@/features/hotels'
 import { ClientBookingCheckout, parseCheckoutSelection } from '@/features/bookings'
+import { ClientTripCover } from '@/features/discovery'
 import '@/shared/styles/hotel-stay-detail.css'
 import '@/shared/styles/client-checkout.css'
 
@@ -20,5 +21,7 @@ export function BookingCheckoutPage() {
   if (!user.currentUser) return <div className="client-checkout"><Alert type="error" title="Không tải được thông tin tài khoản" action={<button onClick={() => void user.refetch()}>Thử lại</button>} /></div>
   const room = detail.roomTypes.find(room => room.id === selection.roomTypeId)
   if (!room) return <div className="client-checkout"><Alert type="warning" title="Hạng phòng không còn được công bố" description={<Link to={`/stays/${hotelId}`}>Quay lại chọn phòng</Link>} /></div>
-  return <ClientBookingCheckout key={`${user.currentUser.id}-${JSON.stringify(selection)}`} selection={selection} user={user.currentUser} hotelName={detail.hotel.name} roomName={room.name} initialPrice={initialPrice} />
+  return <ClientBookingCheckout key={`${user.currentUser.id}-${JSON.stringify(selection)}`} selection={selection} user={user.currentUser}
+    hotelName={detail.hotel.name} roomName={room.name} checkInTime={detail.hotel.checkInTime} checkOutTime={detail.hotel.checkOutTime}
+    hotelCover={<ClientTripCover hotelId={hotelId} />} initialPrice={initialPrice} />
 }

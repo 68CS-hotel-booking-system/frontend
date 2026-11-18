@@ -91,6 +91,16 @@ export function getBooking(bookingId: string, hotelId?: string, signal?: AbortSi
   const base = hotelId ? `/management/hotels/${encodeURIComponent(hotelId)}/bookings` : '/bookings'
   return http.request(`${base}/${encodeURIComponent(bookingId)}`, { signal, schema: bookingDetailSchema })
 }
+export function cancelCustomerBooking(bookingId: string, signal?: AbortSignal) {
+  return http.request(`/bookings/${encodeURIComponent(bookingId)}/cancel`, {
+    method: 'POST', signal,
+    schema: z.object({
+      status: z.enum(['CANCELLED', 'EXPIRED']),
+      currency: z.string(),
+      cancellation: z.object({ cancellationFeeAmount: money, refundAmount: money, refundStatus: z.string() }),
+    }),
+  })
+}
 export type StayOperation = 'check-in' | 'check-out' | 'late-arrival' | 'no-show'
 export function operateBooking(hotelId: string, bookingId: string, operation: StayOperation, payload?: { reason?: string; expectedArrivalAt?: string; note?: string }, signal?: AbortSignal) {
   return http.request(`/management/hotels/${encodeURIComponent(hotelId)}/bookings/${encodeURIComponent(bookingId)}/${operation}`, {

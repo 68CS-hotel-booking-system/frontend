@@ -35,9 +35,12 @@ it('gives owners a dashboard destination without offering account registration a
   expect(html).not.toContain('href="/register"')
 })
 
-it('also removes unfinished policy actions from the compact hotel footer', () => {
-  const html = renderFooter('/stays/hotel')
-  expect(html).toContain('hotel-detail-site-footer')
+it.each([
+  ['/stays/hotel', 'ref-site-footer'],
+  ['/stays/hotel/checkout', 'hotel-detail-site-footer'],
+])('uses the matching footer layout on %s without unfinished policy actions', (path, footerClass) => {
+  const html = renderFooter(path)
+  expect(html).toContain(footerClass)
   expect(html).toContain('href="/my-bookings"')
   expect(html).not.toContain('<button')
 })

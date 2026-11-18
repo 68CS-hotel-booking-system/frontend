@@ -58,6 +58,14 @@ it('reads paginated management bookings and filters from the server', async () =
   await listBookings({ page: 0, size: 10, status: 'CONFIRMED' }, hotelId)
   expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/management/hotels/${hotelId}/bookings?page=0&size=10&status=CONFIRMED`)
 })
+it('posts customer cancellation and preserves the backend fee and pending refund', async () => {
+  const cancellation = { cancellationFeeAmount: 200000, refundAmount: 800000, refundStatus: 'PENDING' }
+  response({ status: 'CANCELLED', currency: 'VND', cancellation })
+  const { cancelCustomerBooking } = await import('./booking-api')
+  await expect(cancelCustomerBooking(roomId, new AbortController().signal)).resolves.toEqual({ status: 'CANCELLED', currency: 'VND', cancellation })
+  expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/bookings/${roomId}/cancel`)
+  expect(fetcher.mock.calls[0][1]).toMatchObject({ method: 'POST', signal: expect.any(AbortSignal) })
+})
 it('propagates price conflicts rather than reporting a successful order', async () => {
   fetcher.mockResolvedValue(new Response(JSON.stringify({ code: 'QUOTE_CHANGED', detail: 'Giá đã thay đổi.' }), { status: 409 }))
   const { createBooking } = await import('./booking-api')

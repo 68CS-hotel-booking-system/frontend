@@ -8,8 +8,8 @@ const categories = [
   { key: 'children', label: 'Trẻ em', description: 'Độ tuổi 2 – 12' },
 ] as const
 
-export function ClientGuestPicker({ value, roomTypes, selectedRoomId, onChange, label = 'Khách / phòng', showRoomCount = false, mode = 'capacity', variant = 'default' }: {
-  value: GuestSelection; roomTypes: GuestCapacity[]; selectedRoomId: string; onChange: (value: GuestSelection) => void; label?: string; showRoomCount?: boolean; mode?: 'capacity' | 'search'; variant?: 'default' | 'reference'
+export function ClientGuestPicker({ value, roomTypes, selectedRoomId, onChange, label = 'Khách / phòng', showRoomCount = false, mode = 'capacity', variant = 'default', autoAdjustOverflow = mode === 'search' }: {
+  value: GuestSelection; roomTypes: GuestCapacity[]; selectedRoomId: string; onChange: (value: GuestSelection) => void; label?: string; showRoomCount?: boolean; mode?: 'capacity' | 'search'; variant?: 'default' | 'reference'; autoAdjustOverflow?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const trigger = useRef<HTMLButtonElement>(null)
@@ -73,7 +73,7 @@ export function ClientGuestPicker({ value, roomTypes, selectedRoomId, onChange, 
     <div className="client-guest-close"><Button type="text" onClick={close}>Đóng</Button></div>
   </div>
   return <div className="client-guest-field">
-    <Popover content={content} trigger="click" placement="bottomRight" arrow={false} align={{ offset: [0, 0] }} autoAdjustOverflow={mode === 'search'} open={open} onOpenChange={setOpen}
+    <Popover content={content} trigger="click" placement="bottomRight" arrow={false} align={{ offset: [0, 0] }} autoAdjustOverflow={autoAdjustOverflow} open={open} onOpenChange={setOpen}
       afterOpenChange={isOpen => { if (isOpen) dialog.current?.focus({ preventScroll: true }) }}
       classNames={{ root: `client-guest-popover${variant === 'reference' ? ' ref-theme ref-ui ref-guest-overlay' : ''}` }} styles={{ root: { width: mode === 'search' ? Math.max(320, popupWidth) : popupWidth || undefined }, container: { padding: 0, background: 'transparent', boxShadow: 'none' } }}>
       <button ref={trigger} type="button" className={`client-guest-trigger ${open ? 'is-open' : ''}${variant === 'reference' ? ' ref-seg-btn' : ''}`} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? id : undefined} onKeyDown={event => { if (event.key === 'Escape') close() }}>

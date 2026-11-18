@@ -1,0 +1,86 @@
+@import './be-vietnam-pro.css';
+
+.customer-account-shell.customer-account-reference {
+  --fg: #222;
+  --fg-2: #3f3f3f;
+  --bg: #fff;
+  --surface-warm: #f7f7f7;
+  --muted: #6a6a6a;
+  --meta: #929292;
+  --border: #ddd;
+  --border-soft: #ebebeb;
+  --danger: #c13515;
+  --success: #008a05;
+  --warn: #c47700;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-pill: 9999px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 22px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --tracking-display: -0.02em;
+  --motion-fast: 150ms;
+  --motion-base: 200ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  font-family: "Be Vietnam Pro", system-ui, sans-serif;
+  line-height: 1.43;
+
+  .account-page { display: block; width: 100%; max-width: 1120px; padding: 24px 40px 48px; }
+  .account-breadcrumb { display: flex; gap: 6px; }
+  .account-checkout-return { margin: 16px 0 0; }
+  .account-layout { grid-template-columns: 280px minmax(0, 1fr); gap: 56px; margin-top: 16px; }
+  .account-sidebar { display: flex; gap: 20px; position: sticky; top: 104px; }
+  .account-sidebar-nav { gap: 2px; }
+  .account-avatar { flex-basis: 56px; width: 56px; height: 56px; background: var(--surface-warm); font-size: 20px; font-weight: 600; }
+  .account-identity-text { gap: 2px; }
+  .account-identity-text p { font-size: 12px; }
+  .account-nav-item { min-height: 44px; padding: 10px 12px; font-weight: 500; }
+  .account-nav-item[aria-current='page'] { background: #f2f2f2; font-weight: 600; }
+  .account-sidebar-nav hr { margin: 10px 0; }
+  .account-sign-out { margin: 0; color: var(--danger); }
+  .account-sign-out:hover { background: #fff5f1; color: var(--danger); }
+  .account-content { gap: 0; max-width: 720px; }
+  .account-heading h1 { font-size: 32px; font-weight: 600; line-height: 1.2; letter-spacing: var(--tracking-display); }
+  .account-heading p { font-size: 16px; line-height: 1.43; }
+
+  @media (max-width: 1023px) {
+    .account-page { padding-inline: 24px; }
+    .account-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .account-sidebar { position: static; }
+    .account-sidebar-nav { flex-direction: row; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .account-sidebar-nav > div { flex: none; }
+    .account-nav-item {
+      flex: none;
+      width: auto;
+      min-height: 40px;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+    }
+    .account-nav-item .account-icon, .account-sidebar-nav hr { display: none; }
+    .account-content { max-width: none; }
+  }
+  @media (max-width: 639px) {
+    .account-page { padding: 16px 16px 48px; }
+    .account-heading h1 { font-size: 26px; }
+  }
+}
+
+.client-theme:has(.customer-account-reference) {
+  --ref-font-body: "Be Vietnam Pro", system-ui, sans-serif;
+  --ref-font-display: var(--ref-font-body);
+
+  .ref-site-header { position: sticky; top: 0; z-index: 60; }
+  @media (max-width: 639px) {
+    .ref-header-inner { min-height: 64px; }
+    .ref-brand-sub { display: none; }
+  }
+}

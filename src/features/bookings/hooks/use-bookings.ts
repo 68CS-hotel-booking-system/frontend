@@ -9,9 +9,9 @@ export function useBooking(bookingId?: string, hotelId?: string) {
   return useQuery({ queryKey: ['bookings', 'detail', hotelId ?? 'mine', bookingId],
     queryFn: ({ signal }) => getBooking(bookingId!, hotelId, signal), enabled: Boolean(bookingId), retry: false })
 }
-export function useBookingAction<T>(action: (payload: T) => Promise<unknown>) {
+export function useBookingAction<T, Result>(action: (payload: T) => Promise<Result>) {
   const client = useQueryClient()
-  return useMutation({ mutationFn: action, retry: false, onSuccess: async () => {
+  return useMutation({ mutationFn: (payload: T) => action(payload), retry: false, onSuccess: async () => {
     await client.invalidateQueries({ queryKey: bookingKeys.all })
     await client.invalidateQueries({ queryKey: ['rooms'] })
   } })
