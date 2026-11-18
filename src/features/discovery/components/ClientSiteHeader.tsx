@@ -22,6 +22,9 @@ export function ClientSiteHeader({ savedCount, onOpenMobileMenu, isMobileMenuOpe
   const session = useSession()
   const { currentUser, isAdmin, isOwner } = useCurrentUser()
   const userName = currentUser?.fullName || currentUser?.email || 'Tài khoản'
+  const avatar = currentUser
+    ? <UserAvatar userId={currentUser.id} name={userName} />
+    : userName.trim().charAt(0).toUpperCase()
   const openRoute = (path: string) => ({ onClick: () => void navigate(path) })
   async function handleLogout() {
     if (logout.isPending) return
@@ -29,17 +32,24 @@ export function ClientSiteHeader({ savedCount, onOpenMobileMenu, isMobileMenuOpe
     catch (error) { void message.error(errorMessage(error)) }
   }
   const items: MenuProps['items'] = [
-    ...(session ? [
-      { key: 'account', label: 'Tài khoản của tôi', ...openRoute('/account') },
-      ...(isOwner ? [{ key: 'my-hotels', label: 'Khách sạn của tôi', ...openRoute('/admin/overview') }] : []),
-      { key: 'bookings', label: 'Đặt phòng của tôi', ...openRoute('/my-bookings') },
-      { key: 'complaints', label: 'Khiếu nại của tôi', ...openRoute('/my-complaints') },
-    ] : [
-      { key: 'login', label: 'Đăng nhập', onClick: () => onOpenAuthModal ? onOpenAuthModal('login') : navigate('/login') },
-      { key: 'register', label: 'Đăng ký', onClick: () => onOpenAuthModal ? onOpenAuthModal('register') : navigate('/register') },
-    ]),
+    {
+      key: 'account',
+      label: currentUser ? <span className="ref-account-summary">
+        <span className="ref-user-initial" aria-hidden="true">{avatar}</span>
+        <span className="ref-account-summary-details">
+          <strong>{userName}</strong>
+          <span>{currentUser.email}</span>
+          <span className="ref-account-profile-label">Xem thông tin cá nhân</span>
+        </span>
+      </span> : 'Tài khoản của tôi',
+      ...openRoute('/account'),
+    },
+    ...(isOwner ? [{ key: 'my-hotels', label: 'Khách sạn của tôi', ...openRoute('/admin/overview') }] : []),
+    { key: 'bookings', label: 'Đặt phòng của tôi', ...openRoute('/my-bookings') },
+    { key: 'complaints', label: 'Khiếu nại của tôi', ...openRoute('/my-complaints') },
     ...(isAdmin ? [{ key: 'admin', label: 'StayHub Admin', ...openRoute('/admin/users') }] : []),
-    ...(session ? [{ type: 'divider' as const }, { key: 'logout', label: logout.isPending ? 'Đang đăng xuất…' : 'Đăng xuất', disabled: logout.isPending, onClick: handleLogout }] : []),
+    { type: 'divider' },
+    { key: 'logout', label: logout.isPending ? 'Đang đăng xuất…' : 'Đăng xuất', disabled: logout.isPending, onClick: handleLogout },
   ]
   return <header className="ref-ui ref-site-header" id="site-header"><div className="ref-header-inner">
     <NavLink to="/" className="ref-brand" aria-label="StayHub — về trang chủ"><ClientReferenceBrand /></NavLink>
@@ -57,15 +67,22 @@ export function ClientSiteHeader({ savedCount, onOpenMobileMenu, isMobileMenuOpe
         <ClientReferenceIcon name="heart" size={20} />
         {savedCount > 0 && <span aria-hidden="true">{savedCount}</span>}
       </NavLink>
-      <Dropdown open={menuOpen} onOpenChange={setMenuOpen} menu={{ items, onClick: () => setMenuOpen(false) }} trigger={['click']} placement="bottomRight" classNames={{ root: 'cf-account-dropdown ref-theme ref-account-dropdown' }}>
-        <button type="button" className="ref-user-pill" aria-label={session ? `Menu tài khoản ${userName}` : 'Menu tài khoản'}>
-          <span className="ref-user-initial" aria-hidden="true">
-            {session
-              ? (currentUser ? <UserAvatar userId={currentUser.id} name={userName} /> : userName.trim().charAt(0).toUpperCase())
-              : <ClientReferenceIcon name="user" />}
-          </span>
+      {session ? (
+        <Dropdown open={menuOpen} onOpenChange={setMenuOpen} menu={{ items, onClick: () => setMenuOpen(false) }} trigger={['click']} placement="bottomRight" classNames={{ root: 'cf-account-dropdown ref-theme ref-account-dropdown' }}>
+          <button type="button" className="ref-user-pill" aria-label={`Menu tài khoản ${userName}`}
+            aria-haspopup="menu" aria-expanded={menuOpen}>
+            <span className="ref-user-initial" aria-hidden="true">{avatar}</span>
+          </button>
+        </Dropdown>
+      ) : (
+        <button type="button" className="ref-user-pill" aria-label="Đăng nhập" title="Đăng nhập"
+          aria-haspopup="dialog" onClick={() => {
+            if (onOpenAuthModal) onOpenAuthModal('login')
+            else void navigate('/login')
+          }}>
+          <span className="ref-user-initial" aria-hidden="true"><ClientReferenceIcon name="user" /></span>
         </button>
-      </Dropdown>
+      )}
       <button type="button" className="stayhub-icon-link stayhub-mobile-trigger" id="client-mobile-menu-trigger"
         aria-label="Mở menu điều hướng" aria-haspopup="dialog" aria-expanded={isMobileMenuOpen}
         aria-controls="mobile-menu" onClick={onOpenMobileMenu}>

@@ -1184,6 +1184,19 @@
 .ref-locale { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; }
 .ref-user-pill:focus-visible { box-shadow: var(--ref-focus-ring); }
 .ref-account-dropdown .ant-dropdown-menu { font-family: var(--ref-font-body); border-radius: var(--ref-radius-md); border-color: var(--ref-border); }
+
+.ref-account-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  width: min(236px, calc(100vw - 84px));
+  padding-block: 6px;
+}
+.ref-account-summary .ref-user-initial { flex: 0 0 36px; height: 36px; }
+.ref-account-summary-details { display: grid; min-width: 0; gap: 2px; }
+.ref-account-summary-details > :is(strong, span) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ref-account-profile-label { font-size: 12px; font-weight: 600; }
 .ref-listings .ref-results.ref-wrap { padding-inline: var(--ref-container-gutter-desktop); }
 .ref-stay-photo { aspect-ratio: 4 / 3; }
 .ref-stay-photo-link, .ref-stay-image { display: block; width: 100%; height: 100%; }

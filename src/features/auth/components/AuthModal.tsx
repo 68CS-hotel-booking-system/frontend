@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { CloseOutlined, CompassOutlined } from '@ant-design/icons'
 import { ClientLoginForm } from './ClientLoginForm'
 import { ClientRegisterForm } from './ClientRegisterForm'
+import { GoogleAuthButton } from './GoogleAuthButton'
 
 export type AuthModalMode = 'login' | 'register'
 
@@ -25,6 +26,7 @@ export function AuthModal({
 
   const [mode, setMode] = useState<AuthModalMode>(initialMode)
   const [persistedEmail, setPersistedEmail] = useState('')
+  const [googleEnrollment, setGoogleEnrollment] = useState(false)
   const [mounted, setMounted] = useState(isOpen)
   const [isClosing, setIsClosing] = useState(false)
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
@@ -62,6 +64,7 @@ export function AuthModal({
       setMounted(true)
       setIsClosing(false)
       setMode(initialMode)
+      setGoogleEnrollment(false)
     }
   }
 
@@ -208,7 +211,7 @@ export function AuthModal({
       // Focus trap (giữ phím Tab bên trong modal)
       if (e.key === 'Tab' && cardRef.current) {
         const focusableElements = cardRef.current.querySelectorAll<HTMLElement>(
-          ':is(button, [href], input:not([type="hidden"]), select, textarea, [tabindex]):not(:disabled, [tabindex="-1"])',
+          ':is(button, [href], input:not([type="hidden"]), select, textarea, iframe, [tabindex]):not(:disabled, [tabindex="-1"])',
         )
         if (focusableElements.length === 0) return
 
@@ -257,6 +260,7 @@ export function AuthModal({
       setPersistedEmail(currentEmail)
     }
     setMode(nextMode)
+    setGoogleEnrollment(false)
   }
 
   function handleLoginSuccess(user: unknown) {
@@ -310,10 +314,10 @@ export function AuthModal({
             {/* Tiêu đề & phụ đề */}
             <div className="auth-modal-head auth-stagger-item auth-stagger-2">
               <h2 className="auth-modal-title" id={titleId}>
-                {variant === 'checkout' ? (mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản') : (mode === 'login' ? 'Đăng nhập tài khoản' : 'Tạo tài khoản mới')}
+                {googleEnrollment ? 'Hoàn tất đăng ký' : variant === 'checkout' ? (mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản') : (mode === 'login' ? 'Đăng nhập tài khoản' : 'Tạo tài khoản mới')}
               </h2>
               <p className="auth-modal-subtitle" id={subtitleId}>
-                {variant === 'checkout' ? (mode === 'login' ? 'Đăng nhập để tiếp tục thanh toán.' : 'Tạo tài khoản để tiếp tục đặt phòng.') : mode === 'login'
+                {googleEnrollment ? 'Thêm số điện thoại cho tài khoản StayHub.' : variant === 'checkout' ? (mode === 'login' ? 'Đăng nhập để tiếp tục thanh toán.' : 'Tạo tài khoản để tiếp tục đặt phòng.') : mode === 'login'
                   ? 'Đăng nhập để đặt phòng và theo dõi các đơn của bạn'
                   : 'Trở thành thành viên để nhận đặc quyền và ưu đãi lưu trú'}
               </p>
@@ -325,7 +329,9 @@ export function AuthModal({
               style={{ height: formHeight ? `${formHeight}px` : undefined }}
             >
               <div ref={formContainerRef} className="auth-form-slide">
-                {mode === 'login' ? (
+                <GoogleAuthButton key={mode} mode={mode} onSuccess={handleLoginSuccess}
+                  onEnrollmentChange={setGoogleEnrollment} />
+                {!googleEnrollment && (mode === 'login' ? (
                   <ClientLoginForm
                     key="modal-login-form"
                     defaultEmail={persistedEmail}
@@ -340,7 +346,7 @@ export function AuthModal({
                     onSwitchToLogin={(email) => handleSwitchMode('login', email)}
                     inModal
                   />
-                )}
+                ))}
               </div>
             </div>
           </div>
