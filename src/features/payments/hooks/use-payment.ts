@@ -11,6 +11,7 @@ export function usePayment(paymentId: string | null) {
     staleTime: 0,
     retry: false,
     refetchInterval: (query) => query.state.data?.status === 'PENDING'
-      && query.state.dataUpdateCount < 20 && !query.state.error ? 5000 : false,
+      && !query.state.data.expired && Date.parse(query.state.data.expiresAt) > Date.now()
+      && !query.state.error ? 5000 : false,
   })
 }

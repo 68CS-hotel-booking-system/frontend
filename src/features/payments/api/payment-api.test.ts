@@ -34,3 +34,15 @@ it('rejects unsafe payment redirects and accepts the VNPay sandbox', async () =>
     expect(() => paymentRedirectUrl(url)).toThrow()
   }
 })
+
+it('requests a QR for the owned booking and preserves provider QR data', async () => {
+  fetcher.mockResolvedValue(new Response(JSON.stringify({ message: 'Payment', data: {
+    id, bookingId: id, amountVnd: 5000, currency: 'VND', status: 'PENDING',
+    paymentUrl: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html', qrContent: '000201-test-qr',
+    expiresAt: '2099-01-01T00:00:00Z', bookingConfirmed: false, expired: false,
+  } })))
+  const { createVnpayQrPayment } = await import('./payment-api')
+  expect((await createVnpayQrPayment(id)).qrContent).toBe('000201-test-qr')
+  expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/payments/bookings/${id}/vnpay?qr=true`)
+  expect(fetcher.mock.calls[0][1]?.method).toBe('POST')
+})
