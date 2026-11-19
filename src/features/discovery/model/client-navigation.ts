@@ -4,6 +4,8 @@ export const clientNavigation = [
   { to: '/services', label: 'Dịch vụ' },
 ] as const
 
+export const accountSavedStaysPath = '/my-bookings?section=saved'
+
 export function isStaySection(pathname: string) {
   return pathname === '/' || pathname === '/explore' || pathname.startsWith('/stays/')
 }

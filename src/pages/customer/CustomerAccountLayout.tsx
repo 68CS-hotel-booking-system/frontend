@@ -2,13 +2,14 @@ import type { ReactNode } from 'react'
 import { App, Button, Dropdown, Typography } from 'antd'
 import { Link, useNavigate } from 'react-router'
 import { UserAvatar, useAuthAction, useCurrentUser } from '@/features/auth'
+import { accountSavedStaysPath } from '@/features/discovery'
 import { errorMessage } from '@/shared/api/api-error'
 import { AccountIcon, type AccountIconName } from '@/shared/ui/AccountIcon'
 import '@/shared/styles/account.css'
 import '@/shared/styles/customer-account-reference.css'
 
 interface CustomerAccountLayoutProps {
-  section: 'profile' | 'security' | 'bookings' | 'complaints' | 'staff'
+  section: 'profile' | 'security' | 'bookings' | 'saved' | 'complaints' | 'staff'
   title: string
   description: string
   mobileDescription?: string
@@ -27,7 +28,7 @@ export function CustomerAccountLayout({ section, title, description, mobileDescr
     { key: 'profile', label: 'Thông tin cá nhân', icon: 'user', href: profileHref },
     { key: 'security', label: 'Đăng nhập & bảo mật', icon: 'lock', href: securityHref },
     { key: 'bookings', label: 'Đặt phòng của tôi', icon: 'bed', href: '/my-bookings' },
-    { key: 'saved', label: 'Chỗ nghỉ đã lưu', icon: 'heart', href: '/saved-stays' },
+    { key: 'saved', label: 'Chỗ nghỉ đã lưu', icon: 'heart', href: accountSavedStaysPath },
     { key: 'complaints', label: 'Khiếu nại của tôi', icon: 'chat', href: '/my-complaints' },
     { key: 'staff', label: 'Nhân sự khách sạn', icon: 'staff', href: '/staff' },
   ]
@@ -40,12 +41,13 @@ export function CustomerAccountLayout({ section, title, description, mobileDescr
       void message.error(errorMessage(error))
     }
   }
-  const referenceLayout = section === 'bookings' || section === 'profile' || section === 'security'
+  const tripsLayout = section === 'bookings' || section === 'saved'
+  const referenceLayout = tripsLayout || section === 'profile' || section === 'security'
   const breadcrumb = <nav className="account-breadcrumb" aria-label="Đường dẫn"><Link to={profileHref}>Tài khoản</Link><span aria-hidden="true">/</span><span aria-current="page">{title}</span></nav>
   const signOut = <button type="button" className="account-nav-item account-sign-out" onClick={() => void handleLogout()} disabled={logout.isPending}>
     <AccountIcon name="logout" /><span>{logout.isPending ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
   </button>
-  return <div className={`customer-account-shell${referenceLayout ? ' customer-account-reference' : ''}${section === 'bookings' ? ' customer-account-trips' : ''}`}>
+  return <div className={`customer-account-shell${referenceLayout ? ' customer-account-reference' : ''}${tripsLayout ? ' customer-account-trips' : ''}`}>
     <div className="account-page">
       {referenceLayout && breadcrumb}
       {referenceLayout && checkoutReturn && <Link className="account-back account-checkout-return" to={checkoutReturn}><AccountIcon name="back" />Quay lại xác nhận đặt phòng</Link>}

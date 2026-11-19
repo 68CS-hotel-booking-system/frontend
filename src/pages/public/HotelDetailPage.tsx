@@ -5,7 +5,7 @@ import { usePublicHotelDetailQuery } from '@/features/hotels'
 import { checkoutHref } from '@/features/bookings'
 import { PublicRoomTypePhotos } from '@/features/rooms'
 import { AuthModal, useSession } from '@/features/auth'
-import { ClientGuestPicker, ClientStayDatePicker, ClientHotelGallery, HotelDetailActions, HotelDetailIcon, HotelAmenityIcon, useStayQuote, type StayParams } from '@/features/discovery'
+import { accountSavedStaysPath, ClientGuestPicker, ClientStayDatePicker, ClientHotelGallery, HotelDetailActions, HotelDetailIcon, HotelAmenityIcon, useStayQuote, type StayParams } from '@/features/discovery'
 import '@/shared/styles/hotel-stay-detail.css'
 import '@/shared/styles/stay-detail-design.css'
 
@@ -24,7 +24,7 @@ export function HotelDetailPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const returnTo: unknown = location.state?.listingReturn
-  const listingReturn = typeof returnTo === 'string' && /^(?:\/|\/explore|\/saved-stays)(?:[?#].*)?$/.test(returnTo)
+  const listingReturn = typeof returnTo === 'string' && (returnTo === accountSavedStaysPath || /^(?:\/|\/explore|\/saved-stays)(?:[?#].*)?$/.test(returnTo))
     ? returnTo
     : '/explore'
   const session = useSession()
