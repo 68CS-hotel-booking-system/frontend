@@ -1,8 +1,12 @@
+import { PictureOutlined } from '@ant-design/icons'
+import { ClientReferenceIcon } from './ClientReferenceIcon'
+
 type IconName = 'search' | 'star' | 'heart' | 'image-error' | 'globe' | 'filters' | 'brand-pin' | 'menu' | 'user'
 
-/** Original Figma exports; intrinsic SVG dimensions are preserved. */
 export function ClientFigmaIcon({ name }: { name: IconName }) {
-  return <img className="cf-icon" src={`/assets/client-figma/${name}.svg`} alt="" aria-hidden="true" />
+  return <span className="cf-icon" aria-hidden="true">
+    {name === 'image-error' ? <PictureOutlined /> : <ClientReferenceIcon name={name === 'brand-pin' ? 'pin' : name} />}
+  </span>
 }
 
 export function ClientFigmaBrand() {

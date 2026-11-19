@@ -1,5 +1,5 @@
 import { ClientListings } from '@/features/discovery'
 
 export function StayVibeHomePage() {
-  return <ClientListings />
+  return <ClientListings home />
 }

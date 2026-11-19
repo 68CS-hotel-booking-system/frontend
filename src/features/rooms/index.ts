@@ -8,6 +8,7 @@ export { RoomInventoryPanel } from './components/RoomInventoryPanel'
 export { EditRoomTypeModal } from './components/EditRoomTypeModal'
 
 export { RoomTypeDetailsModal } from './components/RoomTypeDetailsModal'
+export { PublicRoomTypePhotos } from './components/PublicRoomTypePhotos'
 
 export * from './model/room-status'
 export { RoomOperationalStatusTag } from './components/RoomOperationalStatusTag'

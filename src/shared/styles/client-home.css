@@ -2265,10 +2265,6 @@
   position: fixed;
   inset: 0;
   z-index: 2200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
   opacity: 0;
   visibility: hidden;
   transition: opacity 150ms ease-out, visibility 150ms;
@@ -2294,11 +2290,26 @@
   cursor: pointer;
 }
 
+.auth-modal-positioner {
+  position: absolute;
+  inset: var(--auth-viewport-top, 0px) 0 auto;
+  height: var(--auth-viewport-height, 100%);
+  height: var(--auth-viewport-height, 100dvh);
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  grid-template-rows: minmax(0, 1fr);
+  padding: 16px;
+  pointer-events: none;
+}
+
 .auth-modal-card {
   position: relative;
   z-index: 2;
   width: min(480px, 100%);
-  max-height: calc(100vh - 32px);
+  max-height: 100%;
+  min-height: 0;
+  pointer-events: auto;
   background: var(--white);
   border-radius: 20px;
   border: 1px solid var(--line);
@@ -2323,18 +2334,9 @@
   transition: opacity 150ms cubic-bezier(0.4, 0, 1, 1), transform 150ms cubic-bezier(0.4, 0, 1, 1);
 }
 
-/* Mobile: vẫn dùng kiểu nở ra - co lại, không dùng bottom sheet */
 @media (max-width: 639.98px) {
-  .auth-modal-overlay {
-    align-items: center;
-    padding: 16px;
-  }
-
   .auth-modal-card {
-    width: min(440px, calc(100vw - 24px));
-    max-height: calc(100vh - 32px);
-    border-radius: 20px;
-    border: 1px solid var(--line);
+    width: min(440px, 100%);
   }
 }
 
@@ -2369,10 +2371,16 @@
 }
 
 .auth-modal-body {
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
   padding: 30px 32px 28px;
   display: flex;
   flex-direction: column;
+}
+
+.auth-modal-body > * {
+  flex-shrink: 0;
 }
 
 @media (max-width: 520px) {
@@ -2403,6 +2411,7 @@
 
 .auth-modal-head {
   margin-bottom: 20px;
+  padding-right: 36px;
 }
 
 .auth-modal-title {
@@ -2456,10 +2465,22 @@
 
 /* Smooth height transition between login and register */
 .auth-modal-height-animator {
+  margin-inline: -4px;
+  padding-inline: 4px;
   transition: height 220ms cubic-bezier(0.34, 1.4, 0.64, 1);
   overflow: hidden;
   will-change: height;
 }
+
+.auth-google { display: grid; gap: 10px; margin-bottom: 16px; }
+.auth-google-button { display: grid; justify-items: center; min-width: 0; }
+.auth-google :is(.auth-google-divider, p) { margin: 0; color: var(--muted); font-size: 13px; }
+.auth-google-divider { display: flex; align-items: center; gap: 12px; }
+.auth-google-divider::before,
+.auth-google-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.auth-google-phone { display: grid; gap: 14px; }
+.auth-google-phone .auth-input { padding-inline: 14px; }
+.auth-google-phone .auth-switch-btn { justify-self: center; }
 
 @keyframes authFormContentEnter {
   from {
@@ -2792,3 +2813,12 @@
 .auth-modal-checkout .auth-switch-btn { color: #222; text-decoration: underline; }
 .auth-modal-checkout .auth-modal-backdrop { background: rgb(0 0 0 / 48%); backdrop-filter: none; }
 .auth-modal-checkout .auth-modal-card { box-shadow: 0 8px 32px rgb(0 0 0 / 18%); border: 0; }
+
+@media (max-width: 520px) {
+  .auth-modal-checkout .auth-modal-body { padding: 20px 20px 22px; }
+}
+
+@media (pointer: coarse) {
+  .auth-modal-card .auth-input { font-size: 16px; }
+  .auth-modal-close-btn { width: 44px; height: 44px; }
+}

@@ -1,6 +1,6 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { ConfigProvider } from 'antd'
-import { Outlet, useLocation } from 'react-router'
+import { Outlet, useLocation, useNavigationType } from 'react-router'
 import {
   ClientHomeProvider,
   useClientHomeContext,
@@ -15,18 +15,19 @@ import { PageLoading } from '@/shared/ui/PageLoading'
 
 function ClientHomeLayout() {
   const { pathname, hash } = useLocation()
+  const previousPath = useRef(pathname)
+  const navigationType = useNavigationType()
   const isHotelDetail = pathname.startsWith('/stays/')
   useEffect(() => {
-    if (!hash) return
-    const frame = requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+    const changed = previousPath.current !== pathname
+    previousPath.current = pathname
+    if (!changed || hash || navigationType === 'POP') return
+    const frame = requestAnimationFrame(() => document.getElementById('main')?.focus({ preventScroll: true }))
     return () => cancelAnimationFrame(frame)
-  }, [pathname, hash])
+  }, [pathname, hash, navigationType])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const {
     savedIds,
-    filterState,
-    pulseSaved,
-    toggleSavedOnly,
     toastMessage,
     showToast,
     authModalState,
@@ -35,8 +36,8 @@ function ClientHomeLayout() {
   } = useClientHomeContext()
 
   return (
-    <ConfigProvider theme={{ token: { colorPrimary: '#ff385c', colorInfo: '#ff385c', colorText: '#222222', colorTextSecondary: '#717171', colorBorder: '#ebebeb', colorBgLayout: '#ffffff', fontFamily: isHotelDetail ? 'Inter, sans-serif' : "'Liberation Sans', Arial, sans-serif", borderRadius: 12, controlHeight: 44 }, components: { Button: { borderRadius: 12 }, Table: { headerBg: '#f7f7f7', headerColor: '#222222', borderColor: '#ebebeb', cellPaddingBlock: 18 }, Tabs: { inkBarColor: '#ff385c', itemSelectedColor: '#ff385c' } } }}>
-    <div className={`client-theme ref-theme min-h-screen flex flex-col bg-[var(--paper)] text-[var(--ink)]${isHotelDetail ? ' hotel-detail-theme' : ''}`}>
+    <ConfigProvider theme={{ token: { colorPrimary: '#c91f4b', colorInfo: '#245b91', colorText: '#241f20', colorTextSecondary: '#655b5f', colorBorder: '#e9e0e2', colorBgLayout: '#fffcfb', fontFamily: '"Be Vietnam Pro", system-ui, sans-serif', borderRadius: 12, controlHeight: 44 }, components: { Table: { headerBg: '#faf3f4', headerColor: '#241f20', borderColor: '#e9e0e2', cellPaddingBlock: 18 } } }}>
+    <div className={`client-theme ref-theme stayhub-client min-h-screen flex flex-col${isHotelDetail ? ' hotel-detail-theme' : ''}`}>
       <ClientSvgSprite />
       <a className="skip-link" href="#main">
         Đến nội dung chính
@@ -44,9 +45,6 @@ function ClientHomeLayout() {
 
       <ClientSiteHeader
         savedCount={savedIds.size}
-        isSavedActive={filterState.savedOnly}
-        pulseSaved={pulseSaved}
-        onToggleSaved={toggleSavedOnly}
         onOpenMobileMenu={() => setMobileMenuOpen(true)}
         isMobileMenuOpen={mobileMenuOpen}
         onOpenAuthModal={(mode) => openAuthModal(mode)}

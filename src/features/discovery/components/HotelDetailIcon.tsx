@@ -1,8 +1,24 @@
-const assets = {
-  back: 'imgSvg', star: 'imgSvg1', share: 'imgSvg2', heart: 'imgSvg3', photos: 'imgSvg4', calendar: 'imgSvg5', chevron: 'imgSvg6', info: 'imgSvg7', bed: 'imgSvg8', area: 'imgSvg9', guests: 'imgSvg10', check: 'imgSvg11', selected: 'imgSvg12', parking: 'imgSvg13', pool: 'imgSvg14', reception: 'imgSvg15', restaurant: 'imgSvg16', gym: 'imgSvg17', wifi: 'imgSvg18', conditioning: 'imgSvg19', elevator: 'imgSvg20', bar: 'imgSvg21', luggage: 'imgSvg22', next: 'imgSvg23', checkIn: 'imgSvg24', checkOut: 'imgSvg25', policy: 'imgSvg26', pin: 'imgSvg27', book: 'imgSvg29', compass: 'imgSvgCompassIcon', globe: 'imgSvg32', wishlist: 'imgButtonSvg',
+import {
+  AppstoreOutlined, ArrowLeftOutlined, CalendarOutlined, CarOutlined, CarryOutOutlined,
+  CheckCircleOutlined, CheckOutlined, ClockCircleOutlined, CompassOutlined, CoffeeOutlined,
+  DownOutlined, EnvironmentOutlined, GlobalOutlined, HeartOutlined, HomeOutlined, InfoCircleOutlined,
+  LoginOutlined, LogoutOutlined, PictureOutlined, RightOutlined, ShareAltOutlined, ShopOutlined,
+  StarFilled, ThunderboltOutlined, TeamOutlined, WifiOutlined,
+} from '@ant-design/icons'
+
+const icons = {
+  back: ArrowLeftOutlined, star: StarFilled, share: ShareAltOutlined, heart: HeartOutlined,
+  photos: PictureOutlined, calendar: CalendarOutlined, chevron: DownOutlined, info: InfoCircleOutlined,
+  bed: HomeOutlined, area: AppstoreOutlined, guests: TeamOutlined, check: CheckOutlined,
+  selected: CheckCircleOutlined, parking: CarOutlined, pool: EnvironmentOutlined, reception: ClockCircleOutlined,
+  restaurant: ShopOutlined, gym: ThunderboltOutlined, wifi: WifiOutlined, conditioning: ThunderboltOutlined,
+  elevator: AppstoreOutlined, bar: CoffeeOutlined, luggage: CarryOutOutlined, next: RightOutlined,
+  checkIn: LoginOutlined, checkOut: LogoutOutlined, policy: InfoCircleOutlined, pin: EnvironmentOutlined,
+  book: CalendarOutlined, compass: CompassOutlined, globe: GlobalOutlined, wishlist: HeartOutlined,
 } as const
-export type HotelDetailIconName = keyof typeof assets
+export type HotelDetailIconName = keyof typeof icons
 
 export function HotelDetailIcon({ name }: { name: HotelDetailIconName }) {
-  return <img className="hotel-detail-icon" src={`/assets/detail-figma/${assets[name]}.svg`} alt="" aria-hidden="true" />
+  const Icon = icons[name]
+  return <Icon className="hotel-detail-icon" aria-hidden="true" />
 }

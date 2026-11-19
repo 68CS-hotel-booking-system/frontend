@@ -68,12 +68,7 @@ export async function runAuthAction(
   }
 
   if (id === 'login' || id === 'refresh') {
-    const session = loginResponseSchema.parse(result)
-    queryClient.clear()
-    setSession(session)
-    setAuthStatus('authenticated')
-    broadcastAuth('SESSION_UPDATED', session)
-    return { user: session.user, expiresAt: session.expiresAt }
+    return adoptAuthSession(loginResponseSchema.parse(result))
   }
 
   if (id === 'logout' || id === 'password' || id === 'reset-password') {
@@ -81,6 +76,21 @@ export async function runAuthAction(
   }
 
   return result
+}
+
+function adoptAuthSession(session: ReturnType<typeof loginResponseSchema.parse>) {
+  queryClient.clear()
+  setSession(session)
+  setAuthStatus('authenticated')
+  broadcastAuth('SESSION_UPDATED', session)
+  return { user: session.user, expiresAt: session.expiresAt }
+}
+
+export function useGoogleSignIn() {
+  return useAbortableMutation(['auth', 'google'], async (payload: { credential: string; phone?: string }, signal) => {
+    const session = await authApi.signInWithGoogle(payload, signal)
+    return adoptAuthSession(session)
+  })
 }
 
 export function useAuthAction(id: AuthActionId) {

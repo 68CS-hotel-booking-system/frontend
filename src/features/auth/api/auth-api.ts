@@ -23,6 +23,22 @@ export async function login(payload: LoginRequest, signal?: AbortSignal) {
   })
 }
 
+export function getGoogleChallenge(signal?: AbortSignal) {
+  return http.request('/auth/google', {
+    signal,
+    schema: z.object({ clientId: z.string(), nonce: z.string() }),
+  })
+}
+
+export function signInWithGoogle(payload: { credential: string; phone?: string }, signal?: AbortSignal) {
+  return http.request('/auth/google', {
+    method: 'POST',
+    body: payload,
+    signal,
+    schema: loginResponseSchema,
+  })
+}
+
 export async function register(payload: RegisterRequest, signal?: AbortSignal) {
   return http.request('/auth/register', {
     method: 'POST',

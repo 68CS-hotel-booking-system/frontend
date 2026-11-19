@@ -5,6 +5,7 @@ import { App } from 'antd'
 import { useAuthAction, useCurrentUser, useSession } from '@/features/auth'
 import { errorMessage } from '@/shared/api/api-error'
 import { ClientReferenceBrand } from './ClientReferenceIcon'
+import { clientNavigation } from '../model/client-navigation'
 
 interface ClientMobileMenuProps {
   isOpen: boolean
@@ -24,7 +25,7 @@ export function ClientMobileMenu({ isOpen, onClose, onOpenAuthModal }: ClientMob
   useEffect(() => {
     if (!isOpen || !dialog.current) return
     const panel = dialog.current
-    const returnFocus = document.getElementById('client-account-menu-trigger')
+    const returnFocus = document.getElementById('client-mobile-menu-trigger')
     const previousOverflow = document.body.style.overflow
     panel.showModal()
     closeButton.current?.focus()
@@ -65,9 +66,8 @@ export function ClientMobileMenu({ isOpen, onClose, onOpenAuthModal }: ClientMob
       <button ref={closeButton} className="cf-mobile-close" type="button" aria-label="Đóng menu" onClick={onClose}><CloseOutlined aria-hidden="true" /></button>
     </div>
     <nav aria-label="Điều hướng di động">
-      <NavLink to="/" onClick={onClose}>Chỗ ở</NavLink>
-      <NavLink to="/explore" onClick={onClose}>Tìm chỗ nghỉ</NavLink>
-      {['Trải nghiệm', 'Dịch vụ'].map(label => <button type="button" key={label} onClick={() => { onClose(); void message.info(`${label} đang được phát triển.`) }}>{label}</button>)}
+      {clientNavigation.map(({ to, label }) => <NavLink key={to} to={to} end onClick={onClose}>{label}</NavLink>)}
+      <NavLink to="/saved-stays" onClick={onClose}>Chỗ nghỉ đã lưu</NavLink>
       {session && <>
         <NavLink to="/account" onClick={onClose}>Tài khoản của tôi</NavLink>
         {isOwner && <NavLink to="/admin/overview" onClick={onClose}>Khách sạn của tôi</NavLink>}

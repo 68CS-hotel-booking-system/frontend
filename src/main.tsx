@@ -15,6 +15,7 @@ import './shared/styles/customer-pages.css'
 import './shared/styles/client-figma.css'
 import './shared/styles/client-reference.css'
 import './shared/styles/payment-pending.css'
+import './shared/styles/stayhub-client.css'
 
 document.title = env.appName
 const root = document.getElementById('root')

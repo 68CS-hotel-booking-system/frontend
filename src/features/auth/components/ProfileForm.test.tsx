@@ -18,13 +18,9 @@ it('shows the signed-in profile, verification status and unavailable sections', 
   expect(html).toContain('qa@example.invalid')
   expect(html).toContain('Đã xác minh')
   expect(html).toContain('Xác minh danh tính')
-  for (const id of ['display-name', 'birth-date', 'gender', 'country', 'city', 'address', 'language', 'currency', 'timezone']) {
-    const control = html.match(new RegExp(`<(?:input|select)[^>]*id="profile-${id}"[^>]*>`))?.[0]
-    expect(control).toBeDefined()
-    expect(control).not.toContain('disabled')
-    expect(control).toContain('aria-describedby="profile-preview-hint"')
-  }
-  expect(html).toContain('chưa được lưu và sẽ mất khi tải lại trang')
+  expect(html).toContain('Đổi ảnh')
+  expect(html).toContain('accept="image/jpeg,image/png,image/webp"')
+  expect(html.match(/<input[^>]*id="profile-address"[^>]*>/)?.[0]).toContain('disabled')
   expect(html.match(/<input[^>]*id="profile-phone"[^>]*>/)?.[0]).not.toContain('disabled')
   expect(html.match(/<input[^>]*id="profile-phone"[^>]*>/)?.[0]).toContain('value="0900000000"')
   expect(html.match(/<button[^>]*type="submit"[^>]*>/)?.[0]).toContain('disabled')
