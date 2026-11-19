@@ -1,5 +1,5 @@
-import { AuthPanel } from '@/features/auth'
+import { ResetPasswordView } from '@/features/auth'
 
 export function ResetPasswordPage() {
-  return <AuthPanel initialAction="reset-password" />
+  return <ResetPasswordView />
 }

@@ -2,13 +2,15 @@ import { useState, type ComponentType } from 'react'
 import { CalendarOutlined, ClockCircleOutlined, EnvironmentOutlined, ReloadOutlined, TeamOutlined } from '@ant-design/icons'
 import { App, Button } from 'antd'
 import { Link } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { usePublicHotelDetailQuery } from '@/features/hotels'
 import { PaymentButton } from '@/features/payments'
 import { errorMessage } from '@/shared/api/api-error'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
 import { cancelCustomerBooking, type BookingSummary } from '../api/booking-api'
-import { useBookingAction } from '../hooks/use-bookings'
+import { bookingKeys, useBookingAction } from '../hooks/use-bookings'
+import { hasBookingHoldExpired, useBookingHoldExpired } from '../hooks/use-booking-hold-expired'
 import { tripGroups, useCustomerTrips } from '../hooks/use-customer-trips'
 import { bookingStatusLabels } from '../model/booking-display'
 import { checkoutDate, checkoutMoney } from '../model/client-checkout'
@@ -18,7 +20,7 @@ import '@/shared/styles/customer-trips.css'
 const tabs = [
   { id: 'upcoming', label: 'Sắp tới', emptyTitle: 'Chưa có đơn đặt phòng sắp tới' },
   { id: 'completed', label: 'Đã hoàn thành', emptyTitle: 'Chưa có chuyến đi đã hoàn thành' },
-  { id: 'cancelled', label: 'Đã hủy', emptyTitle: 'Chưa có đơn đã hủy hoặc hết hạn' },
+  { id: 'cancelled', label: 'Đã hủy / hết hạn', emptyTitle: 'Chưa có đơn đã hủy hoặc hết hạn' },
 ] as const
 const badgeTone: Record<string, string> = {
   PENDING_PAYMENT: 'warn', CONFIRMED: 'success', CHECKED_IN: 'success', CANCELLED: 'danger', EXPIRED: 'danger',
@@ -42,9 +44,18 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
     .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
   const currentTab = tabs.find(item => item.id === tab)!
   const cancel = useBookingAction(cancelCustomerBooking)
+  const client = useQueryClient()
   const { message, modal } = App.useApp()
 
   function confirmCancellation(booking: BookingSummary) {
+    const refreshIfExpired = () => {
+      if (booking.status !== 'PENDING_PAYMENT' || !hasBookingHoldExpired(booking.expiresAt)) return false
+      void client.invalidateQueries({ queryKey: bookingKeys.all }, { cancelRefetch: false })
+      void message.info('Hạn thanh toán đã qua. Kiểm tra trạng thái mới của đơn trong danh sách.')
+      return true
+    }
+    if (refreshIfExpired()) return
+
     modal.confirm({
       title: 'Hủy đơn đặt phòng?',
       content: booking.status === 'CONFIRMED'
@@ -54,6 +65,7 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
       cancelText: 'Giữ đặt phòng',
       okButtonProps: { danger: true },
       onOk: async () => {
+        if (refreshIfExpired()) return
         try {
           const result = await cancel.mutateAsync(booking.id)
           if (result.status === 'EXPIRED') {
@@ -66,6 +78,7 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
             ? ` Khoản hoàn ${checkoutMoney(refundAmount, result.currency)} đang chờ xử lý.` : ''
           void message.success(`Đã hủy đặt phòng.${fee}${refund}`)
         } catch (error) {
+          if (refreshIfExpired()) return
           void message.error(errorMessage(error))
           throw error
         }
@@ -118,15 +131,18 @@ function CustomerTripCard({ booking, CoverImage, onDetails, onCancel }: {
   booking: BookingSummary; CoverImage: Cover; onDetails: () => void; onCancel: () => void
 }) {
   const { hotel } = usePublicHotelDetailQuery(booking.hotelId)
-  const pending = booking.status === 'PENDING_PAYMENT'
-  const cancelled = booking.status === 'CANCELLED' || booking.status === 'EXPIRED'
+  const holdExpired = useBookingHoldExpired(booking.status === 'PENDING_PAYMENT' ? booking.expiresAt : null)
+  const status = holdExpired ? 'EXPIRED' : booking.status
+  const pending = status === 'PENDING_PAYMENT'
+  const expired = status === 'EXPIRED'
+  const cancelled = status === 'CANCELLED' || expired
   return <li className={cancelled ? 'tr-item is-cancelled' : 'tr-item'}>
     <article className="tr-card">
       <div className="tr-main">
         <div className="tr-media"><CoverImage hotelId={booking.hotelId} /></div>
         <div className="tr-body">
           <div className="tr-top">
-            <span className={`tr-badge tr-badge-${badgeTone[booking.status] ?? 'neutral'}`}><span className="tr-dot" aria-hidden="true" />{bookingStatusLabels[booking.status] ?? booking.status}</span>
+            <span className={`tr-badge tr-badge-${badgeTone[status] ?? 'neutral'}`}><span className="tr-dot" aria-hidden="true" />{bookingStatusLabels[status] ?? status}</span>
             <span className="tr-code">{booking.bookingCode}</span>
           </div>
           <h2 className="tr-name">{hotel ? <Link to={`/stays/${booking.hotelId}`}>{hotel.name}</Link> : 'Đơn đặt phòng'}</h2>
@@ -139,10 +155,11 @@ function CustomerTripCard({ booking, CoverImage, onDetails, onCancel }: {
           <p className="tr-price">{checkoutMoney(booking.totalAmount, booking.currency)}</p>
           <p className="tr-price-note">Tổng tiền đặt phòng</p>
           {pending && booking.expiresAt && <p className="tr-deadline"><ClockCircleOutlined />Thanh toán trước {tripDateTime.format(new Date(booking.expiresAt))}</p>}
+          {expired && <p className="tr-deadline">Đơn đã hết thời gian giữ phòng.</p>}
           <div className="tr-buttons">
             {pending && <PaymentButton bookingId={booking.id} />}
             <Button onClick={onDetails}>Xem chi tiết</Button>
-            {(pending || booking.status === 'CONFIRMED') && <button className="tr-link is-danger" type="button" onClick={onCancel}>Hủy đặt phòng</button>}
+            {(pending || status === 'CONFIRMED') && <button className="tr-link is-danger" type="button" onClick={onCancel}>Hủy đặt phòng</button>}
           </div>
         </div>
       </div>

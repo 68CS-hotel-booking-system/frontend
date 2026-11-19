@@ -1,5 +1,5 @@
-import { AuthPanel } from '@/features/auth'
+import { ForgotPasswordView } from '@/features/auth'
 
 export function ForgotPasswordPage() {
-  return <AuthPanel initialAction="forgot-password" />
+  return <ForgotPasswordView />
 }

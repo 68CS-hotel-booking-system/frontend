@@ -276,6 +276,10 @@ export function useClientHome() {
     return allStays.find((s) => s.id === modalStayId) || null
   }, [allStays, modalStayId])
 
+  const closeAuthModal = useCallback(() => {
+    setAuthModalState(prev => prev.isOpen ? { ...prev, isOpen: false } : prev)
+  }, [])
+
   return {
     allStays,
     destinations,
@@ -304,8 +308,7 @@ export function useClientHome() {
     authModalState,
     openAuthModal: (mode: 'login' | 'register' = 'login') =>
       setAuthModalState({ isOpen: true, mode }),
-    closeAuthModal: () =>
-      setAuthModalState((prev) => ({ ...prev, isOpen: false })),
+    closeAuthModal,
     switchAuthMode: (mode: 'login' | 'register') =>
       setAuthModalState((prev) => ({ ...prev, mode })),
     showToast,

@@ -49,6 +49,8 @@
   .account-content { gap: 0; max-width: 720px; }
   .account-heading h1 { font-size: 32px; font-weight: 600; line-height: 1.2; letter-spacing: var(--tracking-display); }
   .account-heading p { font-size: 16px; line-height: 1.43; }
+  .account-saved-stays { margin-top: var(--space-4); }
+  .account-saved-stays .stayhub-saved-item h2 { font-size: var(--text-base); font-weight: 600; }
 
   @media (max-width: 1023px) {
     .account-page { padding-inline: 24px; }

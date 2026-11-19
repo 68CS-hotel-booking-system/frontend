@@ -6,6 +6,7 @@ import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
 import { bookingStatuses, type BookingDetail, type BookingSummary } from '../api/booking-api'
 import { useBooking, useBookings } from '../hooks/use-bookings'
+import { useBookingHoldExpired } from '../hooks/use-booking-hold-expired'
 import { bookingStatusLabels } from '../model/booking-display'
 import { checkoutMoney as amount } from '../model/client-checkout'
 import { StayOperations } from './StayOperations'
@@ -46,9 +47,11 @@ export function BookingDetailsDrawer({ selectedId, onClose, hotelId }: { selecte
   </Drawer>
 }
 function BookingDetails({ booking, hotelId }: { booking: BookingDetail; hotelId?: string }) {
+  const holdExpired = useBookingHoldExpired(!hotelId && booking.status === 'PENDING_PAYMENT' ? booking.expiresAt : null)
+  const status = holdExpired ? 'EXPIRED' : booking.status
   return <Space orientation="vertical" size="large" style={{ width: '100%' }}>
     <Descriptions title={booking.bookingCode} column={1} items={[
-      { key: 'status', label: 'Trạng thái', children: bookingStatusLabels[booking.status] ?? booking.status },
+      { key: 'status', label: 'Trạng thái', children: bookingStatusLabels[status] ?? status },
       { key: 'dates', label: 'Lưu trú', children: `${booking.checkIn} → ${booking.checkOut} (${booking.nights} đêm)` },
       { key: 'booker', label: 'Người đặt', children: `${booking.booker.fullName ?? ''} · ${booking.booker.email ?? ''} · ${booking.booker.phone}` },
       { key: 'guest', label: 'Người nhận phòng', children: `${booking.guest.fullName ?? ''} · ${booking.guest.phone}` },
@@ -61,7 +64,7 @@ function BookingDetails({ booking, hotelId }: { booking: BookingDetail; hotelId?
       { title: 'Thành tiền', render: (_, item) => amount(item.subtotalAmount, booking.currency) },
     ]} expandable={{ expandedRowRender: (item) => <ul>{item.nightlyPrices.map((night) => <li key={night.stayDate}>{night.stayDate}: {amount(night.unitPrice, booking.currency)}</li>)}</ul> }} />
     {hotelId ? <StayOperations booking={booking} hotelId={hotelId} /> : <>
-      {booking.status === 'PENDING_PAYMENT' && <PaymentButton bookingId={booking.id} />}
+      {status === 'PENDING_PAYMENT' && <PaymentButton bookingId={booking.id} />}
       <Alert type="info" title="Cần hỗ trợ về đơn này?" description="Gửi khiếu nại để hệ thống tiếp nhận và theo dõi xử lý. Điều kiện gửi được kiểm tra theo trạng thái đơn." />
       <ComplaintForm bookingId={booking.id} />
     </>}
