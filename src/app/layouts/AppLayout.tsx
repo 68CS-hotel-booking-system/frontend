@@ -35,6 +35,10 @@ function ClientHomeLayout() {
     closeAuthModal,
   } = useClientHomeContext()
 
+  useEffect(() => {
+    if (pathname === '/forgot-password' || pathname === '/reset-password') closeAuthModal()
+  }, [pathname, closeAuthModal])
+
   return (
     <ConfigProvider theme={{ token: { colorPrimary: '#c91f4b', colorInfo: '#245b91', colorText: '#241f20', colorTextSecondary: '#655b5f', colorBorder: '#e9e0e2', colorBgLayout: '#fffcfb', fontFamily: '"Be Vietnam Pro", system-ui, sans-serif', borderRadius: 12, controlHeight: 44 }, components: { Table: { headerBg: '#faf3f4', headerColor: '#241f20', borderColor: '#e9e0e2', cellPaddingBlock: 18 } } }}>
     <div className={`client-theme ref-theme stayhub-client min-h-screen flex flex-col${isHotelDetail ? ' hotel-detail-theme' : ''}`}>

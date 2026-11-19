@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import {
@@ -50,6 +50,7 @@ export function ClientLoginForm({
     resolver: zodResolver(loginRequestSchema),
     defaultValues: { email: defaultEmail, password: '' },
   })
+  const recoveryEmail = useWatch({ control, name: 'email' })
 
   const busy = isSubmitting || mutation.isPending
 
@@ -212,6 +213,7 @@ export function ClientLoginForm({
         </label>
         <Link
           to="/forgot-password"
+          state={{ recoveryEmail }}
           className="text-sm font-medium text-[var(--color-primary)] hover:underline"
         >
           Quên mật khẩu?

@@ -1,5 +1,6 @@
 export { AuthPanel } from './components/AuthPanel'
 export { AuthForm } from './components/AuthForm'
+export { ForgotPasswordView, ResetPasswordView } from './components/PasswordRecovery'
 export { ProfileForm } from './components/ProfileForm'
 export { UserAvatar } from './components/UserAvatar'
 export { AccountPasswordForm } from './components/AccountPasswordForm'
