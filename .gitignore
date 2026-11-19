@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+.agents
+.taste-skill
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -32,3 +35,6 @@ dist-ssr
 *.tsbuildinfo
 coverage/
 .vite/
+docs/superpowers/plans/2026-11-05-admin-login.md
+README.md
+index.html

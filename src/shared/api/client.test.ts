@@ -114,4 +114,54 @@ describe('shared HTTP client', () => {
       expect(error).toBeInstanceOf(ApiError)
     }
   })
+
+  it('sends X-Requested-With header on requests', async () => {
+    const { client, fetcher } = setup(json({ message: 'ok', data: true }))
+    await client.request('/sample')
+    expect(new Headers(fetcher.mock.calls[0][1]?.headers).get('X-Requested-With')).toBe('XMLHttpRequest')
+  })
+
+  it('retries once with refreshed token when receiving 401 on non-auth endpoint', async () => {
+    let callCount = 0
+    let currentToken = 'old-token'
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => {
+      callCount++
+      if (callCount === 1) {
+        return json({ detail: 'Token expired', code: 'UNAUTHORIZED' }, 401)
+      }
+      return json({ message: 'ok', data: { success: true } }, 200)
+    })
+    const onRefreshToken = vi.fn().mockImplementation(async () => {
+      currentToken = 'new-token'
+      return 'new-token'
+    })
+    const client = createHttpClient({
+      baseUrl: '/api/v1',
+      timeoutMs: 10_000,
+      fetcher,
+      getAccessToken: () => currentToken,
+      onRefreshToken,
+    })
+
+    const result = await client.request('/hotels')
+    expect(result).toEqual({ success: true })
+    expect(onRefreshToken).toHaveBeenCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(new Headers(fetcher.mock.calls[1][1]?.headers).get('Authorization')).toBe('Bearer new-token')
+  })
+
+  it('does not retry 401 on auth endpoints', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(json({ detail: 'Invalid' }, 401))
+    const onRefreshToken = vi.fn().mockResolvedValue('new-token')
+    const client = createHttpClient({
+      baseUrl: '/api/v1',
+      timeoutMs: 10_000,
+      fetcher,
+      onRefreshToken,
+    })
+
+    await expect(client.request('/auth/refresh')).rejects.toMatchObject({ status: 401 })
+    expect(onRefreshToken).not.toHaveBeenCalled()
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
 })

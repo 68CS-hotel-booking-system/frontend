@@ -1,6 +1,24 @@
 # Hotel Booking Frontend
 
-Khung React + TypeScript + Vite để nhóm phát triển thống nhất. Node 24, npm; dùng lockfile.
+React + TypeScript + Vite. Dùng React Router, TanStack Query, Ant Design, React Hook Form và Zod; Node 24 và npm theo lockfile.
+
+## Tổ chức code
+
+Đọc [Frontend architecture](docs/frontend-architecture.md) trước khi thêm tính năng.
+
+- `app/`: router, layout và providers.
+- `pages/`: route, điều hướng và ghép các feature.
+- `features/<name>/api/`: HTTP functions và contract DTO của backend.
+- `features/<name>/hooks/`: query keys, queries, mutations và logic React của feature.
+- `features/<name>/model/`: kiểu dữ liệu, schema form và xử lý dữ liệu.
+- `features/<name>/mocks/`: dữ liệu/hành vi mô phỏng được ghi rõ.
+- `features/<name>/components/`: UI riêng của feature.
+- `features/<name>/index.ts`: public exports cho page và feature khác.
+- `shared/`: HTTP client, config, hooks, UI và utilities độc lập với feature.
+
+Luồng: page/component -> feature hook -> feature API -> shared HTTP client.
+Bên ngoài feature import từ `@/features/<name>`; bên trong dùng relative imports. ESLint kiểm tra hướng phụ thuộc và chặn import vào phần riêng của feature khác.
+Tên component dùng PascalCase; file khác dùng kebab-case. Dùng named exports. Đặt test cạnh code được kiểm tra.
 
 ## Chạy local
 
@@ -10,85 +28,77 @@ Copy-Item .env.example .env.local
 npm.cmd run dev
 ~~~
 
-Chỉ copy env khi chưa có .env.local. Backend chạy ở http://localhost:8080 với profile dev.
-FE chạy http://localhost:5173. Đổi API_PROXY_TARGET trong .env.local nếu backend ở địa chỉ khác; khởi động lại Vite sau khi sửa env.
+Chỉ copy env khi chưa có `.env.local`. Backend dev mặc định ở http://localhost:8080; FE ở http://localhost:5173.
+Đổi `API_PROXY_TARGET` trong `.env.local` nếu backend ở địa chỉ khác rồi khởi động lại Vite.
 
-Trang / gọi GET /actuator/health thật qua Vite proxy. Backend dừng sẽ hiển thị lỗi và nút thử lại, không tự thay bằng mock.
-Luồng mẫu: SystemStatusPage -> useBackendHealth -> getBackendHealth -> shared HTTP client -> backend.
-Đây là feature kiểm tra kết nối; chưa phải danh sách khách sạn hoặc test nghiệp vụ.
+## Phạm vi API và dữ liệu mẫu
 
-## Stack và quy ước
+- Auth có feature riêng tại `features/auth`: đăng ký, xác minh email, login, refresh/logout, forgot/reset/change password và đọc user hiện tại.
+- Các route `/login`, `/register`, `/forgot-password`, `/verify-email`, `/reset-password` dùng feature auth, độc lập với trang diagnostics.
+- `/management/live` giữ 18 thao tác kiểm thử API đã có, dùng lại logic auth và contract khách sạn.
+- Quản lý khách sạn có nguồn API: danh sách/chi tiết/tạo/sửa, danh mục thành phố/tiện ích, album ảnh, loại phòng/phòng vật lý, giá theo ngày, chính sách và lịch chặn phòng. Hồ sơ được sửa bằng PATCH có version; album lưu trên BE và chuyển ảnh bằng albumId. Tiện ích gán riêng cho hotel và room type. Xem [phạm vi API quản lý khách sạn](docs/hotel-management-api.md) để biết đường dẫn và các giới hạn đọc tiện ích/chính sách.
+- Tạo khách sạn dùng danh mục cities (`GET /api/v1/cities`) và lựa chọn chủ sở hữu có thật (UUID `HOTEL_OWNER` đang hoạt động, đã xác minh email; Owner tự tạo cho mình). Backend sinh slug và kiểm tra quyền. Tạo hồ sơ qua `POST /api/v1/management/hotels`, upload ảnh qua `POST /api/v1/media` và liên kết gallery bằng `PUT /api/v1/management/hotels/{hotelId}/images`.
+- Tổng quan khách sạn có tạm ngừng/mở bán lại và khóa/gỡ khóa theo vai trò. Giá theo ngày có thể chuẩn bị cho DRAFT/SUSPENDED nếu hạng phòng đang bán và hotel không bị khóa. Lịch tồn kho, lịch chặn và readiness lấy từ BE; FE không tự tính số phòng còn trống. Lỗi trạng thái, thiếu điều kiện mở bán và quyền được giữ từ backend.
+- Trang chủ lấy khách sạn đang bán từ API tìm kiếm, không thay lỗi/kết quả rỗng bằng mock. `/explore` tìm kiếm theo điểm đến, ngày, sức chứa, giá và số sao, sắp xếp/phân trang phía server. Ảnh bìa lấy qua media access; thiếu ảnh dùng hình trung tính.
+- `/stays/:hotelId` với UUID lấy khách sạn và hạng phòng thật, kiểm tra tồn -> báo giá -> tạo đơn. Thay ngày/số khách/số phòng/hạng phòng sẽ vô hiệu hóa báo giá cũ. Tổng tiền tạo đơn lấy từ báo giá server, không tính giá ở client. Những slug demo cũ được ghi rõ là minh họa và không tạo đơn.
+- `/my-bookings` hiển thị đơn thật, bộ lọc/phân trang/chi tiết, mở thanh toán VNPay và gửi khiếu nại. Chỉ chuyển sang URL HTTPS thuộc VNPay; trạng thái giao dịch lấy lại từ server ở `/payment/return`.
+- `/my-complaints` dùng API khiếu nại của chính tài khoản. Nhóm OTHER cần nội dung ít nhất 20 ký tự. Chưa có API xử lý khiếu nại dành cho admin.
+- `/bookings` và tab đặt phòng trong workspace khách sạn có danh sách/chi tiết, phân phòng, nhận/trả phòng, khách đến muộn/không đến. Server kiểm tra tồn, xung đột, quyền và trạng thái; thành công mới tải lại dữ liệu.
+- `/contracts` nối danh sách/tạo dự thảo/kích hoạt/chấm dứt hợp đồng; `/financial-access` nối quyền tài chính theo khách sạn. Chỉ vai trò được backend cho phép mới thực hiện được.
+- Màn admin users dùng API thật cho danh sách, tìm kiếm,
+  bộ lọc, phân trang, số lượng theo tab, khóa/mở khóa, gửi lại email xác minh và cấp/thu hồi vai trò.
+  Số lượng tab lấy từ `totalElements` của API danh sách; thao tác hàng loạt gọi API từng tài khoản
+  và báo kết quả một phần khi có lỗi. Không chuyển sang mock khi kết nối thất bại.
+- Tạo người dùng từ admin đã nối API, không cấp mật khẩu dùng chung. Người nhận xác minh email rồi dùng Quên mật khẩu để đặt mật khẩu riêng; cần cấu hình SMTP ở backend.
+  Modal chi tiết dùng dữ liệu từ danh sách, chưa có API chi tiết người dùng riêng.
+- `/account` sửa tên/số điện thoại với `expectedVersion`, hiển thị mã tài khoản và dùng lại luồng đổi mật khẩu.
+- `/staff` lấy danh sách khách sạn thuộc quyền từ server, phân trang nhân sự và thêm/thu hồi phân công theo từng khách sạn. ADMIN được phân công quản lý; chủ khách sạn/quản lý chỉ phân công lễ tân. Dùng mã tài khoản từ hồ sơ hoặc màn admin, không nhận role toàn hệ thống từ client làm căn cứ cấp quyền.
+- `/system-status` gọi `GET /actuator/health` thật; backend dừng sẽ hiện lỗi, không tự chuyển sang mock.
 
-- React Router: route và layout tập trung tại src/app.
-- TanStack Query: dữ liệu từ server; query key đặt trong feature; truyền AbortSignal xuống API.
-- Ant Design: UI và theme qua AppProviders. Không thêm bộ UI thứ hai.
-- React Hook Form + Zod: form và validation. RefreshSettings là ví dụ thực tế.
-- fetch qua src/shared/api/http.ts; không gọi fetch rải rác trong component.
-- Import source qua alias @/.
-- Luồng: page/component -> feature hook -> feature API -> shared HTTP client.
-- Giữ khung app, pages, features, shared; không sao chép các tầng DDD của backend sang FE.
+## Xác thực
 
-## API contract hiện có
+`/admin/login` là màn hình đăng nhập riêng cho quản trị. Khách mở `/admin`, `/admin/overview` hoặc `/admin/users` được chuyển đến đây; sau login, FE gọi `/users/me` xác minh role `ADMIN` rồi quay về đường dẫn admin ban đầu (mặc định `/admin/overview`). Tài khoản thiếu quyền bị từ chối; lỗi xác minh cho phép thử lại hoặc đổi tài khoản. `/login` dành cho client vẫn giữ nguyên.
 
-- Business API dùng http.request('/hotels', options): tự nối /api/v1, unwrap { message, data }.
-- Đường dẫn nghiệp vụ này là ví dụ cách dùng, BE hiện chưa có endpoint hotels.
-- Lỗi là ProblemDetail: status, detail, code, traceId, errors[field,message].
-- ApiError phân biệt HTTP, network, timeout, invalid-response; 401/403 giữ đúng status.
-- Không tự refresh token hoặc chuyển mọi lỗi thành đăng nhập.
+Access token giữ trong memory. Refresh token của trình duyệt nằm trong cookie HttpOnly; khi tải trang, session manager gọi refresh để khôi phục phiên. Remember me điều khiển thời hạn cookie phía server. Các menu đăng xuất dùng API logout và broadcast xoá phiên/cache cho các tab. Không tự gửi lại mutation.
+Login/refresh không hiển thị token trong kết quả. Logout thành công, đổi/reset mật khẩu xóa phiên local và cache; logout lỗi giữ phiên.
+
+Link email chứa `?token=...` được đọc vào form rồi loại token khỏi URL. Mật khẩu mới dài 15–128 ký tự. Quyền ADMIN/HOTEL_OWNER luôn được backend kiểm tra.
+
+## HTTP contract
+
+- Business API đi qua `shared/api/http.ts`, nối base path `/api/v1` và unwrap `{ message, data }`.
+- Lỗi dùng `ApiError` và ProblemDetail: status, detail, code, traceId, errors[field,message].
+- Giữ nguyên HTTP 401/403; không tự refresh hay chuyển mọi lỗi sang trang đăng nhập.
 - HTTP 204 trả undefined; data null/false/0 vẫn hợp lệ.
-- http.requestRaw dành cho ngoại lệ JSON cùng origin như Actuator; không dùng để bỏ qua contract nghiệp vụ.
-- API ngoài boundary nên có Zod schema. PageResponse bắt đầu từ page=0.
-- HTTP client hỗ trợ JSON, FormData, timeout và cancellation.
+- Truyền AbortSignal; HTTP client hỗ trợ timeout, JSON và FormData.
+- Zod kiểm tra response tại API. Giữ đúng null và giá trị chưa được cung cấp; chỉ map DTO khi UI cần cấu trúc khác.
+- `requestRaw` dành cho ngoại lệ cùng origin như Actuator.
+- PageResponse bắt đầu từ page=0. Giá, tồn phòng, voucher, quyền và trạng thái booking/payment do BE quyết định.
 
 ## Environment
 
-.env.example được commit; .env.local và .env.* chứa cấu hình cá nhân được ignore.
-env.ts là nơi duy nhất đọc import.meta.env; Vite cũng kiểm tra cấu hình khi khởi động/build.
+Chỉ `shared/config/env.ts` đọc cấu hình trình duyệt. `.env.example` được commit; env cá nhân được ignore.
 
 | Biến | Mặc định | Phạm vi |
 | --- | --- | --- |
 | VITE_APP_NAME | Hotel Booking | Public, được bundle lúc build |
 | VITE_API_BASE_URL | /api/v1 | Public; giữ path cùng origin |
-| VITE_API_TIMEOUT_MS | 10000 | Public; 1000-60000 ms |
+| VITE_API_TIMEOUT_MS | 10000 | Public; 1000–60000 ms |
 | API_PROXY_TARGET | http://localhost:8080 | Chỉ Vite dev proxy |
 
-Không đặt password, JWT secret, private key hoặc token cá nhân trong VITE_*.
-Không đổi domain API bằng VITE_API_BASE_URL cho staging/production: gateway của infra chuyển /api sang BE.
-Đổi environment trong container không thay các biến đã bundle vào JavaScript.
-Vite proxy chỉ dùng local. nginx.conf của FE phục vụ static/SPA; gateway /api thuộc repo infra.
+VITE_* là public; không chứa secret. Gateway infra chuyển /api sang BE. Thay env trong container không thay JavaScript đã build. nginx.conf FE phục vụ static/SPA; proxy /api thuộc infra.
 
-## Hướng auth đã chuẩn bị
-
-BE hiện dùng HTTP Basic và CSRF; chưa có JWT/login/refresh/logout contract nghiệp vụ.
-FE hiện chưa tạo phiên, chưa lưu token và không giả lập người đăng nhập.
-Trang /login thông báo đúng trạng thái chưa được kết nối.
-
-Định hướng để nhóm BE/FE chốt contract: access JWT chỉ giữ trong memory, refresh token qua cookie HttpOnly,
-Secure khi chạy HTTPS, refresh/logout cùng origin qua /api. Thời hạn, CSRF, endpoint và response phải được hai nhóm chốt trước triển khai.
-Đây là định hướng, chưa phải chức năng đã làm. Không tự thêm Basic credentials trong env hay lưu password/token vào localStorage.
-BE quyết định quyền truy cập; route guard/menu FE không thay thế authorization phía server.
-
-## Chất lượng và CI
+## Kiểm tra trước bàn giao
 
 ~~~powershell
 npm.cmd run check
 ~~~
 
-check chạy lint -> typecheck -> test phần dùng chung -> build.
-Có thể chạy riêng lint, typecheck, test, build; build chỉ bundle Vite, không thay typecheck.
-Không có test chi tiết các feature nghiệp vụ. Test hiện tập trung env và HTTP contract/lỗi/cancellation.
+Chạy lint -> typecheck -> toàn bộ Vitest -> production build. Các test kiểm tra HTTP, env, contract khách sạn, auth/session, form rendering và logic dữ liệu. Local tests không thay QA HTTP/database/email trên staging.
 
-CI giữ flow develop -> staging -> main: PR kiểm tra và build thử image; push develop smoke-test image rồi publish chính image đã test.
-Push staging/main không build/publish lại. Required check là Frontend checks; không yêu cầu Publish frontend image trên PR.
+QA thật: health -> đăng ký/nhận email/xác minh -> login/me/refresh/logout -> kiểm tra 403 với user thường -> tạo/xem khách sạn đúng quyền -> tạo loại phòng/phòng -> forgot/reset/change password và xác nhận phiên cũ bị vô hiệu hóa.
 
-## Thêm feature
+## Quy trình làm việc
 
-1. Chốt API thật: method, path, request/response, lỗi, quyền. Không tự đoán endpoint/DTO.
-2. Đặt API, hook, type/schema, component vào src/features/<feature>.
-3. Page chỉ ghép giao diện và lấy dữ liệu qua hook; không nhân bản HTTP/error handling.
-4. Làm đủ loading, empty, error, success; form có validation và xử lý lỗi từ BE.
-5. Backend là nguồn quyết định giá, tồn, voucher, quyền và trạng thái booking/payment.
-6. Chạy check, cập nhật test đúng hành vi và ghi rõ API/mock/chưa triển khai.
-7. Đọc AGENTS.md trước khi dùng agent viết code.
-
-Chưa tự khởi tạo Git, commit, push hoặc thay đổi repo backend trong đợt dựng khung này.
+Giữ nguyên thay đổi ngoài phạm vi và đọc AGENTS.md. Không tự commit/push.
+Nhánh công việc -> PR develop -> staging -> main. Refactor cấu trúc và thay đổi UI/UX thực hiện thành các đợt riêng để dễ review.

@@ -1,370 +1,595 @@
+import '@/shared/styles/hotel-management.css'
 import { useState } from 'react'
 import {
-  CompassOutlined,
+  AppstoreOutlined,
   DollarOutlined,
+  EllipsisOutlined,
   EnvironmentOutlined,
-  FileProtectOutlined,
+  EyeOutlined,
+  HomeOutlined,
+  InfoCircleOutlined,
+  PauseCircleOutlined,
+  PlayCircleOutlined,
   PlusOutlined,
   ReloadOutlined,
   SearchOutlined,
   SettingOutlined,
   StarFilled,
+  UnorderedListOutlined,
 } from '@ant-design/icons'
-import { Button, Input, Select, Space, Tag } from 'antd'
-import { useNavigate } from 'react-router'
-import { CreateAdminHotelDrawer } from '@/features/hotels/components/CreateAdminHotelDrawer'
-import { HotelStatusBadge } from '@/features/hotels/components/HotelStatusBadge'
 import {
+  Button,
+  Card,
+  Dropdown,
+  Input,
+  Pagination,
+  Segmented,
+  Select,
+  Skeleton,
+} from 'antd'
+import { useNavigate } from 'react-router'
+import {
+  HotelStatusBadge,
   useCitiesQuery,
   useManagementHotelsQuery,
-} from '@/features/hotels/hooks/use-hotel-management'
-import {
+  useHotelCoverImage,
   type HotelStatus,
-  hotelStatusValues,
-} from '@/features/hotels/types/hotel-management'
-import { DataSourceBanner } from '@/shared/ui/DataSourceBanner'
-import { EmptyState } from '@/shared/ui/EmptyState'
-import { ErrorState } from '@/shared/ui/ErrorState'
-import { PageLoading } from '@/shared/ui/PageLoading'
+  type ManagementHotelSummary,
+} from '@/features/hotels'
 
-const STATUS_FILTER_LABELS: Record<HotelStatus, string> = {
-  ACTIVE: 'Đang hoạt động',
-  PENDING_APPROVAL: 'Chờ phê duyệt',
-  DRAFT: 'Bản nháp',
-  REJECTED: 'Từ chối duyệt',
-  SUSPENDED: 'Tạm đình chỉ',
+function HotelCardCover({ hotel }: { hotel: ManagementHotelSummary }) {
+  const { data: coverUrl } = useHotelCoverImage(hotel.id, hotel.coverImageUrl)
+  const displayUrl = coverUrl || hotel.coverImageUrl
+
+  if (displayUrl) {
+    return (
+      <img
+        src={displayUrl}
+        alt={hotel.name}
+        loading="lazy"
+        decoding="async"
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+      />
+    )
+  }
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#f2f8f6] via-[#e5f3ee] to-[#d6ede4] text-[#0b5f53] p-4 text-center select-none">
+      <div className="w-12 h-12 rounded-2xl bg-white/85 shadow-2xs border border-[#cfe5dd] flex items-center justify-center mb-1.5 text-[#0b5f53]">
+        <HomeOutlined className="text-xl opacity-80" />
+      </div>
+      <span className="text-xs font-semibold text-[#1e463d]">Chưa có ảnh bìa</span>
+      <span className="text-[10.5px] text-[#5f736e]">Chờ tải ảnh đại diện</span>
+    </div>
+  )
 }
 
-const VIBE_CHIPS = [
-  'ALL',
-  'Glamping',
-  'Boutique Art',
-  'Pool Party',
-  'Pet-friendly',
-  'Workation',
-  'Sát biển',
-  'Eco Retreat',
-  'Rooftop Chill',
-] as const
+function HotelCardCompletion({ hotel }: { hotel: ManagementHotelSummary }) {
+  return <p className="m-0 rounded-xl bg-[#f4f8f7] p-2.5 text-xs text-[#526760]" title={`Mở hồ sơ ${hotel.name} để xem tiến độ đầy đủ`}>
+    <InfoCircleOutlined className="mr-1.5" />Xem tiến độ trong hồ sơ
+  </p>
+}
+
+function HotelTableThumbnail({ hotel }: { hotel: ManagementHotelSummary }) {
+  const { data: coverUrl } = useHotelCoverImage(hotel.id, hotel.coverImageUrl)
+  const displayUrl = coverUrl || hotel.coverImageUrl
+
+  if (displayUrl) {
+    return (
+      <img
+        src={displayUrl}
+        alt={hotel.name}
+        loading="lazy"
+        decoding="async"
+        className="w-full h-full object-cover"
+      />
+    )
+  }
+
+  return <HomeOutlined className="text-[#0b5f53] text-base" />
+}
+
+function HotelTableCompletion({ hotel }: { hotel: ManagementHotelSummary }) {
+  return <span className="text-xs text-[#526760]" title={`Mở hồ sơ ${hotel.name} để xem tiến độ đầy đủ`}>Xem trong hồ sơ</span>
+}
+
+import { useCurrentUser } from '@/features/auth'
+import { PageHeader } from '@/shared/ui/PageHeader'
+import { EmptyState } from '@/shared/ui/EmptyState'
+import { ErrorState } from '@/shared/ui/ErrorState'
+
+type ViewMode = 'card' | 'table'
+
+const STATUS_FILTER_OPTIONS: Array<{ label: string; value: HotelStatus | 'ALL' }> = [
+  { label: 'Tất cả trạng thái', value: 'ALL' },
+  { label: 'Bản nháp', value: 'DRAFT' },
+  { label: 'Chờ duyệt', value: 'PENDING_APPROVAL' },
+  { label: 'Đang bán', value: 'ACTIVE' },
+  { label: 'Tạm ngưng', value: 'SUSPENDED' },
+]
 
 export function HotelManagementListPage() {
+  const { isAdmin } = useCurrentUser()
   const navigate = useNavigate()
+  const mode = 'api'
+
   const [page, setPage] = useState(0)
-  const [cityId, setCityId] = useState<string | undefined>(undefined)
   const [status, setStatus] = useState<HotelStatus | 'ALL'>('ALL')
   const [keyword, setKeyword] = useState('')
-  const [vibe, setVibe] = useState<string>('ALL')
-  const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>('card')
 
   const citiesQuery = useCitiesQuery()
   const hotelsQuery = useManagementHotelsQuery({
     page,
-    size: 6,
-    cityId,
+    size: 12,
     status,
     keyword,
-    vibe,
   })
 
-  function resetFilters() {
+  const cities = citiesQuery.data ?? []
+  const rawHotels = hotelsQuery.data?.content ?? []
+  const totalElements = hotelsQuery.data?.totalElements ?? 0
+  const totalPages = hotelsQuery.data?.totalPages ?? 1
+
+  // Client-side fallback filter if BE doesn't support keyword/status directly in all modes
+  const hotels = mode === 'api' ? rawHotels : rawHotels.filter((h) => {
+    if (status !== 'ALL' && h.status !== status) return false
+    if (keyword) {
+      const q = keyword.toLowerCase().trim()
+      const matchName = h.name.toLowerCase().includes(q)
+      const matchAddress = h.address?.toLowerCase().includes(q)
+      const matchCity = h.cityName?.toLowerCase().includes(q)
+      if (!matchName && !matchAddress && !matchCity) return false
+    }
+    return true
+  })
+
+  const resetFilters = () => {
     setPage(0)
-    setCityId(undefined)
     setStatus('ALL')
     setKeyword('')
-    setVibe('ALL')
   }
 
-  const cities = citiesQuery.data ?? []
+  const getCityName = (hotel: ManagementHotelSummary) => {
+    return (
+      hotel.cityName ||
+      cities.find((c) => c.id === hotel.cityId)?.name ||
+      hotel.address ||
+      'Việt Nam'
+    )
+  }
 
   return (
-    <div className="management-page rates-management-page">
-      <DataSourceBanner />
-
-      <header className="rates-page-header" aria-labelledby="mgmt-hero-title">
-        <div className="rates-page-header__content">
-          <span className="rates-page-header__kicker">
-            <CompassOutlined aria-hidden="true" /> QUẢN LÝ CƠ SỞ LƯU TRÚ
-          </span>
-          <h1 id="mgmt-hero-title" className="rates-page-header__title">
-            Không gian Quản trị &amp; Vận hành Khách sạn
-          </h1>
-          <p className="rates-page-header__desc">
-            Quản lý hồ sơ khách sạn, cấu hình tiện ích, theo dõi bảng giá phòng
-            theo ngày và đối soát hợp đồng tài chính.
-          </p>
-        </div>
-        <div className="rates-page-header__actions">
+    <div className="hotel-management-list-page max-w-7xl mx-auto space-y-6">
+      {/* 1. Header */}
+      <PageHeader
+        breadcrumbItems={[{ label: 'Khách sạn' }]}
+        kicker="CƠ SỞ LƯU TRÚ"
+        title="Khách sạn"
+        description="Theo dõi toàn bộ danh sách khách sạn và khu nghỉ dưỡng trực thuộc đối tác. Quản lý hồ sơ vận hành, loại phòng, giá bán và tiện ích lưu trú."
+        extra={
           <Button
             type="primary"
             size="large"
-            icon={<PlusOutlined aria-hidden="true" />}
-            onClick={() => setCreateDrawerOpen(true)}
+            icon={<PlusOutlined />}
+            onClick={() => navigate('/hotels/new')}
+            className="!rounded-xl !bg-[#0b5f53] hover:!bg-[#08473e] !px-6 font-semibold"
           >
-            Tạo khách sạn mới
+            Thêm khách sạn
           </Button>
-          <Button
+        }
+      />
+
+      {/* 2. Thanh công cụ (Toolbar) */}
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e2e8f0] shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
+        <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Ô tìm kiếm theo tên */}
+          <Input
+            disabled={mode === 'api'}
+            placeholder="Tìm kiếm theo tên khách sạn..."
+            prefix={<SearchOutlined className="text-[#5f736e]" />}
+            value={keyword}
+            onChange={(e) => {
+              setKeyword(e.target.value)
+              setPage(0)
+            }}
+            allowClear
             size="large"
-            icon={<ReloadOutlined aria-hidden="true" />}
-            loading={hotelsQuery.isFetching}
-            onClick={() => void hotelsQuery.refetch()}
-          >
-            Làm mới
-          </Button>
-        </div>
-      </header>
+            className="w-full sm:max-w-xs rounded-xl"
+          />
 
-      <section
-        className="smart-filter-panel"
-        aria-label="Bộ lọc tìm kiếm khách sạn vận hành"
-      >
-        <div className="smart-filter-panel__row">
-          <div className="smart-filter-panel__search">
-            <label htmlFor="hotel-search-input">Tìm theo tên, địa chỉ hoặc chủ sở hữu</label>
-            <Input
-              id="hotel-search-input"
-              allowClear
-              prefix={<SearchOutlined aria-hidden="true" />}
-              placeholder="Ví dụ: InterContinental, Đà Lạt, Glamping..."
-              value={keyword}
-              onChange={(e) => {
-                setKeyword(e.target.value)
-                setPage(0)
-              }}
-            />
-          </div>
+          {/* Filter trạng thái */}
+          <Select
+            disabled={mode === 'api'}
+            size="large"
+            value={status}
+            onChange={(val) => {
+              setStatus(val)
+              setPage(0)
+            }}
+            className="w-full sm:w-52"
+            options={STATUS_FILTER_OPTIONS}
+          />
 
-          <div className="smart-filter-panel__select">
-            <label htmlFor="hotel-city-filter">Thành phố</label>
-            <Select
-              id="hotel-city-filter"
-              allowClear
-              placeholder="Tất cả thành phố"
-              value={cityId}
-              onChange={(value) => {
-                setCityId(value)
-                setPage(0)
-              }}
-              className="full-width"
-              options={cities.map((c) => ({
-                label: c.name,
-                value: c.id,
-              }))}
-            />
-          </div>
+          {(keyword || status !== 'ALL') && (
+            <Button
+              type="text"
+              icon={<ReloadOutlined />}
+              onClick={resetFilters}
+              className="text-[#0b5f53] text-xs font-semibold self-start sm:self-center"
+            >
+              Đặt lại
+            </Button>
+          )}
 
-          <div className="smart-filter-panel__select">
-            <label htmlFor="hotel-status-filter">Trạng thái hoạt động</label>
-            <Select
-              id="hotel-status-filter"
-              value={status}
-              onChange={(value) => {
-                setStatus(value)
-                setPage(0)
-              }}
-              className="full-width"
-              options={[
-                { label: 'Tất cả trạng thái', value: 'ALL' },
-                ...hotelStatusValues.map((s) => ({
-                  label: STATUS_FILTER_LABELS[s],
-                  value: s,
-                })),
-              ]}
-            />
-          </div>
+          {mode === 'api' && (
+            <span className="hidden xl:inline-flex items-center gap-1.5 text-xs text-[#5f736e] bg-[#f8fafc] px-3 py-1.5 rounded-lg border border-[#e2e8f0]">
+              <InfoCircleOutlined className="text-[#0b5f53]" />
+              <span>Phân trang cơ sở dữ liệu API</span>
+            </span>
+          )}
         </div>
 
-        <div className="vibe-chips-bar" role="group" aria-label="Lọc nhanh theo phong cách">
-          {VIBE_CHIPS.map((chip) => {
-            const isSelected = vibe === chip
-            return (
-              <button
-                key={chip}
-                type="button"
-                className={`vibe-chip ${isSelected ? 'is-active' : ''}`}
-                aria-pressed={isSelected}
-                onClick={() => {
-                  setVibe(chip)
-                  setPage(0)
-                }}
-              >
-                {chip === 'ALL' ? 'Tất cả phong cách' : chip}
-              </button>
-            )
-          })}
+        {/* Chuyển chế độ xem Card / Bảng */}
+        <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+          <span className="text-xs text-[#5f736e] font-medium mr-1 hidden sm:inline">Chế độ xem:</span>
+          <Segmented<ViewMode>
+            value={viewMode}
+            onChange={setViewMode}
+            className="!p-1 !rounded-xl !bg-[#f1f5f9]"
+            options={[
+              {
+                value: 'card',
+                icon: <AppstoreOutlined />,
+                label: 'Thẻ',
+              },
+              {
+                value: 'table',
+                icon: <UnorderedListOutlined />,
+                label: 'Bảng',
+              },
+            ]}
+          />
         </div>
-      </section>
+      </div>
 
+      {/* 3. Nội dung danh sách theo trạng thái (Loading, Error, Empty, Card/Table) */}
       {hotelsQuery.isPending ? (
-        <PageLoading />
+        viewMode === 'card' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[1, 2, 3, 4, 5, 6].map((idx) => (
+              <Card key={idx} className="rounded-2xl border border-[#dce7e3] overflow-hidden">
+                <Skeleton.Image className="!w-full !h-44" active />
+                <div className="p-4 space-y-3">
+                  <Skeleton active paragraph={{ rows: 2 }} />
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="rounded-2xl border border-[#dce7e3] p-6">
+            <Skeleton active paragraph={{ rows: 5 }} />
+          </Card>
+        )
       ) : hotelsQuery.isError ? (
-        <div className="surface-card">
+        <Card className="rounded-2xl border border-[#dce7e3] p-6">
           <ErrorState
             error={hotelsQuery.error}
             retrying={hotelsQuery.isFetching}
             onRetry={() => void hotelsQuery.refetch()}
           />
-        </div>
-      ) : hotelsQuery.data.content.length === 0 ? (
-        <div className="surface-card">
+        </Card>
+      ) : hotels.length === 0 ? (
+        <Card className="rounded-2xl border border-[#dce7e3] p-10 text-center">
           <EmptyState
-            title="Không tìm thấy khách sạn phù hợp"
-            description="Thử xóa bộ lọc tìm kiếm hoặc khởi tạo hồ sơ khách sạn mới trong danh mục."
+            title="Chưa có khách sạn nào"
+            description="Bạn chưa khởi tạo cơ sở lưu trú nào trên hệ thống hoặc không có khách sạn nào phù hợp với bộ lọc tìm kiếm hiện tại."
             action={
-              <Space>
-                <Button onClick={resetFilters}>Xóa bộ lọc</Button>
-                <Button type="primary" onClick={() => setCreateDrawerOpen(true)}>
-                  Tạo khách sạn mới
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-5">
+                {(keyword || status !== 'ALL') && (
+                  <Button size="large" onClick={resetFilters}>
+                    Xóa bộ lọc
+                  </Button>
+                )}
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<PlusOutlined />}
+                  onClick={() => navigate('/hotels/new')}
+                  className="!bg-[#0b5f53] hover:!bg-[#08473e] !rounded-xl !px-6 font-semibold"
+                >
+                  Tạo khách sạn đầu tiên
                 </Button>
-              </Space>
+              </div>
             }
           />
-        </div>
-      ) : (
-        <>
-          <div className="results-summary-bar">
-            <span>
-              Hiển thị <strong>{hotelsQuery.data.content.length}</strong> /{' '}
-              <strong>{hotelsQuery.data.totalElements}</strong> khách sạn
-            </span>
-          </div>
+        </Card>
+      ) : viewMode === 'card' ? (
+        /* CHẾ ĐỘ XEM THẺ (CARD GRID) - GU SKILL */
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {hotels.map((hotel) => {
+              const cityName = getCityName(hotel)
+              const roomCount = hotel.roomTypeCount
 
-          <div className="hotel-cards-grid" role="list">
-            {hotelsQuery.data.content.map((hotel) => (
-              <article
-                key={hotel.id}
-                role="listitem"
-                className="hotel-vibe-card"
-              >
-                <div className="hotel-vibe-card__media">
-                  {hotel.coverImageUrl ? (
-                    <img
-                      src={hotel.coverImageUrl}
-                      alt={hotel.name}
-                      loading="lazy"
-                      className="hotel-vibe-card__img"
-                    />
-                  ) : (
-                    <div className="hotel-vibe-card__placeholder" aria-hidden="true">
-                      StayVibe
+              return (
+                <div
+                  key={hotel.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Quản lý khách sạn ${hotel.name}`}
+                  onClick={() => navigate(`/hotels/${hotel.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      navigate(`/hotels/${hotel.id}`)
+                    }
+                  }}
+                  className="group bg-white rounded-2xl border border-[#e2e8f0] hover:border-[#0b5f53]/50 hover:shadow-lg hover:shadow-[#0b5f53]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5f53] focus-visible:ring-offset-2 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col justify-between"
+                >
+                  <div>
+                    {/* Ảnh bìa & Badges */}
+                    <div className="relative h-48 bg-[#f4f8f7] overflow-hidden">
+                      <HotelCardCover hotel={hotel} />
+
+                      {/* Trạng thái & Hạng sao */}
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+                        <HotelStatusBadge status={hotel.status} />
+                      </div>
+
+                      {hotel.starRating && (
+                        <div className="absolute top-3 right-3 bg-slate-900/70 backdrop-blur-md text-amber-300 px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-xs z-10 border border-white/10">
+                          <StarFilled className="text-[10px] text-amber-400" />
+                          <span>{hotel.starRating} sao</span>
+                        </div>
+                      )}
+
+                      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
                     </div>
-                  )}
-                  <div className="hotel-vibe-card__top-badges">
-                    <HotelStatusBadge status={hotel.status} />
-                    {hotel.starRating && (
-                      <span className="star-pill">
-                        <StarFilled aria-hidden="true" /> {hotel.starRating} sao
-                      </span>
-                    )}
-                  </div>
-                </div>
 
-                <div className="hotel-vibe-card__body">
-                  <div className="hotel-vibe-card__location">
-                    <EnvironmentOutlined aria-hidden="true" />{' '}
-                    <span>{hotel.cityName ?? 'Việt Nam'}</span>
-                    <span className="dot-sep" aria-hidden="true">
-                      ·
-                    </span>
-                    <span>
-                      Nhận {hotel.checkInTime.slice(0, 5)} / Trả{' '}
-                      {hotel.checkOutTime.slice(0, 5)}
-                    </span>
-                  </div>
+                    {/* Nội dung chi tiết */}
+                    <div className="p-4 space-y-3">
+                      <div>
+                        <h3 className="text-base font-bold text-[#12211d] group-hover:text-[#0b5f53] transition-colors truncate m-0">
+                          {hotel.name}
+                        </h3>
+                        <p className="text-xs text-[#5f736e] flex items-center gap-1.5 mt-1 m-0 truncate">
+                          <EnvironmentOutlined className="text-[#0b5f53] shrink-0" />
+                          <span>{cityName}</span>
+                        </p>
+                      </div>
 
-                  <h2 className="hotel-vibe-card__title">
-                    <button
-                      type="button"
-                      className="title-link-btn"
-                      onClick={() =>
-                        void navigate(`/management/hotels/${hotel.id}`)
-                      }
-                    >
-                      {hotel.name}
-                    </button>
-                  </h2>
+                      {/* Tiến độ hoàn thiện */}
+                      <HotelCardCompletion hotel={hotel} />
 
-                  <p className="hotel-vibe-card__address">{hotel.address}</p>
-
-                  {hotel.vibeTags && hotel.vibeTags.length > 0 && (
-                    <div className="hotel-vibe-card__tags">
-                      {hotel.vibeTags.map((tag) => (
-                        <Tag key={tag}>{tag}</Tag>
-                      ))}
+                      {/* Thông số phòng */}
+                      <div className="flex items-center justify-between text-xs text-[#5f736e] pt-1 border-t border-[#f1f5f9]">
+                        <span className="flex items-center gap-1.5 font-medium text-[#1e293b]">
+                          <HomeOutlined className="text-[#0b5f53]" />
+                          <span>{roomCount === undefined ? 'Chưa tải số hạng phòng' : `${roomCount} loại phòng`}</span>
+                        </span>
+                        <span className="text-[11.5px] font-medium text-[#64748b]">
+                          {hotel.checkInTime ? `Nhận ${hotel.checkInTime.slice(0, 5)}` : 'Nhận 14:00'}
+                        </span>
+                      </div>
                     </div>
-                  )}
-
-                  <div className="hotel-vibe-card__owner">
-                    <span className="muted">Chủ sở hữu:</span>{' '}
-                    <strong>{hotel.ownerName ?? 'Chủ sở hữu chính'}</strong>
                   </div>
 
-                  <div className="hotel-vibe-card__actions">
+                  {/* Actions chân card: QUẢN LÝ + BẢNG GIÁ + MORE */}
+                  <div
+                    className="p-3 bg-[#fafcfb] border-t border-[#edf2f0] flex items-center gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Button
                       type="primary"
-                      icon={<SettingOutlined aria-hidden="true" />}
-                      onClick={() =>
-                        void navigate(`/management/hotels/${hotel.id}?tab=general`)
-                      }
+                      icon={<SettingOutlined />}
+                      onClick={() => navigate(`/hotels/${hotel.id}`)}
+                      className="!flex-1 !h-9 !bg-[#0b5f53] hover:!bg-[#08473e] !text-white !font-semibold !text-xs !rounded-xl !shadow-2xs !border-0 flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform"
                     >
-                      Quản trị
+                      Quản lý
                     </Button>
+
                     <Button
-                      icon={<DollarOutlined aria-hidden="true" />}
-                      onClick={() =>
-                        void navigate(`/management/rates?hotelId=${hotel.id}`)
-                      }
+                      icon={<DollarOutlined />}
+                      onClick={() => navigate(`/hotels/${hotel.id}/pricing`)}
+                      className="!flex-1 !h-9 !bg-[#eef8f5] hover:!bg-[#dfede7] !text-[#0b5f53] hover:!text-[#08473e] !border-[#cfe5dd] hover:!border-[#0b5f53] !font-semibold !text-xs !rounded-xl flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform"
                     >
                       Bảng giá
                     </Button>
-                    <Button
-                      icon={<FileProtectOutlined aria-hidden="true" />}
-                      onClick={() =>
-                        void navigate(`/management/contracts?hotelId=${hotel.id}`)
-                      }
+
+                    <Dropdown
+                      menu={{
+                        items: [
+                          {
+                            key: 'info',
+                            label: isAdmin ? 'Xem hồ sơ xét duyệt' : 'Chỉnh sửa thông tin',
+                            icon: <SettingOutlined />,
+                            onClick: () => navigate(`/hotels/${hotel.id}/${isAdmin ? 'review-requests' : 'info'}`),
+                          },
+                          {
+                            key: 'pricing',
+                            label: 'Biểu giá theo ngày',
+                            icon: <DollarOutlined />,
+                            onClick: () => navigate(`/hotels/${hotel.id}/pricing`),
+                          },
+                          {
+                            key: 'status',
+                            label: hotel.status === 'ACTIVE' ? 'Tạm ngưng hoạt động' : 'Kích hoạt / Cập nhật',
+                            icon: hotel.status === 'ACTIVE' ? <PauseCircleOutlined /> : <PlayCircleOutlined />,
+                            onClick: () => navigate(`/hotels/${hotel.id}/${isAdmin ? 'review-requests' : 'info'}`),
+                          },
+                          ...(hotel.status === 'ACTIVE'
+                            ? [
+                                {
+                                  key: 'public',
+                                  label: 'Xem trang công khai',
+                                  icon: <EyeOutlined />,
+                                  onClick: () => window.open(`/stays/${hotel.id}`, '_blank'),
+                                },
+                              ]
+                            : []),
+                        ],
+                      }}
+                      trigger={['click']}
+                      placement="topRight"
                     >
-                      Hợp đồng
-                    </Button>
+                      <Button
+                        type="default"
+                        icon={<EllipsisOutlined className="text-base" />}
+                        aria-label="Tùy chọn khác"
+                        className="!w-9 !h-9 !min-w-[36px] !rounded-xl !border-[#e2e8f0] !text-[#5f736e] hover:!bg-[#f1f5f9] flex items-center justify-center !p-0"
+                      />
+                    </Dropdown>
                   </div>
                 </div>
-              </article>
-            ))}
+              )
+            })}
           </div>
 
-          <div
-            className="pagination-bar"
-            role="navigation"
-            aria-label="Phân trang danh sách khách sạn"
-          >
-            <span className="muted">
-              Trang {hotelsQuery.data.page + 1} /{' '}
-              {Math.max(1, hotelsQuery.data.totalPages)}
-            </span>
-            <Space>
-              <Button
-                disabled={hotelsQuery.data.first}
-                onClick={() => setPage((prev) => Math.max(0, prev - 1))}
-              >
-                Trang trước
-              </Button>
-              <Button
-                disabled={hotelsQuery.data.last}
-                onClick={() => setPage((prev) => prev + 1)}
-              >
-                Trang tiếp
-              </Button>
-            </Space>
+          {/* Phân trang */}
+          {totalPages > 1 && (
+            <div className="flex justify-center sm:justify-end pt-4">
+              <Pagination
+                current={page + 1}
+                total={totalElements}
+                pageSize={12}
+                onChange={(p) => setPage(p - 1)}
+                showSizeChanger={false}
+              />
+            </div>
+          )}
+        </div>
+      ) : (
+        /* CHẾ ĐỘ XEM BẢNG (TABLE VIEW) - GU SKILL */
+        <Card className="rounded-2xl border border-[#e2e8f0] overflow-hidden p-0 shadow-2xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-[#f8fafc] border-b border-[#e2e8f0] text-[#475569] uppercase tracking-wider font-bold text-[11px]">
+                  <th className="py-4 px-5">Khách sạn / Cơ sở</th>
+                  <th className="py-4 px-4">Tỉnh / Thành</th>
+                  <th className="py-4 px-4">Tiêu chuẩn sao</th>
+                  <th className="py-4 px-4">Trạng thái</th>
+                  <th className="py-4 px-4">Hồ sơ</th>
+                  <th className="py-4 px-4">Loại phòng</th>
+                  <th className="py-4 px-5 text-right font-bold">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f1f5f9]">
+                {hotels.map((hotel) => {
+                  const cityName = getCityName(hotel)
+                  const roomCount = hotel.roomTypeCount
+
+                  return (
+                    <tr
+                      key={hotel.id}
+                      tabIndex={0}
+                      role="row"
+                      aria-label={`Khách sạn ${hotel.name}`}
+                      onClick={() => navigate(`/hotels/${hotel.id}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          navigate(`/hotels/${hotel.id}`)
+                        }
+                      }}
+                      className="hover:bg-[#f8fbfa] focus-visible:bg-[#eef8f5] focus-visible:outline-none transition-colors cursor-pointer group"
+                    >
+                      {/* Tên & Thumbnail */}
+                      <td className="py-3.5 px-5">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#eef8f5] border border-[#dce7e3] overflow-hidden shrink-0 flex items-center justify-center shadow-2xs">
+                            <HotelTableThumbnail hotel={hotel} />
+                          </div>
+                          <div className="min-w-0 max-w-xs">
+                            <div className="font-bold text-sm text-[#12211d] group-hover:text-[#0b5f53] transition-colors truncate">
+                              {hotel.name}
+                            </div>
+                            <div className="text-[11.5px] text-[#5f736e] truncate mt-0.5">{hotel.address}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Tỉnh / Thành */}
+                      <td className="py-3.5 px-4 text-[#1e293b] font-medium text-xs">
+                        <span className="inline-flex items-center gap-1.5">
+                          <EnvironmentOutlined className="text-[#0b5f53] text-xs" />
+                          <span>{cityName}</span>
+                        </span>
+                      </td>
+
+                      {/* Tiêu chuẩn sao */}
+                      <td className="py-3.5 px-4">
+                        {hotel.starRating ? (
+                          <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200/60 px-2 py-0.5 rounded-md font-bold text-xs">
+                            <StarFilled className="text-[10px] text-amber-500" />
+                            <span>{hotel.starRating} sao</span>
+                          </span>
+                        ) : (
+                          <span className="text-[#94a3b8] italic">Chưa xếp hạng</span>
+                        )}
+                      </td>
+
+                      {/* Trạng thái */}
+                      <td className="py-3.5 px-4">
+                        <HotelStatusBadge status={hotel.status} />
+                      </td>
+
+                      {/* % Hoàn thiện */}
+                      <td className="py-3.5 px-4 min-w-[130px]">
+                        <HotelTableCompletion hotel={hotel} />
+                      </td>
+
+                      {/* Loại phòng */}
+                      <td className="py-3.5 px-4 font-semibold text-[#12211d]">
+                        <span className="bg-[#f1f5f9] text-[#334155] px-2.5 py-1 rounded-lg text-xs font-semibold">
+                          {roomCount === undefined ? 'Chưa tải số hạng phòng' : `${roomCount} loại phòng`}
+                        </span>
+                      </td>
+
+                      {/* Thao tác: CỤM NÚT QUẢN LÝ VÀ BẢNG GIÁ CAO CẤP */}
+                      <td className="py-3.5 px-5 text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            type="primary"
+                            size="small"
+                            icon={<SettingOutlined />}
+                            onClick={() => navigate(`/hotels/${hotel.id}`)}
+                            className="!h-8 !px-3.5 !bg-[#0b5f53] hover:!bg-[#08473e] !text-white !font-semibold !text-xs !rounded-lg !shadow-2xs !border-0 flex items-center gap-1"
+                          >
+                            Quản lý
+                          </Button>
+                          <Button
+                            size="small"
+                            icon={<DollarOutlined />}
+                            onClick={() => navigate(`/hotels/${hotel.id}/pricing`)}
+                            className="!h-8 !px-3 !bg-[#eef8f5] hover:!bg-[#dfede7] !text-[#0b5f53] hover:!text-[#08473e] !border-[#cfe5dd] hover:!border-[#0b5f53] !font-semibold !text-xs !rounded-lg flex items-center gap-1"
+                          >
+                            Bảng giá
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
-        </>
+
+          {/* Phân trang */}
+          {totalPages > 1 && (
+            <div className="flex justify-end p-4 border-t border-[#e2e8f0] bg-[#fafcfb]">
+              <Pagination
+                current={page + 1}
+                total={totalElements}
+                pageSize={12}
+                onChange={(p) => setPage(p - 1)}
+                showSizeChanger={false}
+              />
+            </div>
+          )}
+        </Card>
       )}
-
-      <CreateAdminHotelDrawer
-        open={createDrawerOpen}
-        onClose={() => setCreateDrawerOpen(false)}
-        cities={cities}
-        onCreated={(created) => {
-          void navigate(`/management/hotels/${created.id}`)
-        }}
-      />
     </div>
   )
 }

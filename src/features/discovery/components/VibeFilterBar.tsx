@@ -4,11 +4,8 @@ import {
   LeftOutlined,
   RightOutlined,
 } from '@ant-design/icons'
-import { VibeSvgIcon } from '@/features/discovery/components/StayVibeIcons'
-import type {
-  VibeCategoryItem,
-  VibeIconKey,
-} from '@/features/discovery/data/stayvibe-mock-data'
+import { VibeSvgIcon } from './StayVibeIcons'
+import type { VibeCategoryItem, VibeIconKey } from '../model/discovery'
 
 interface VibeFilterBarProps {
   categories: VibeCategoryItem[]
@@ -34,22 +31,24 @@ export function VibeFilterBar({
   return (
     <section
       id="vibe-section"
-      className="stayvibe-vibe-section"
+      className="w-full my-6"
       aria-label="Lọc nhanh theo phong cách lưu trú"
     >
-      <div className="stayvibe-vibe-bar-header">
+      <div className="flex items-center justify-between gap-4 mb-3.5">
         <div>
-          <h2 className="stayvibe-section-eyebrow">PHONG CÁCH LƯU TRÚ</h2>
-          <p className="stayvibe-vibe-subtext">
-            Chọn đúng chất kỳ nghỉ của bạn — đang có{' '}
-            <strong>{totalMatchingCount}</strong> chỗ nghỉ phù hợp
+          <h2 className="text-xs font-bold tracking-wider uppercase text-[var(--md-sys-color-primary)]">
+            Phong cách lưu trú
+          </h2>
+          <p className="text-xs sm:text-sm text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+            Lựa chọn phong cách phù hợp cho kỳ nghỉ — đang có{' '}
+            <strong className="text-[var(--md-sys-color-on-surface)]">{totalMatchingCount}</strong> chỗ nghỉ
           </p>
         </div>
 
-        <div className="stayvibe-scroll-controls">
+        <div className="hidden sm:flex items-center gap-1.5">
           <button
             type="button"
-            className="vibe-scroll-arrow"
+            className="w-8 h-8 rounded-full border border-[var(--md-sys-color-outline-subtle)] bg-white text-[var(--md-sys-color-on-surface-variant)] flex items-center justify-center text-xs hover:border-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-primary)] transition cursor-pointer"
             aria-label="Cuộn danh sách phong cách sang trái"
             onClick={() => handleScroll('left')}
           >
@@ -57,7 +56,7 @@ export function VibeFilterBar({
           </button>
           <button
             type="button"
-            className="vibe-scroll-arrow"
+            className="w-8 h-8 rounded-full border border-[var(--md-sys-color-outline-subtle)] bg-white text-[var(--md-sys-color-on-surface-variant)] flex items-center justify-center text-xs hover:border-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-primary)] transition cursor-pointer"
             aria-label="Cuộn danh sách phong cách sang phải"
             onClick={() => handleScroll('right')}
           >
@@ -68,52 +67,60 @@ export function VibeFilterBar({
 
       <div
         ref={scrollContainerRef}
-        className="stayvibe-vibe-track"
+        className="flex items-center gap-2.5 overflow-x-auto pb-2 scroll-smooth"
         role="group"
         aria-label="Chọn phong cách lưu trú"
       >
+        {/* 'All' Chip */}
         <button
           type="button"
-          className={`stayvibe-style-chip ${
-            selectedVibe === 'ALL' ? 'is-selected' : ''
+          className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full border transition-all shrink-0 cursor-pointer text-xs ${
+            selectedVibe === 'ALL'
+              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] border-[var(--md-sys-color-secondary-container)] font-bold shadow-xs'
+              : 'bg-white border-[var(--md-sys-color-outline-subtle)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)] hover:text-[var(--md-sys-color-on-surface)]'
           }`}
           aria-pressed={selectedVibe === 'ALL'}
           onClick={() => onSelectVibe('ALL')}
         >
-          <span className="stayvibe-style-chip__icon" aria-hidden="true">
+          <span
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 ${
+              selectedVibe === 'ALL'
+                ? 'bg-[var(--md-sys-color-primary)] text-white'
+                : 'bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]'
+            }`}
+            aria-hidden="true"
+          >
             <AppstoreOutlined />
           </span>
-          <span className="stayvibe-style-chip__content">
-            <span className="stayvibe-style-chip__label">Tất cả</span>
-            <span className="stayvibe-style-chip__meta">Mọi phong cách</span>
-          </span>
+          <span className="font-semibold whitespace-nowrap">Tất cả phong cách</span>
         </button>
 
+        {/* Category Chips */}
         {categories.map((category) => {
           const isSelected = selectedVibe === category.icon
           return (
             <button
               key={category.id}
               type="button"
-              className={`stayvibe-style-chip ${
-                isSelected ? 'is-selected' : ''
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full border transition-all shrink-0 cursor-pointer text-xs ${
+                isSelected
+                  ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] border-[var(--md-sys-color-secondary-container)] font-bold shadow-xs'
+                  : 'bg-white border-[var(--md-sys-color-outline-subtle)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)] hover:text-[var(--md-sys-color-on-surface)]'
               }`}
               aria-pressed={isSelected}
-              onClick={() =>
-                onSelectVibe(isSelected ? 'ALL' : category.icon)
-              }
+              onClick={() => onSelectVibe(isSelected ? 'ALL' : category.icon)}
             >
-              <span className="stayvibe-style-chip__icon">
+              <span
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 ${
+                  isSelected
+                    ? 'bg-[var(--md-sys-color-primary)] text-white'
+                    : 'bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]'
+                }`}
+                aria-hidden="true"
+              >
                 <VibeSvgIcon icon={category.icon} />
               </span>
-              <span className="stayvibe-style-chip__content">
-                <span className="stayvibe-style-chip__label">
-                  {category.label}
-                </span>
-                <span className="stayvibe-style-chip__meta">
-                  {category.subLabel}
-                </span>
-              </span>
+              <span className="font-semibold whitespace-nowrap">{category.label}</span>
             </button>
           )
         })}

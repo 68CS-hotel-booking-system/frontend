@@ -1,0 +1,13 @@
+.status-message { width: min(100%, 680px); margin: 0 auto; padding: 72px 24px; color: #222; font-family: 'Liberation Sans', Arial, sans-serif; }
+.status-message h1, .status-message h2 { margin: 0 0 16px; color: inherit; font-family: inherit; font-size: 32px; font-weight: 600; line-height: 1.25; letter-spacing: -.02em; }
+.status-message p { max-width: 60ch; margin: 0; color: #595959; font-size: 16px; line-height: 1.65; }
+.status-message-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.status-message-actions :is(a, button) { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 12px 20px; border: 1px solid #222; border-radius: 8px; background: #222; color: #fff; font: inherit; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.status-message-actions :is(a, button):hover { background: #444; color: #fff; }
+.status-message-actions :is(a, button):focus-visible { outline: 2px solid #222; outline-offset: 4px; }
+.payment-status .status-message { width: 100%; padding: 0 0 32px; }
+.payment-status .status-message h2 { font-size: 24px; }
+@media (max-width: 600px) {
+  .status-message { padding: 48px 24px; }
+  .status-message h1 { font-size: 28px; }
+}
