@@ -35,7 +35,7 @@
 }
 .stayhub-client .ref-brand { color: var(--ref-fg); }
 .stayhub-client .ref-brand-sub { letter-spacing: .07em; }
-.stayhub-client .ref-header-actions { gap: 8px; }
+.stayhub-client .ref-header-actions { position: relative; gap: 8px; }
 .stayhub-client .ref-nav-tab {
   padding-inline: 18px;
   transition: color 160ms ease, background-color 160ms ease;
