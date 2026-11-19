@@ -46,3 +46,15 @@ it('renders the upcoming empty state instead of a sample trip', () => {
   expect(html).toContain('Chưa có đơn đặt phòng sắp tới')
   expect(html).not.toContain('Thanh toán qua VNPay')
 })
+
+it.each([
+  { status: 'PENDING_PAYMENT', expiresAt: '2000-01-01T00:00:00Z' },
+  { status: 'EXPIRED', expiresAt: null },
+])('keeps details and hides cancellation and payment for an expired hold (%s)', state => {
+  const html = renderTrips([{ ...booking, ...state }])
+  expect(html).toContain('Hết hạn thanh toán')
+  expect(html).toContain('Đơn đã hết thời gian giữ phòng.')
+  expect(html).toContain('Xem chi tiết')
+  expect(html).not.toContain('Thanh toán qua VNPay')
+  expect(html).not.toContain('Hủy đặt phòng')
+})
