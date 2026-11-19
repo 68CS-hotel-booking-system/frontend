@@ -2,26 +2,29 @@ import {
   AppstoreAddOutlined,
   ArrowLeftOutlined,
   CalendarOutlined,
+  CheckCircleOutlined,
   EditOutlined,
   EnvironmentOutlined,
   FileProtectOutlined,
   ReloadOutlined,
   StarFilled,
 } from '@ant-design/icons'
-import { Button, Space, Tabs, Tag } from 'antd'
+import { Button, Modal, Space, Tabs, Tag, message } from 'antd'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
-import { HotelContractsSection } from '@/features/contracts/components/HotelContractsSection'
-import { useHotelContractsQuery } from '@/features/contracts/hooks/use-hotel-contracts'
-import { FinancialAccessSection } from '@/features/finance/components/FinancialAccessSection'
-import { HotelAmenitiesManager } from '@/features/hotels/components/HotelAmenitiesManager'
-import { HotelGeneralEditForm } from '@/features/hotels/components/HotelGeneralEditForm'
-import { HotelStatusBadge } from '@/features/hotels/components/HotelStatusBadge'
-import { RoomTypeDailyRatesPanel } from '@/features/hotels/components/RoomTypeDailyRatesPanel'
+import { useCurrentUser } from '@/features/auth'
+import { HotelContractsSection, useHotelContractsQuery } from '@/features/contracts'
+
+import { FinancialAccessSection } from '@/features/finance'
 import {
+  HotelAmenitiesManager,
+  HotelGeneralEditForm,
+  HotelStatusBadge,
+  RoomTypeDailyRatesPanel,
+  useApproveHotelMutation,
   useCitiesQuery,
   useManagementHotelDetailQuery,
-} from '@/features/hotels/hooks/use-hotel-management'
-import { DataSourceBanner } from '@/shared/ui/DataSourceBanner'
+} from '@/features/hotels'
+
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
 
@@ -31,14 +34,33 @@ export function HotelManagementDetailPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') ?? 'general'
 
+  const { isAdmin } = useCurrentUser()
   const citiesQuery = useCitiesQuery()
   const detailQuery = useManagementHotelDetailQuery(hotelId)
   const contractsQuery = useHotelContractsQuery(hotelId)
+  const approveMutation = useApproveHotelMutation()
+
+  const handleApprove = () => {
+    Modal.confirm({
+      title: 'Xác nhận duyệt khách sạn',
+      content: `Bạn có chắc chắn muốn duyệt khách sạn "${detailQuery.data?.name}" từ bản nháp (DRAFT) sang trạng thái đã duyệt?`,
+      okText: 'Duyệt khách sạn',
+      cancelText: 'Hủy',
+      okButtonProps: { style: { backgroundColor: '#1F7A4D' } },
+      onOk: async () => {
+        try {
+          await approveMutation.mutateAsync(hotelId)
+          message.success('Đã duyệt khách sạn thành công!')
+        } catch (error) {
+          message.error(error instanceof Error ? error.message : 'Duyệt khách sạn thất bại.')
+        }
+      },
+    })
+  }
 
   if (detailQuery.isPending) {
     return (
       <div className="management-page">
-        <DataSourceBanner />
         <PageLoading />
       </div>
     )
@@ -47,7 +69,6 @@ export function HotelManagementDetailPage() {
   if (detailQuery.isError) {
     return (
       <div className="management-page">
-        <DataSourceBanner />
         <div className="surface-card">
           <ErrorState
             error={detailQuery.error}
@@ -65,8 +86,6 @@ export function HotelManagementDetailPage() {
 
   return (
     <div className="management-page">
-      <DataSourceBanner />
-
       <div className="detail-top-nav">
         <Button
           icon={<ArrowLeftOutlined aria-hidden="true" />}
@@ -81,6 +100,17 @@ export function HotelManagementDetailPage() {
         >
           Làm mới thông tin
         </Button>
+        {isAdmin && hotel.status === 'DRAFT' && (
+          <Button
+            type="primary"
+            icon={<CheckCircleOutlined aria-hidden="true" />}
+            loading={approveMutation.isPending}
+            onClick={handleApprove}
+            style={{ marginLeft: 'auto', backgroundColor: '#1F7A4D' }}
+          >
+            Duyệt khách sạn (DRAFT → APPROVED)
+          </Button>
+        )}
       </div>
 
       <header className="hotel-detail-hero">
@@ -169,7 +199,7 @@ export function HotelManagementDetailPage() {
             ),
             children: (
               <div className="stack-lg">
-                <HotelContractsSection hotelId={hotel.id} />
+                <HotelContractsSection hotelId={hotel.id} ownerUserId={hotel.ownerUserId} />
                 <FinancialAccessSection
                   hotelId={hotel.id}
                   defaultOwnerUserId={hotel.ownerUserId}
@@ -183,4 +213,3 @@ export function HotelManagementDetailPage() {
     </div>
   )
 }
-

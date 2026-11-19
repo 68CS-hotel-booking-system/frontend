@@ -115,31 +115,31 @@ p {
 
 h1 {
   margin-bottom: 10px;
-  font-family: var(--font-editorial);
-  font-size: clamp(30px, 3.2vw, 40px);
-  font-weight: 600;
-  line-height: 1.18;
-  letter-spacing: -0.015em;
+  font-family: var(--font-sans);
+  font-size: clamp(28px, 3vw, 38px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
 }
 
 h2 {
   margin-bottom: 10px;
-  font-family: var(--font-editorial);
+  font-family: var(--font-sans);
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.25;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--text-primary);
 }
 
 h3 {
   margin-bottom: 8px;
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-size: 16.5px;
   font-weight: 700;
   line-height: 1.4;
-  color: var(--text-primary);
+  color: inherit;
 }
 
 p {

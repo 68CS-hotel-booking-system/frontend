@@ -1,0 +1,169 @@
+{
+ "version": 1,
+ "kind": "app",
+ "at": "2026-11-04T15:42:54.258Z",
+ "seed": 883231393,
+ "input": {
+  "kind": "smb-admin",
+  "brief": "StayHub Hotel Booking Admin Dashboard",
+  "theme": "light",
+  "screens": [
+   "overview",
+   "list",
+   "settings"
+  ],
+  "keep": [],
+  "style": "accent-ladder"
+ },
+ "style": {
+  "id": "accent-ladder",
+  "name": "Accent ladder",
+  "theme": "light",
+  "basis": "3 screens: a newsletter home, a network analytics overview, a cap-table company home",
+  "suits": [
+   "creator",
+   "smb-admin",
+   "community",
+   "analytics"
+  ],
+  "idea": "One brand hue at full strength only on small marks, and its pale tints doing all the area work: the active nav row, a plan card, badges and progress tracks.",
+  "colourBudget": "3-10%, nearly all of it as pale tints of the one hue",
+  "tokens": {
+   "ground": "#f5f6f7",
+   "surface": "#ffffff",
+   "raised": "#f0f2f4",
+   "border": "#e3e6e9",
+   "rule": "#eaecee",
+   "control": "#cbd5e1",
+   "text": "#17212b",
+   "muted": "#5f6672",
+   "accent": "#0e6b6f",
+   "accentSoft": "#e6f4f5",
+   "accentTrack": "#b8e2e4",
+   "accentInk": "#073b3d",
+   "positive": "#1f7a4d",
+   "negative": "#b42318",
+   "warning": "#8a5a00",
+   "chart": [
+    "#0e6b6f",
+    "#5f6672",
+    "#2ba5a9"
+   ],
+   "pills": {
+    "positive": [
+     "#e6f4ec",
+     "#1f7a4d"
+    ],
+    "negative": [
+     "#fdecea",
+     "#b42318"
+    ],
+    "warning": [
+     "#fff3d6",
+     "#8a5a00"
+    ],
+    "neutral": [
+     "#eef0f2",
+     "#4b5560"
+    ],
+    "accent": [
+     "#e6f4f5",
+     "#0e6b6f"
+    ]
+   },
+   "radius": {
+    "card": 8,
+    "control": 6
+   },
+   "font": {
+    "family": "Be Vietnam Pro",
+    "second": null,
+    "fallback": "system-ui, -apple-system, sans-serif",
+    "sizes": {
+     "title": 24,
+     "section": 16,
+     "kpi": 22,
+     "body": 13,
+     "small": 12
+    },
+    "weights": [
+     400,
+     500,
+     600,
+     700
+    ],
+    "note": "600 for the page title only."
+   },
+   "density": "sparse",
+   "rowHeight": 45,
+   "sidebarWidth": 240,
+   "gap": 20,
+   "pad": 24,
+   "controlHeight": 34
+  },
+  "shell": "open-plane",
+  "shellAlternatives": [
+   "ruled-t-frame"
+  ],
+  "signature": "The full hue goes only on small marks: the one filled-button style, the data series and the active nav icon. Its 50-200 tints carry every area: the active nav row (tint fill with the dark ink of the hue), the plan or trial card, badges and progress tracks. The primary action may instead be near-black, as on the study's newsletter home.",
+  "identity": [
+   "The ladder built from the brand's own hue (its logo, the brief's object) in place of the dealt raspberry: the full hue on small marks, its pale tints on areas, never violet or indigo.",
+   "The product's objects in the lead block: hotel properties, room categories, partner accounts with their status.",
+   "A ground one level toward the hue's palest tint (#f5f6f7) so the page and the tints read as one family."
+  ],
+  "avoid": [
+   "the full hue on large areas",
+   "a second accent family",
+   "a gradient on buttons or cards",
+   "a left accent bar on top of heavy shadows",
+   "violet or indigo"
+  ],
+  "notes": "StayHub Admin Design System based on accent-ladder with brand Teal #0E6B6F and Be Vietnam Pro."
+ },
+ "shell": {
+  "id": "open-plane",
+  "name": "Open plane",
+  "basis": "5 of 23 screens",
+  "suits": [
+   "finance",
+   "wallet",
+   "workspace",
+   "creator",
+   "analytics",
+   "smb-admin"
+  ],
+  "numbers": {
+   "sidebarWidth": "240px",
+   "separation": "1px hairline border #e3e6e9",
+   "navPitch": 34,
+   "navRowHeight": 34,
+   "navIcon": "18px outline",
+   "navLabel": "13px, 500, grey or ink",
+   "activeItem": "soft teal tint pill (#e6f4f5), ink #073b3d with 3px left indicator in #0e6b6f",
+   "topBar": "56px sticky bar with breadcrumb and user menu",
+   "canvas": "fluid with 24-32px padding on desktop, 16px on mobile"
+  },
+  "blueprint": "The labelled sidebar sits on the page ground or white surface with a 1px hairline between it and the canvas; a clean 56px sticky top bar holds breadcrumb navigation and account access. Primary nav grouped under 12px sentence-case grey labels, user row pushed to the bottom. Cards are white with a 1px border on the #f5f6f7 canvas, flat surfaces without drop shadows.",
+  "phone": "The sidebar folds into an off-screen drawer triggered by the top bar's hamburger button, with an overlay backdrop. Content takes full width with 16px margins."
+ },
+ "screens": [
+  {
+   "name": "overview",
+   "pattern": {
+    "id": "kpi-strip-chart-rail",
+    "name": "Overview workspace",
+    "screen": "overview",
+    "blueprint": "Title row: 22-24px title on the left, quick action on the right. Main column with flat statistics cards and quick shortcuts."
+   }
+  },
+  {
+   "name": "list",
+   "pattern": {
+    "id": "table-filter-bar",
+    "name": "Table with tabs and a filter bar",
+    "screen": "list",
+    "blueprint": "Title row: 22-24px title on the left. State filter tabs on a full-width rule. Clean search & filters toolbar. Flat table with 12px muted headers, right-aligned numbers in tabular figures."
+   }
+  }
+ ]
+}

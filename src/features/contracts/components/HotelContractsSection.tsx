@@ -22,24 +22,20 @@ import {
 import { Controller, useForm } from 'react-hook-form'
 import { errorMessage } from '@/shared/api/api-error'
 import { applyApiFieldErrors } from '@/shared/lib/form-errors'
+import { useDataMode } from '@/shared/lib/data-mode-context'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
-import {
-  useCreateHotelContractMutation,
-  useHotelContractsQuery,
-} from '../hooks/use-hotel-contracts'
-import {
-  type ContractStatus,
-  contractStatusValues,
-  createHotelContractFormSchema,
-  type CreateHotelContractFormValues,
-  type HotelCommissionContract,
-} from '../types/contract'
+import { useCreateHotelContractMutation } from '../hooks/use-create-hotel-contract-mutation'
+import { useHotelContractsQuery } from '../hooks/use-hotel-contracts-query'
+import { type ContractStatus, contractStatusValues, type HotelCommissionContract } from '../model/contract'
+import { createHotelContractFormSchema, type CreateHotelContractFormValues } from '../model/contract-form-schema'
+import { ApiHotelContractsSection } from './ApiHotelContractsSection'
 
 interface HotelContractsSectionProps {
   hotelId: string
   hotelName?: string
+  ownerUserId?: string
 }
 
 const CONTRACT_STATUS_COLOR: Record<
@@ -59,7 +55,12 @@ const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
   TERMINATED: 'Đã chấm dứt',
 }
 
-export function HotelContractsSection({
+export function HotelContractsSection(props: HotelContractsSectionProps) {
+  const { mode } = useDataMode()
+  return mode === 'api' ? <ApiHotelContractsSection {...props} /> : <MockHotelContractsSection {...props} />
+}
+
+function MockHotelContractsSection({
   hotelId,
   hotelName,
 }: HotelContractsSectionProps) {
@@ -126,6 +127,7 @@ export function HotelContractsSection({
 
   return (
     <>
+      <Alert type="info" showIcon title="Dữ liệu mẫu: hợp đồng trong màn hình này chỉ dùng để xem trước." />
       <div className="detail-grid-layout">
         <section className="surface-card" aria-labelledby="contracts-list-title">
           <div className="section-header">

@@ -1,4 +1,4 @@
-import type { VibeIconKey } from '@/features/discovery/data/stayvibe-mock-data'
+import type { VibeIconKey } from '../model/discovery'
 
 interface VibeSvgIconProps {
   icon: VibeIconKey
@@ -182,4 +182,3 @@ export function HeartVectorIcon({ filled }: { filled: boolean }) {
     </svg>
   )
 }
-

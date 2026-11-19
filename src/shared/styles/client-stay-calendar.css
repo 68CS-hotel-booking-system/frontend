@@ -1,0 +1,58 @@
+.hotel-stay-filters > .hotel-stay-date-trigger { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; padding: 10px; border: 0; background: transparent; color: #222; font: inherit; text-align: left; cursor: pointer; }
+.hotel-stay-filters > .hotel-stay-date-trigger + .hotel-stay-date-trigger { border-left: 1px solid #717171; }
+.hotel-stay-date-trigger > span:first-child { font-size: 9px; line-height: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .45px; }
+.hotel-stay-date-trigger > span:last-child { font-size: 13px; line-height: 19.5px; font-weight: 500; }
+.hotel-stay-date-trigger:focus-visible { outline: 2px solid #222; outline-offset: -3px; border-radius: 6px; }
+.hotel-calendar-modal .ant-modal-container { border: 1px solid #ebebeb; border-radius: 16px; background: #fff; box-shadow: 0 12px 18px rgba(0,0,0,.14), 0 2px 4px rgba(0,0,0,.06); }
+.hotel-calendar { padding: 24px 32px 20px; color: #222; font-family: 'Plus Jakarta Sans', sans-serif; }
+.hotel-calendar button { font-family: inherit; cursor: pointer; }
+.hotel-calendar button:focus-visible { outline: 2px solid #222; outline-offset: 2px; }
+.hotel-calendar button:disabled { cursor: not-allowed; }
+.hotel-calendar-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
+.hotel-calendar-heading { padding-top: 1px; }
+.hotel-calendar-heading h2 { margin: 0 0 4px; font-size: 22px; font-weight: 700; line-height: 27.5px; letter-spacing: -.55px; }
+.hotel-calendar-heading p { margin: 0; color: #717171; font-size: 14px; line-height: 21px; }
+.hotel-calendar-inputs { display: flex; flex-shrink: 0; padding: 1px; border: 1px solid #222; border-radius: 8px; box-shadow: 0 1px 2px #0000000d; }
+.hotel-calendar-input { display: flex; align-items: center; width: 138px; padding: 8px 14px; gap: 8px; }
+.hotel-calendar-input + .hotel-calendar-input { border-left: 1px solid #2222224d; }
+.hotel-calendar-field { display: flex; flex-direction: column; gap: 4px; flex: 1; padding: 0; border: 0; color: #222; background: none; text-align: left; }
+.hotel-calendar-field span { font-size: 10px; line-height: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.hotel-calendar-field strong { font-size: 13px; line-height: 13px; font-weight: 500; white-space: nowrap; }
+.hotel-calendar-clear-one { display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; padding: 2px; border: 0; border-radius: 50%; background: none; }
+.hotel-calendar-clear-one:disabled { opacity: .3; }
+.hotel-calendar img { display: block; flex-shrink: 0; max-width: none; }
+.hotel-calendar-months { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+.hotel-calendar-month h3 { display: flex; align-items: center; justify-content: center; height: 32px; padding-bottom: 1px; margin: 0 0 4px; font-size: 16px; line-height: 24px; font-weight: 600; }
+.hotel-calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); padding-top: 4px; margin-bottom: 4px; font-size: 12px; font-weight: 600; line-height: 18px; color: #717171; text-align: center; }
+.hotel-calendar-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 2px; }
+.hotel-calendar-cell { position: relative; display: flex; align-items: center; justify-content: center; height: 44px; isolation: isolate; }
+.hotel-calendar-cell button { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #222; font-size: 14px; line-height: 21px; font-weight: 600; }
+.hotel-calendar-cell button:hover:not(:disabled) { box-shadow: inset 0 0 0 1px #222; }
+.hotel-calendar-cell button:disabled { color: #b0b0b0; font-weight: 400; text-decoration: line-through; }
+.hotel-calendar-cell.is-between { background: #f7f7f7; }
+.hotel-calendar-cell.has-range:is(.is-start,.is-end)::before { content: ''; position: absolute; inset: 0 0 0 50%; z-index: -1; background: #f7f7f7; }
+.hotel-calendar-cell.has-range.is-end::before { inset: 0 50% 0 0; }
+.hotel-calendar-cell:is(.is-start,.is-end) button { background: #222; color: white; }
+.hotel-calendar-cell.is-start button { box-shadow: 0 0 0 2px white, 0 0 0 4px #222; }
+.hotel-calendar-previous, .hotel-calendar-next { position: absolute; top: 0; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: none; }
+.hotel-calendar-previous { left: 4px; }
+.hotel-calendar-next { right: 4px; }
+.hotel-calendar-previous:disabled { opacity: .3; }
+.hotel-calendar-previous:hover:not(:disabled), .hotel-calendar-next:hover, .hotel-calendar-keyboard:hover, .hotel-calendar-clear:hover { background: #f7f7f7; }
+.hotel-calendar-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; margin-top: 24px; }
+.hotel-calendar-keyboard { display: flex; padding: 8px; border: 0; border-radius: 8px; background: none; }
+.hotel-calendar-footer > div { display: flex; align-items: center; gap: 16px; }
+.hotel-calendar-clear { padding: 8px 12px; border: 0; border-radius: 8px; background: none; color: #222; font-size: 14px; font-weight: 600; line-height: 21px; text-decoration: underline; }
+.hotel-calendar-close { padding: 10px 24px; border: 0; border-radius: 8px; background: #222; color: white; font-size: 14px; font-weight: 600; line-height: 21px; box-shadow: 0 1px 1px #0000000d; }
+.hotel-calendar-close:hover { background: #000; }
+.hotel-calendar-help { max-width: 270px; }
+@media (max-width: 650px) {
+  .hotel-calendar-modal { max-width: calc(100vw - 24px); margin: 12px auto; }
+  .hotel-calendar { padding: 20px 16px; }
+  .hotel-calendar-header { flex-direction: column; gap: 16px; }
+  .hotel-calendar-inputs { width: 100%; }
+  .hotel-calendar-input { width: 50%; }
+  .hotel-calendar-months { grid-template-columns: 1fr; gap: 24px; max-height: 50vh; overflow-y: auto; scrollbar-width: thin; }
+  .hotel-calendar-next { right: 4px; }
+  .hotel-calendar-footer { margin-top: 12px; }
+}

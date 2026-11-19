@@ -1,0 +1,64 @@
+.customer-account-reference .customer-security {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  margin-top: 24px;
+
+  .security-card {
+    min-width: 0;
+    padding: 32px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+  }
+
+  .security-card h2 { font-size: 20px; font-weight: 600; line-height: 1.2; }
+  .security-card-heading { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .security-card-heading p { margin-top: 6px; color: var(--muted); }
+  .security-badge { padding: 4px 10px; border-radius: var(--radius-pill); background: var(--surface-warm); color: var(--fg-2); font-size: 12px; font-weight: 600; }
+
+  .account-password-form { gap: 20px; }
+  .account-password-form .account-field label { font-weight: 600; }
+  .account-password-form .account-field .ant-input-affix-wrapper { min-height: 56px; height: 56px; padding-inline: 14px; }
+  .account-password-toggle { display: grid; place-items: center; margin: 0; width: 40px; height: 40px; padding: 0; border-radius: var(--radius-pill); }
+  .account-password-toggle:hover { background: var(--surface-warm); }
+  .security-meter { display: flex; gap: 6px; margin-top: 4px; }
+  .security-meter span { flex: 1; height: 5px; border-radius: var(--radius-pill); background: #e6e6e6; }
+  .security-meter[data-score="1"] span:first-child { background: var(--danger); }
+  .security-meter[data-score="2"] span:nth-child(-n + 2) { background: var(--warn); }
+  .security-meter[data-score="3"] span:nth-child(-n + 3) { background: #2f7d32; }
+  .security-meter[data-score="4"] span { background: var(--success); }
+  .security-password-tips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; padding: 0; margin: 8px 0 0; list-style: none; }
+  .security-password-tips li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .security-password-tips li[data-met="true"] { color: var(--fg-2); }
+  .security-password-tips .account-icon { flex-basis: 14px; width: 14px; height: 14px; opacity: .35; }
+  .security-password-tips .account-icon img { width: 14px; height: 14px; }
+  .security-password-tips li[data-met="true"] .account-icon { opacity: 1; }
+
+  .security-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 8px; }
+  .security-actions p { color: var(--muted); font-size: 12px; }
+  .security-actions .ant-btn, .security-two-step .ant-btn { width: auto; min-height: 44px; padding-inline: 20px; }
+  .account-password-form .security-actions .ant-btn { min-height: 48px; }
+  .security-icon { display: grid; flex: 0 0 36px; place-items: center; width: 36px; height: 36px; border-radius: var(--radius-pill); background: var(--surface-warm); font-weight: 600; }
+  .security-two-step { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
+  .security-two-step > p { flex: 1 1 240px; color: var(--muted); }
+  .security-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding-block: 16px; }
+  .security-row + .security-row { border-top: 1px solid var(--border-soft); }
+  .security-row-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+  .security-row-meta { margin-top: 2px; color: var(--muted); font-size: 12px; }
+  .security-alert-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px; padding-block: 16px; }
+  .security-tips { display: grid; gap: 12px; padding: 0; margin: 16px 0 0; list-style: none; }
+  .security-tips li { display: flex; align-items: flex-start; gap: 12px; color: var(--fg-2); }
+  .security-help-link { min-height: 44px; padding: 0; border: 0; background: none; color: var(--fg); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+  @media (max-width: 1023px) {
+    .security-card { padding: 24px; }
+  }
+  @media (max-width: 639px) {
+    .security-card { padding: 20px; }
+    .security-password-tips { grid-template-columns: minmax(0, 1fr); }
+    .security-actions .ant-btn, .security-two-step .ant-btn { width: 100%; }
+    .security-row { grid-template-columns: 36px minmax(0, 1fr); }
+    .security-row > .ant-btn { grid-column: 2; justify-self: start; padding-inline: 0; }
+  }
+}

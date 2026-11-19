@@ -2,13 +2,7 @@ import { useId } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, Form, InputNumber } from 'antd'
 import { Controller, useForm } from 'react-hook-form'
-import { z } from 'zod'
-
-const settingsSchema = z.object({
-  refreshSeconds: z.number({ error: 'Nhập số giây hợp lệ.' }).int().min(0).max(300)
-    .refine((value) => value === 0 || value >= 15, 'Nhập 0 hoặc từ 15 đến 300 giây.'),
-})
-type Settings = z.infer<typeof settingsSchema>
+import { settingsSchema, type Settings } from '../model/refresh-settings-schema'
 
 interface RefreshSettingsProps {
   refreshSeconds: number

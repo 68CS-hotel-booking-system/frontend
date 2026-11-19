@@ -1,0 +1,39 @@
+/* Giao diện quản lý khách sạn; không thay đổi theme của trang khách. */
+.hotel-workspace-shell,
+.hotel-management-list-page,
+.hotel-create-page { min-width: 0; }
+.hotel-workspace-shell .ant-tag-success,
+.hotel-workspace-shell .ant-tag-green,
+.hotel-management-list-page .ant-tag-success {
+  color: #0b5f3b !important; background: #e8f4ed !important; border-color: transparent !important;
+}
+.hotel-workspace-shell .ant-tag-gold,
+.hotel-workspace-shell .ant-tag-warning,
+.hotel-management-list-page .ant-tag-gold {
+  color: #805100 !important; background: #fff3d6 !important; border-color: transparent !important;
+}
+.hotel-workspace-shell .ant-breadcrumb,
+.hotel-workspace-shell .ant-breadcrumb a,
+.hotel-workspace-shell .ant-breadcrumb-separator,
+.hotel-workspace-shell .ant-input-data-count,
+.hotel-workspace-shell .ant-form-item-extra { color: #526760; }
+.hotel-workspace-shell .text-slate-400,
+.hotel-workspace-shell .text-gray-400 { color: #526760; }
+.hotel-workspace-shell .ant-form-item-explain:not(.ant-form-item-explain-error) { color: #526760; }
+.hotel-workspace-shell .page-header-container .uppercase { font-size: 12px; }
+.hotel-workspace-shell .ant-table-wrapper { min-width: 0; max-width: 100%; }
+.hotel-room-detail-page .page-header-container .flex.items-center.gap-2 { flex-wrap: wrap; }
+.hotel-room-detail-page .ant-table-content { overflow-x: auto; }
+.hotel-photo-cover-label {
+  background: #064e3b !important; color: white !important; font-size: 12px !important;
+}
+.hotel-workspace-shell .ant-picker { max-width: 100%; }
+.hotel-workspace-shell .ant-select { max-width: 100%; }
+
+.hotel-workspace-shell .ant-breadcrumb a { display: inline-flex; align-items: center; min-height: 28px; }
+
+/* Amenity editors may live in a portal outside the workspace shell. */
+.hotel-amenities-editor .ant-tag-green {
+  color: #0b5f3b !important;
+  background: #e8f4ed !important;
+}
