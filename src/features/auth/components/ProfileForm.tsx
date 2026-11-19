@@ -20,9 +20,10 @@ const phoneCodes = [
 function UnavailableField({ id, label, placeholder, wide = false, select = false, suffix }: {
   id: string; label: string; placeholder: string; wide?: boolean; select?: boolean; suffix?: ReactNode
 }) {
+  // shortcut: these fields are editable previews; connect them when profile APIs support saving them.
   return <div className={`account-field${wide ? ' profile-field-wide' : ''}`}>
     <label htmlFor={id}>{label}</label>
-    {select ? <select id={id} className="profile-select" disabled><option>{placeholder}</option></select> : <Input id={id} placeholder={placeholder} suffix={suffix} disabled />}
+    {select ? <select id={id} className="profile-select" aria-describedby="profile-preview-hint"><option>{placeholder}</option></select> : <Input id={id} placeholder={placeholder} suffix={suffix} aria-describedby="profile-preview-hint" />}
   </div>
 }
 
@@ -106,7 +107,7 @@ export function ProfileForm({ user }: { user: CurrentUser }) {
         <UnavailableField id="profile-birth-date" label="Ngày sinh" placeholder="dd/mm/yyyy" suffix={<AccountIcon name="calendar" />} />
         <UnavailableField id="profile-gender" label="Giới tính" placeholder="Chọn giới tính" select />
       </div>
-      <p className="account-privacy-note"><AccountIcon name="lock-small" />Bạn có thể cập nhật họ tên và số điện thoại. Các trường hồ sơ còn lại chưa hỗ trợ chỉnh sửa.</p>
+      <p className="account-privacy-note" id="profile-preview-hint"><AccountIcon name="lock-small" />Bạn có thể lưu họ tên và số điện thoại. Các trường khác tạm mở để nhập thử, chưa được lưu và sẽ mất khi tải lại trang.</p>
     </section>
     <section className="profile-card" aria-labelledby="profile-address-title">
       <h2 id="profile-address-title">Địa chỉ</h2>
@@ -135,7 +136,7 @@ export function ProfileForm({ user }: { user: CurrentUser }) {
       </div>
     </section>
     {mutation.isError && <Alert type="error" showIcon title={errorMessage(mutation.error)} />}
-    {saved && !form.formState.isDirty && <Alert type="success" showIcon title="Đã lưu hồ sơ." role="status" />}
+    {saved && !form.formState.isDirty && <Alert type="success" showIcon title="Đã lưu họ tên và số điện thoại." role="status" />}
     <div className="account-form-actions">
       <div className="profile-actions-left">
         <Button htmlType="button" type="text" disabled={mutation.isPending} onClick={() => {
