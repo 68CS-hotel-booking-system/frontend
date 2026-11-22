@@ -16,7 +16,12 @@ export function HotelModulePage({ module }: { module: 'bookings' | 'contracts' |
   const query = useManagementHotelsQuery({ page, size: 50 })
   const selected = chosen ?? query.data?.content[0]
   const title = { bookings: 'Quản lý đặt phòng', contracts: 'Hợp đồng lưu trú', 'financial-access': 'Phân quyền tài chính' }[module]
-  return <div><PageHeader title={title} description="Chọn khách sạn thuộc phạm vi quản lý để tiếp tục." />
+  const kicker = {
+    bookings: 'VẬN HÀNH LƯU TRÚ',
+    contracts: 'HỢP ĐỒNG & ĐỐI TÁC',
+    'financial-access': 'TÀI CHÍNH & PHÂN QUYỀN',
+  }[module]
+  return <div className="w-full max-w-6xl mx-auto space-y-6"><PageHeader kicker={kicker} title={title} description="Chọn khách sạn thuộc phạm vi quản lý để tiếp tục." />
     {query.isPending ? <PageLoading /> : query.isError ? <ErrorState error={query.error} onRetry={() => void query.refetch()} /> : !query.data.content.length ? <EmptyState title="Chưa có khách sạn trong phạm vi quản lý" action={<Link to="/hotels">Quản lý khách sạn</Link>} /> : <>
       <Space wrap style={{ marginBottom: 24 }}><label htmlFor="module-hotel">Khách sạn</label><Select id="module-hotel" value={selected?.id} style={{ minWidth: 240, maxWidth: '100%' }}
         options={query.data.content.map((hotel) => ({ value: hotel.id, label: hotel.name }))} onChange={(id) => setChosen(query.data.content.find((hotel) => hotel.id === id))} />

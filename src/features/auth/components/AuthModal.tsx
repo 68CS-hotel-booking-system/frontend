@@ -2,9 +2,11 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { CloseOutlined, CompassOutlined } from '@ant-design/icons'
 import { ClientLoginForm } from './ClientLoginForm'
 import { ClientRegisterForm } from './ClientRegisterForm'
+import { ClientForgotPasswordForm } from './ClientForgotPasswordForm'
+import { ClientResetPasswordForm } from './ClientResetPasswordForm'
 import { GoogleAuthButton } from './GoogleAuthButton'
 
-export type AuthModalMode = 'login' | 'register'
+export type AuthModalMode = 'login' | 'register' | 'forgot-password' | 'reset-password'
 
 export interface AuthModalProps {
   isOpen: boolean
@@ -314,36 +316,70 @@ export function AuthModal({
             {/* Tiêu đề & phụ đề */}
             <div className="auth-modal-head auth-stagger-item auth-stagger-2">
               <h2 className="auth-modal-title" id={titleId}>
-                {googleEnrollment ? 'Hoàn tất đăng ký' : variant === 'checkout' ? (mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản') : (mode === 'login' ? 'Đăng nhập tài khoản' : 'Tạo tài khoản mới')}
+                {googleEnrollment
+                  ? 'Hoàn tất đăng ký'
+                  : mode === 'forgot-password'
+                    ? 'Quên mật khẩu'
+                    : mode === 'reset-password'
+                      ? 'Đặt lại mật khẩu'
+                      : variant === 'checkout'
+                        ? (mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản')
+                        : (mode === 'login' ? 'Đăng nhập tài khoản' : 'Tạo tài khoản mới')}
               </h2>
               <p className="auth-modal-subtitle" id={subtitleId}>
-                {googleEnrollment ? 'Thêm số điện thoại cho tài khoản StayHub.' : variant === 'checkout' ? (mode === 'login' ? 'Đăng nhập để tiếp tục thanh toán.' : 'Tạo tài khoản để tiếp tục đặt phòng.') : mode === 'login'
-                  ? 'Đăng nhập để đặt phòng và theo dõi các đơn của bạn'
-                  : 'Trở thành thành viên để nhận đặc quyền và ưu đãi lưu trú'}
+                {googleEnrollment
+                  ? 'Thêm số điện thoại cho tài khoản StayHub.'
+                  : mode === 'forgot-password'
+                    ? 'Nhập email đã đăng ký để nhận hướng dẫn đặt lại mật khẩu'
+                    : mode === 'reset-password'
+                      ? 'Nhập mã xác nhận từ email và thiết lập mật khẩu mới'
+                      : variant === 'checkout'
+                        ? (mode === 'login' ? 'Đăng nhập để tiếp tục thanh toán.' : 'Tạo tài khoản để tiếp tục đặt phòng.')
+                        : mode === 'login'
+                          ? 'Đăng nhập để đặt phòng và theo dõi các đơn của bạn'
+                          : 'Trở thành thành viên để nhận đặc quyền và ưu đãi lưu trú'}
               </p>
             </div>
 
-            {/* Form đăng nhập hoặc đăng ký với container chuyển đổi chiều cao mượt mà */}
+            {/* Form đăng nhập / đăng ký / quên mật khẩu / đặt lại mật khẩu */}
             <div
               className="auth-modal-height-animator"
               style={{ height: formHeight ? `${formHeight}px` : undefined }}
             >
               <div ref={formContainerRef} className="auth-form-slide">
-                <GoogleAuthButton key={mode} mode={mode} onSuccess={handleLoginSuccess}
-                  onEnrollmentChange={setGoogleEnrollment} />
+                {(mode === 'login' || mode === 'register') && (
+                  <GoogleAuthButton key={mode} mode={mode} onSuccess={handleLoginSuccess}
+                    onEnrollmentChange={setGoogleEnrollment} />
+                )}
                 {!googleEnrollment && (mode === 'login' ? (
                   <ClientLoginForm
                     key="modal-login-form"
                     defaultEmail={persistedEmail}
                     onSuccess={handleLoginSuccess}
                     onSwitchToRegister={(email) => handleSwitchMode('register', email)}
+                    onSwitchToForgot={(email) => handleSwitchMode('forgot-password', email)}
                     inModal
                   />
-                ) : (
+                ) : mode === 'register' ? (
                   <ClientRegisterForm
                     key="modal-register-form"
                     defaultEmail={persistedEmail}
                     onSwitchToLogin={(email) => handleSwitchMode('login', email)}
+                    inModal
+                  />
+                ) : mode === 'forgot-password' ? (
+                  <ClientForgotPasswordForm
+                    key="modal-forgot-form"
+                    defaultEmail={persistedEmail}
+                    onSwitchToLogin={(email) => handleSwitchMode('login', email)}
+                    onSwitchToReset={(email) => handleSwitchMode('reset-password', email)}
+                    inModal
+                  />
+                ) : (
+                  <ClientResetPasswordForm
+                    key="modal-reset-form"
+                    onSwitchToLogin={() => handleSwitchMode('login')}
+                    onSwitchToForgot={() => handleSwitchMode('forgot-password')}
                     inModal
                   />
                 ))}

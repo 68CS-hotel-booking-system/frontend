@@ -24,7 +24,7 @@ export function HotelDetailPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const returnTo: unknown = location.state?.listingReturn
-  const listingReturn = typeof returnTo === 'string' && /^(?:\/|\/explore|\/saved-stays)(?:[?#].*)?$/.test(returnTo)
+  const listingReturn = typeof returnTo === 'string' && /^(?:\/|\/explore|\/saved-stays|\/account\/saved-stays)(?:[?#].*)?$/.test(returnTo)
     ? returnTo
     : '/explore'
   const session = useSession()

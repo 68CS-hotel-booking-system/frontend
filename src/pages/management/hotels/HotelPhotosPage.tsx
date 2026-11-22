@@ -247,11 +247,14 @@ export function HotelPhotosPage() {
     )
   }
 
-  const handleReassignPhotoAlbum = (mediaId: string, albumId: string) => runWrite(false, () =>
-    imagesQuery.saveGallery((current) => {
+  const handleReassignPhotoAlbum = (mediaId: string, albumId: string) => {
+    const targetAlbum = allAlbums.find((album) => album.id === albumId)
+    if (!targetAlbum) return
+    return runWrite(false, () => imagesQuery.saveGallery((current) => {
       if (!current.some((image) => image.mediaId === mediaId)) throw new Error('Ảnh đã thay đổi. Vui lòng tải lại.')
       return current.map((image) => image.mediaId === mediaId ? { ...image, albumId: albumId === 'ungrouped' ? null : albumId } : image)
-    }), 'Đã lưu phân loại ảnh lên máy chủ.')
+    }), `Đã chuyển ảnh vào "${targetAlbum.name}".`)
+  }
 
   const handleCreateAlbum = () => {
     const name = newAlbumName.trim()
@@ -380,7 +383,7 @@ export function HotelPhotosPage() {
               <span>Phân loại album ảnh</span>
             </span>
             <span className="text-[11px] text-[#5f736e]">
-              Bấm vào từng album để lọc ảnh hoặc sắp xếp thứ tự
+              Chọn “Chuyển đến” dưới ảnh để đổi album, không cần tải lại ảnh.
             </span>
           </div>
 
@@ -515,7 +518,7 @@ export function HotelPhotosPage() {
             <div className="py-10 text-center bg-[#f7fbfa] rounded-xl border border-dashed border-[#dce7e3]">
               <EmptyState
                 title={`Chưa có ảnh nào trong album ${activeAlbum?.name || ''}`}
-                description="Hãy chọn hoặc kéo thả các tệp ảnh ở phần tải lên bên dưới để đưa ảnh vào album này."
+                description="Để chuyển ảnh có sẵn, mở Tất cả hoặc Chưa phân loại rồi chọn album tại mục Chuyển đến dưới ảnh. Bạn cũng có thể tải ảnh mới ở bên dưới."
               />
 
             </div>
@@ -575,14 +578,15 @@ export function HotelPhotosPage() {
                         {/* Hàng chuyển đổi album */}
                         <div className="flex items-center justify-between gap-1 text-[11px]">
                           <span className="text-[#526760] flex items-center gap-1 shrink-0">
-                            <SwapOutlined /> Album:
+                            <SwapOutlined /> Chuyển đến:
                           </span>
                           <Select
                             size="small"
                             value={img.albumId}
+                            aria-label={`Chuyển ảnh ${img.originalIndex + 1} đến album`}
                             disabled={writesDisabled}
                             onChange={(newVal) => handleReassignPhotoAlbum(img.mediaId, newVal)}
-                            className="w-[140px] text-xs"
+                            className="w-[140px] min-w-0 text-xs"
                             options={allAlbums.map((a) => ({
                               value: a.id,
                               label: a.name,

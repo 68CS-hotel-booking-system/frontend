@@ -1,14 +1,10 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import {
   ArrowRightOutlined,
   CalendarOutlined,
-  CheckCircleOutlined,
-  CloseOutlined,
   CloudServerOutlined,
   CreditCardOutlined,
   LineChartOutlined,
-  LoadingOutlined,
   LockOutlined,
   MessageOutlined,
   ShopOutlined,
@@ -21,15 +17,11 @@ import { formatRoleLabel } from '@/shared/lib/format'
 
 export function AdminOverviewPage() {
   const navigate = useNavigate()
-  const { currentUser, isChecking } = useCurrentUser()
-  const [healthModalOpen, setHealthModalOpen] = useState(false)
-  const [healthChecking, setHealthChecking] = useState(false)
-  const [healthChecked, setHealthChecked] = useState(false)
-  const [placeholderModule, setPlaceholderModule] = useState<string | null>(null)
+  const { currentUser, isChecking, isAdmin } = useCurrentUser()
 
-  const userFullName = currentUser?.fullName || (currentUser?.email ? currentUser.email.split('@')[0] : 'Nguyễn Văn C')
-  const userEmail = currentUser?.email || 'an.demo06@example.test'
-  const userRoles = currentUser?.roles && currentUser.roles.length > 0 ? currentUser.roles : ['ADMIN', 'HOTEL_OWNER']
+  const userFullName = currentUser?.fullName || (currentUser?.email ? currentUser.email.split('@')[0] : 'Tài khoản')
+  const userEmail = currentUser?.email || ''
+  const userRoles = currentUser?.roles && currentUser.roles.length > 0 ? currentUser.roles : []
   const userInitials =
     userFullName
       .split(' ')
@@ -37,20 +29,10 @@ export function AdminOverviewPage() {
       .map((part) => part[0])
       .slice(-2)
       .join('')
-      .toUpperCase() || 'VC'
-
-  const runSimulatedHealth = () => {
-    setHealthModalOpen(true)
-    setHealthChecking(true)
-    setHealthChecked(false)
-    setTimeout(() => {
-      setHealthChecking(false)
-      setHealthChecked(true)
-    }, 900)
-  }
+      .toUpperCase() || 'SH'
 
   return (
-    <div className="flex flex-col gap-7 w-full max-w-full">
+    <div className="flex flex-col gap-7 w-full max-w-6xl mx-auto">
       {/* 1. Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#dce7e3]">
         <div>
@@ -68,12 +50,18 @@ export function AdminOverviewPage() {
 
         <button
           type="button"
-          onClick={() => navigate('/admin/users')}
+          onClick={() => navigate(isAdmin ? '/admin/users' : '/hotels')}
           className="console-primary-btn shrink-0 self-start sm:self-auto"
           style={{ color: '#ffffff', backgroundColor: '#0b5f53' }}
         >
-          <UserAddOutlined className="!text-white text-sm" style={{ color: '#ffffff' }} aria-hidden="true" />
-          <span className="!text-white font-semibold" style={{ color: '#ffffff' }}>Quản lý tài khoản</span>
+          {isAdmin ? (
+            <UserAddOutlined className="!text-white text-sm" style={{ color: '#ffffff' }} aria-hidden="true" />
+          ) : (
+            <ShopOutlined className="!text-white text-sm" style={{ color: '#ffffff' }} aria-hidden="true" />
+          )}
+          <span className="!text-white font-semibold" style={{ color: '#ffffff' }}>
+            {isAdmin ? 'Quản lý tài khoản' : 'Quản lý khách sạn'}
+          </span>
         </button>
       </div>
 
@@ -95,7 +83,7 @@ export function AdminOverviewPage() {
           {/* Queue Card 1: Bookings */}
           <button
             type="button"
-            onClick={() => setPlaceholderModule('Đặt phòng')}
+            onClick={() => navigate('/bookings')}
             className="queue-card p-4 flex flex-col justify-between text-left cursor-pointer border-[#dce7e3] bg-white group min-h-[108px]"
           >
             <div className="text-[11px] font-bold text-[#5f736e] uppercase tracking-[.11em] text-center mb-1">
@@ -125,7 +113,7 @@ export function AdminOverviewPage() {
           {/* Queue Card 2: Complaints */}
           <button
             type="button"
-            onClick={() => setPlaceholderModule('Khiếu nại')}
+            onClick={() => navigate('/complaints')}
             className="queue-card p-4 flex flex-col justify-between text-left cursor-pointer border-[#dce7e3] bg-white group min-h-[108px]"
           >
             <div className="text-[11px] font-bold text-[#5f736e] uppercase tracking-[.11em] text-center mb-1">
@@ -155,7 +143,7 @@ export function AdminOverviewPage() {
           {/* Queue Card 3: Finance */}
           <button
             type="button"
-            onClick={() => setPlaceholderModule('Tài chính')}
+            onClick={() => navigate('/finance')}
             className="queue-card p-4 flex flex-col justify-between text-left cursor-pointer border-[#dce7e3] bg-white group min-h-[108px]"
           >
             <div className="text-[11px] font-bold text-[#5f736e] uppercase tracking-[.11em] text-center mb-1">
@@ -185,7 +173,7 @@ export function AdminOverviewPage() {
           {/* Queue Card 4: Vouchers */}
           <button
             type="button"
-            onClick={() => setPlaceholderModule('Voucher')}
+            onClick={() => navigate('/vouchers')}
             className="queue-card p-4 flex flex-col justify-between text-left cursor-pointer border-[#dce7e3] bg-white group min-h-[108px]"
           >
             <div className="text-[11px] font-bold text-[#5f736e] uppercase tracking-[.11em] text-center mb-1">
@@ -717,7 +705,7 @@ export function AdminOverviewPage() {
               <span className="text-[#5f736e]">Thông tin quyền hạn được cấp</span>
               <button
                 type="button"
-                onClick={() => navigate('/admin/users')}
+                onClick={() => navigate(isAdmin ? '/admin/users' : '/account')}
                 className="text-[#0b5f53] hover:underline font-semibold cursor-pointer border-0 bg-transparent p-0 flex items-center gap-1"
               >
                 <span>Xem hồ sơ</span>
@@ -759,15 +747,19 @@ export function AdminOverviewPage() {
             </div>
 
             <div className="pt-3 border-t border-[#dce7e3] flex items-center justify-between text-xs">
-              <span className="text-[#5f736e]">Mô phỏng phản hồi trạng thái</span>
-              <button
-                type="button"
-                onClick={runSimulatedHealth}
-                className="text-[#0b5f53] hover:underline font-semibold cursor-pointer border-0 bg-transparent p-0 flex items-center gap-1"
-              >
-                <span>Chạy kiểm tra mô phỏng</span>
-                <ArrowRightOutlined className="text-[10px]" />
-              </button>
+              <span className="text-[#5f736e]">Giám sát tình trạng kết nối backend</span>
+              {isAdmin ? (
+                <button
+                  type="button"
+                  onClick={() => navigate('/system-status')}
+                  className="text-[#0b5f53] hover:underline font-semibold cursor-pointer border-0 bg-transparent p-0 flex items-center gap-1"
+                >
+                  <span>Mở trang trạng thái</span>
+                  <ArrowRightOutlined className="text-[10px]" />
+                </button>
+              ) : (
+                <span className="text-[#5f736e] font-medium">Chỉ dành cho quản trị viên</span>
+              )}
             </div>
           </div>
         </div>
@@ -783,41 +775,43 @@ export function AdminOverviewPage() {
             Tác vụ vận hành theo phân hệ
           </h2>
           <span className="text-[12.5px] text-[#5f736e]">
-            7 phân hệ tính năng quản trị
+            {isAdmin ? '7 phân hệ tính năng quản trị' : '6 phân hệ vận hành đối tác'}
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Module 1: Users */}
-          <div className="module-card p-5 flex flex-col justify-between gap-4">
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="w-[42px] h-[42px] rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center text-lg">
-                  <TeamOutlined />
+          {/* Module 1: Users (Admin only) */}
+          {isAdmin && (
+            <div className="module-card p-5 flex flex-col justify-between gap-4">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="w-[42px] h-[42px] rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center text-lg">
+                    <TeamOutlined />
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#eaf6f1] text-[#0f7a5f] border border-[#cde9dc]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0f7a5f]" />
+                    <span>Đã kết nối</span>
+                  </span>
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#eef8f5] text-[#0b5f53] border border-[#d6ebe5]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0b5f53]" />
-                  <span>Dữ liệu minh họa</span>
-                </span>
+                <div>
+                  <h3 className="text-[17.5px] font-semibold tracking-[-0.02em] text-[#12211d] m-0">
+                    Người dùng & Phân quyền
+                  </h3>
+                  <p className="text-[14.5px] text-[#5f736e] mt-1.5 mb-0 leading-[22px]">
+                    Quản lý tài khoản, khóa/mở khóa và phân quyền quản trị viên, chủ khách sạn.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-[17.5px] font-semibold tracking-[-0.02em] text-[#12211d] m-0">
-                  Người dùng & Phân quyền
-                </h3>
-                <p className="text-[14.5px] text-[#5f736e] mt-1.5 mb-0 leading-[22px]">
-                  Quản lý tài khoản, khóa/mở khóa và phân quyền quản trị viên, chủ khách sạn.
-                </p>
-              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/admin/users')}
+                className="w-full min-h-[44px] px-4 rounded-[8px] bg-[#eef8f5] hover:bg-[#d9f0ea] text-[#0b5f53] font-semibold text-[13px] flex items-center justify-between cursor-pointer border-0 transition-colors"
+              >
+                <span>Quản lý người dùng</span>
+                <ArrowRightOutlined className="module-cta-arrow transition-transform duration-150" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => navigate('/admin/users')}
-              className="w-full min-h-[44px] px-4 rounded-[8px] bg-[#eef8f5] hover:bg-[#d9f0ea] text-[#0b5f53] font-semibold text-[13px] flex items-center justify-between cursor-pointer border-0 transition-colors"
-            >
-              <span>Quản lý người dùng</span>
-              <ArrowRightOutlined className="module-cta-arrow transition-transform duration-150" />
-            </button>
-          </div>
+          )}
 
           {/* Module 2: Hotels */}
           <div className="module-card p-5 flex flex-col justify-between gap-4">
@@ -826,8 +820,9 @@ export function AdminOverviewPage() {
                 <div className="w-[42px] h-[42px] rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center text-lg">
                   <ShopOutlined />
                 </div>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#f7fbfa] text-[#5f736e] border border-[#dce7e3]">
-                  Dữ liệu minh họa
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#eaf6f1] text-[#0f7a5f] border border-[#cde9dc]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0f7a5f]" />
+                  <span>Đã kết nối</span>
                 </span>
               </div>
               <div>
@@ -841,7 +836,7 @@ export function AdminOverviewPage() {
             </div>
             <button
               type="button"
-              onClick={() => navigate('/management/hotels')}
+              onClick={() => navigate('/hotels')}
               className="w-full min-h-[44px] px-4 rounded-[8px] bg-[#eef8f5] hover:bg-[#d9f0ea] text-[#0b5f53] font-semibold text-[13px] flex items-center justify-between cursor-pointer border-0 transition-colors"
             >
               <span>Quản lý khách sạn</span>
@@ -856,8 +851,9 @@ export function AdminOverviewPage() {
                 <div className="w-[42px] h-[42px] rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center text-lg">
                   <CalendarOutlined />
                 </div>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#f7fbfa] text-[#5f736e] border border-[#dce7e3]">
-                  Dữ liệu minh họa
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#eaf6f1] text-[#0f7a5f] border border-[#cde9dc]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0f7a5f]" />
+                  <span>Đã kết nối</span>
                 </span>
               </div>
               <div>
@@ -871,7 +867,7 @@ export function AdminOverviewPage() {
             </div>
             <button
               type="button"
-              onClick={() => setPlaceholderModule('Đặt phòng')}
+              onClick={() => navigate('/bookings')}
               className="w-full min-h-[44px] px-4 rounded-[8px] bg-[#eef8f5] hover:bg-[#d9f0ea] text-[#0b5f53] font-semibold text-[13px] flex items-center justify-between cursor-pointer border-0 transition-colors"
             >
               <span>Quản lý đặt phòng</span>
@@ -901,7 +897,7 @@ export function AdminOverviewPage() {
             </div>
             <button
               type="button"
-              onClick={() => setPlaceholderModule('Voucher')}
+              onClick={() => navigate('/vouchers')}
               className="w-full min-h-[44px] px-4 rounded-[8px] bg-[#eef8f5] hover:bg-[#d9f0ea] text-[#0b5f53] font-semibold text-[13px] flex items-center justify-between cursor-pointer border-0 transition-colors"
             >
               <span>Quản lý voucher</span>
@@ -931,7 +927,7 @@ export function AdminOverviewPage() {
             </div>
             <button
               type="button"
-              onClick={() => setPlaceholderModule('Khiếu nại')}
+              onClick={() => navigate('/complaints')}
               className="w-full min-h-[44px] px-4 rounded-[8px] bg-[#eef8f5] hover:bg-[#d9f0ea] text-[#0b5f53] font-semibold text-[13px] flex items-center justify-between cursor-pointer border-0 transition-colors"
             >
               <span>Xử lý khiếu nại</span>
@@ -961,7 +957,7 @@ export function AdminOverviewPage() {
             </div>
             <button
               type="button"
-              onClick={() => setPlaceholderModule('Tài chính')}
+              onClick={() => navigate('/finance')}
               className="w-full min-h-[44px] px-4 rounded-[8px] bg-[#eef8f5] hover:bg-[#d9f0ea] text-[#0b5f53] font-semibold text-[13px] flex items-center justify-between cursor-pointer border-0 transition-colors"
             >
               <span>Báo cáo tài chính</span>
@@ -969,8 +965,8 @@ export function AdminOverviewPage() {
             </button>
           </div>
 
-          {/* Module 7: Reports (Centered in desktop 3-col layout: lg:col-start-2) */}
-          <div className="module-card lg:col-start-2 p-5 flex flex-col justify-between gap-4">
+          {/* Module 7: Reports (Centered in desktop 3-col layout when 7 modules) */}
+          <div className={`module-card ${isAdmin ? 'lg:col-start-2 ' : ''}p-5 flex flex-col justify-between gap-4`}>
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <div className="w-[42px] h-[42px] rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center text-lg">
@@ -991,7 +987,7 @@ export function AdminOverviewPage() {
             </div>
             <button
               type="button"
-              onClick={() => setPlaceholderModule('Báo cáo')}
+              onClick={() => navigate('/reports')}
               className="w-full min-h-[44px] px-4 rounded-[8px] bg-[#eef8f5] hover:bg-[#d9f0ea] text-[#0b5f53] font-semibold text-[13px] flex items-center justify-between cursor-pointer border-0 transition-colors"
             >
               <span>Xem báo cáo</span>
@@ -1000,114 +996,6 @@ export function AdminOverviewPage() {
           </div>
         </div>
       </section>
-
-      {/* Simulated Health Check Dialog */}
-      {healthModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071c18]/48 backdrop-blur-xs"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="healthDialogTitle"
-        >
-          <div className="w-full max-w-[500px] p-6 sm:p-7 border border-[#dce7e3] rounded-[16px] bg-white text-[#12211d] shadow-2xl flex flex-col gap-4 animate-in fade-in duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-[#dce7e3]">
-              <h2 id="healthDialogTitle" className="text-xl font-bold text-[#12211d] m-0">
-                Kiểm tra máy chủ
-              </h2>
-              <button
-                type="button"
-                onClick={() => setHealthModalOpen(false)}
-                className="w-8 h-8 rounded-md flex items-center justify-center text-[#5f736e] hover:text-[#12211d] hover:bg-[#f7fbfa] transition-colors border-0 bg-transparent cursor-pointer"
-                aria-label="Đóng hộp thoại"
-              >
-                <CloseOutlined />
-              </button>
-            </div>
-
-            {healthChecking ? (
-              <div className="flex flex-col items-center justify-center gap-3 py-6" role="status">
-                <LoadingOutlined className="text-2xl text-[#0b5f53] animate-spin" />
-                <span className="text-sm font-medium text-[#5f736e]">
-                  Đang mô phỏng kiểm tra /actuator/health…
-                </span>
-              </div>
-            ) : healthChecked ? (
-              <div className="flex flex-col gap-3 py-2">
-                <div className="p-4 rounded-xl bg-[#eef8f5] border border-[#d6ebe5] flex items-start gap-3">
-                  <CheckCircleOutlined className="text-xl text-[#0f7a5f] shrink-0 mt-0.5" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-[#08473e]">
-                      Phản hồi mô phỏng: 200 OK
-                    </span>
-                    <span className="text-xs text-[#5f736e] mt-1 leading-relaxed">
-                      Dịch vụ máy chủ StayHub Backend phản hồi mô phỏng bình thường. Chưa có cuộc gọi mạng thực tế nào được thực hiện trong bản xem trước này.
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setHealthModalOpen(false)}
-                className="min-h-[40px] px-5 border border-[#bfd3cd] hover:border-[#0b5f53] rounded-[9px] text-sm font-semibold text-[#12211d] bg-transparent transition-colors cursor-pointer"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Module Placeholder Dialog */}
-      {placeholderModule && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071c18]/48 backdrop-blur-xs"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="placeholderDialogTitle"
-        >
-          <div className="w-full max-w-[500px] p-6 sm:p-7 border border-[#dce7e3] rounded-[16px] bg-white text-[#12211d] shadow-2xl flex flex-col gap-4 animate-in fade-in duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-[#dce7e3]">
-              <h2 id="placeholderDialogTitle" className="text-xl font-bold text-[#12211d] m-0">
-                Phân hệ {placeholderModule}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setPlaceholderModule(null)}
-                className="w-8 h-8 rounded-md flex items-center justify-center text-[#5f736e] hover:text-[#12211d] hover:bg-[#f7fbfa] transition-colors border-0 bg-transparent cursor-pointer"
-                aria-label="Đóng hộp thoại"
-              >
-                <CloseOutlined />
-              </button>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#f7fbfa] border border-[#dce7e3] flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[#eef8f5] text-[#0b5f53] border border-[#d6ebe5]">
-                  Dữ liệu minh họa
-                </span>
-                <span className="text-xs text-[#5f736e]">Chưa có dữ liệu trong bản xem trước</span>
-              </div>
-              <p className="text-sm text-[#344a44] m-0 leading-relaxed">
-                Phân hệ <strong>{placeholderModule}</strong> sẽ được kết nối với API backend StayHub khi các dịch vụ nghiệp vụ tương ứng sẵn sàng.
-              </p>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setPlaceholderModule(null)}
-                className="min-h-[40px] px-5 bg-[#0b5f53] hover:bg-[#08473e] !text-white rounded-[9px] text-sm font-semibold transition-colors cursor-pointer border-0"
-                style={{ color: '#ffffff' }}
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

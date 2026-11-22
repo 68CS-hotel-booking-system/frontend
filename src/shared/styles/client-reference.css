@@ -470,7 +470,7 @@
         border-radius: var(--ref-radius-sm);
         background: var(--ref-surface-warm);
       }
-      .ref-dest-field:focus-within { border-color: var(--ref-fg); box-shadow: var(--ref-focus-ring); background: var(--ref-surface); }
+      .ref-dest-field:focus-within { outline: 2px solid var(--ref-fg); outline-offset: 1px; background: var(--ref-surface); }
       .ref-dest-field input {
         flex: 1 1 0;
         min-width: 0;
@@ -483,6 +483,7 @@
         outline: none;
       }
       .ref-dest-field input::placeholder { color: var(--ref-muted); }
+      .ref-dest-field input:focus { outline: none; box-shadow: none; }
 
       .ref-suggest-list {
         display: flex;
@@ -1213,7 +1214,7 @@
 .ref-pagination .ant-pagination-item-active a { color: var(--ref-accent-on); }
 .ref-search-error { margin: 12px auto 0; max-width: 900px; color: var(--ref-danger); font-size: var(--ref-text-sm); }
 .ref-inline-error { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid var(--ref-danger); border-radius: var(--ref-radius-sm); }
-.ref-destination-pop.ref-pop { position: static; margin: 0; width: 380px; max-width: calc(100vw - 32px); }
+.ref-destination-pop.ref-pop { position: static; margin: 0; width: 380px; max-width: calc(100vw - 32px); --ref-font-body: "Be Vietnam Pro", system-ui, sans-serif; }
 .ref-destination-pop .ref-suggest-list { max-height: 300px; overflow-y: auto; }
 .ref-destination-pop .ref-suggest-active { background: var(--ref-surface-warm); }
 .ref-suggest-icon { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: var(--ref-radius-sm); background: var(--ref-surface-warm); }

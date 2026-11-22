@@ -81,7 +81,7 @@
 .customer-account-shell .account-field .ant-input[readonly]:not([type='password']) { background: var(--account-soft); }
 .customer-account-shell .account-field :is(.ant-input-disabled, .ant-input-affix-wrapper-disabled) { background: var(--account-soft); color: var(--account-muted); cursor: not-allowed; }
 .customer-account-shell .account-field :is(.ant-input, .ant-input-affix-wrapper):hover:not(:disabled):not(.ant-input-affix-wrapper-disabled) { border-color: var(--account-ink); }
-.customer-account-shell .account-field :is(.ant-input:focus, .ant-input-affix-wrapper-focused) { border-color: var(--account-ink); outline: 1px solid var(--account-ink); outline-offset: 1px; }
+.customer-account-shell .account-field > .ant-input:focus { border-color: var(--account-ink); outline: 1px solid var(--account-ink); outline-offset: 1px; }
 .customer-account-shell .account-field .ant-input-status-error, .customer-account-shell .account-field .ant-input-affix-wrapper-status-error { border-color: #c4242a; }
 .customer-account-shell .account-field .account-field-error { color: #c4242a; }
 .account-privacy-note { display: flex; align-items: flex-start; gap: 10px; color: var(--account-muted); font-size: 12px; line-height: 18px; }
@@ -103,6 +103,17 @@
 .account-mobile-navigation, .account-mobile-copy { display: none; }
 .account-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; padding: 0; border: 0; clip-path: inset(50%); white-space: nowrap; }
 .customer-account-shell :is(a, button, input):focus-visible { outline: 2px solid var(--account-ink); outline-offset: 3px; }
+.customer-account-shell .account-field .ant-input-affix-wrapper:focus-within {
+  outline: 2px solid var(--account-ink);
+  outline-offset: 1px;
+}
+.customer-account-shell .account-field .ant-input-affix-wrapper input.ant-input:focus {
+  border-color: transparent;
+  outline: none;
+  box-shadow: none;
+}
+.customer-account-shell .account-saved-stays { margin-top: 16px; }
+.customer-account-shell .account-saved-stays > p { color: var(--account-muted); }
 .account-navigation-dropdown .ant-dropdown-menu { padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-family: Inter, sans-serif; }
 .account-navigation-dropdown .ant-dropdown-menu-item { min-height: 44px; font-size: 14px; }
 .account-navigation-dropdown .ant-dropdown-menu-item-selected { background: #f3f3f3; color: #222; }

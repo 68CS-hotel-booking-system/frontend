@@ -110,9 +110,11 @@ describe('VerifyEmailView component', () => {
   it('renders clean header and footer without exposing internal diagnostics', () => {
     const html = renderView('success')
 
-    // Clean header
-    expect(html).toContain('Bộ sưu tập lưu trú')
+    // Clean header matching Client brand
+    expect(html).toContain('Chỗ nghỉ &amp; trải nghiệm')
     expect(html).toContain('Về trang chủ')
+    expect(html).not.toContain('Bộ sưu tập lưu trú')
+    expect(html).not.toContain('#b66d3a')
 
     // Clean footer
     expect(html).toContain('© 2026 StayHub · Nền tảng đặt phòng nghỉ dưỡng. Mọi quyền được bảo lưu.')

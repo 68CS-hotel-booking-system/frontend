@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { LoginPage } from './LoginPage'
+import { RegisterPage } from './RegisterPage'
 import { setAuthStatus, setSession } from '@/shared/api/session'
 
 const tokens = {
@@ -94,6 +95,29 @@ describe('LoginPage returnTo and admin access protection', () => {
     )
 
     expect(markup).not.toContain('Tài khoản không có quyền quản trị viên')
+  })
+
+  it('uses unified default AuthModal design on both LoginPage and RegisterPage', () => {
+    const qc = new QueryClient()
+    const loginMarkup = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/login']}>
+        <QueryClientProvider client={qc}>
+          <LoginPage />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+    const registerMarkup = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/register']}>
+        <QueryClientProvider client={qc}>
+          <RegisterPage />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+
+    expect(loginMarkup).not.toContain('auth-modal-checkout')
+    expect(loginMarkup).toContain('auth-modal-brand-badge')
+    expect(registerMarkup).not.toContain('auth-modal-checkout')
+    expect(registerMarkup).toContain('auth-modal-brand-badge')
   })
 })
 

@@ -24,6 +24,7 @@ const HotelReviewRequestPage = lazy(() => import('@/pages/management/HotelReview
 const SystemStatusPage = lazy(() => import('@/pages/public/SystemStatusPage').then(module => ({ default: module.SystemStatusPage })))
 const HotelModulePage = lazy(() => import('@/pages/management/HotelModulePage').then(module => ({ default: module.HotelModulePage })))
 const MyBookingsPage = lazy(() => import('@/pages/customer/MyBookingsPage').then(module => ({ default: module.MyBookingsPage })))
+const AccountSavedStaysPage = lazy(() => import('@/pages/customer/AccountSavedStaysPage').then(module => ({ default: module.AccountSavedStaysPage })))
 const MyComplaintsPage = lazy(() => import('@/pages/customer/MyComplaintsPage').then(module => ({ default: module.MyComplaintsPage })))
 const AdminLayout = lazy(() => import('@/app/layouts/AdminLayout').then(module => ({ default: module.AdminLayout })))
 const HotelWorkspaceLayout = lazy(() => import('@/app/layouts/HotelWorkspaceLayout').then(module => ({ default: module.HotelWorkspaceLayout })))
@@ -76,6 +77,7 @@ const router = createBrowserRouter(createRoutesFromElements(<>
           <Route path="admin/overview" element={<AdminOverviewPage />} />
           <Route path="admin/hotel-review-requests" element={<AdminHotelReviewRequestsPage />} />
           <Route path="admin/users" element={<AdminUsersPage />} />
+          <Route path="system-status" element={<SystemStatusPage />} />
           <Route path="hotel-review-requests/:requestId" element={<HotelReviewRequestPage />} />
 
           {/* CẤP 1: Danh sách Khách sạn & Thêm mới */}
@@ -102,6 +104,7 @@ const router = createBrowserRouter(createRoutesFromElements(<>
 
           {/* CẤP 1: Các phân hệ toàn hệ thống */}
           <Route path="bookings" element={<HotelModulePage module="bookings" />} />
+          <Route path="staff" element={<HotelStaffPage />} />
           <Route
             path="customers"
             element={
@@ -181,8 +184,8 @@ const router = createBrowserRouter(createRoutesFromElements(<>
             <Route path="payment/return" element={<PaymentReturnPage />} />
             <Route path="account" element={<ProfilePage />} />
             <Route path="my-bookings" element={<MyBookingsPage />} />
+            <Route path="account/saved-stays" element={<AccountSavedStaysPage />} />
             <Route path="my-complaints" element={<MyComplaintsPage />} />
-            <Route path="staff" element={<HotelStaffPage />} />
           </Route>
           <Route index element={<StayVibeHomePage />} />
           <Route path="explore" element={<HotelSearchPage />} />
@@ -190,7 +193,6 @@ const router = createBrowserRouter(createRoutesFromElements(<>
           <Route path="services" element={<ClientTripServices />} />
           <Route path="saved-stays" element={<ClientSavedStays />} />
           <Route path="stays/:hotelId" element={<HotelDetailPage />} />
-          <Route path="system-status" element={<SystemStatusPage />} />
           <Route path="management/live" element={<Navigate to="/" replace />} />
           <Route path="reset-password" element={<ResetPasswordPage />} />
           <Route path="login" element={<LoginPage />} />

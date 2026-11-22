@@ -20,7 +20,7 @@ describe('VerifyEmailPage', () => {
 
     // Dedicated brand header
     expect(html).toContain('StayHub')
-    expect(html).toContain('Bộ sưu tập lưu trú')
+    expect(html).toContain('Chỗ nghỉ &amp; trải nghiệm')
 
     // Missing token message rendered by default when no query param is present
     expect(html).toContain('Liên kết xác minh không hợp lệ')
