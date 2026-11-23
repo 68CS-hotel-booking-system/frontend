@@ -15,7 +15,8 @@ interface ClientSiteHeaderProps {
 
 export function ClientSiteHeader({ savedCount, onOpenMobileMenu, isMobileMenuOpen, onOpenAuthModal }: ClientSiteHeaderProps) {
   const navigate = useNavigate()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
+  const isProfile = pathname === '/account' && new URLSearchParams(search).get('section') !== 'security'
   const [menuOpen, setMenuOpen] = useState(false)
   const logout = useAuthAction('logout')
   const { message } = App.useApp()
@@ -67,14 +68,22 @@ export function ClientSiteHeader({ savedCount, onOpenMobileMenu, isMobileMenuOpe
         <ClientReferenceIcon name="heart" size={20} />
         {savedCount > 0 && <span aria-hidden="true">{savedCount}</span>}
       </NavLink>
-      {session ? (
-        <Dropdown open={menuOpen} onOpenChange={setMenuOpen} menu={{ items, onClick: () => setMenuOpen(false) }} trigger={['click']} placement="bottomRight" classNames={{ root: 'cf-account-dropdown ref-theme ref-account-dropdown' }}>
+      {session && isProfile && (
+        <Dropdown open={menuOpen} onOpenChange={setMenuOpen} menu={{ items, onClick: () => setMenuOpen(false) }}
+          trigger={['click']} placement="bottomRight" getPopupContainer={trigger => trigger.parentElement ?? trigger}
+          classNames={{ root: 'cf-account-dropdown ref-theme ref-account-dropdown' }}>
           <button type="button" className="ref-user-pill" aria-label={`Menu tài khoản ${userName}`}
-            aria-haspopup="menu" aria-expanded={menuOpen}>
+            title="Menu tài khoản" aria-haspopup="menu" aria-expanded={menuOpen}>
             <span className="ref-user-initial" aria-hidden="true">{avatar}</span>
           </button>
         </Dropdown>
-      ) : (
+      )}
+      {session && !isProfile && (
+        <Link to="/account" className="ref-user-pill" aria-label={`Xem thông tin cá nhân của ${userName}`} title="Xem thông tin cá nhân">
+          <span className="ref-user-initial" aria-hidden="true">{avatar}</span>
+        </Link>
+      )}
+      {!session && (
         <button type="button" className="ref-user-pill" aria-label="Đăng nhập" title="Đăng nhập"
           aria-haspopup="dialog" onClick={() => {
             if (onOpenAuthModal) onOpenAuthModal('login')
