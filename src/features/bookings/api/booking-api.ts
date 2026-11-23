@@ -77,8 +77,14 @@ export function getAvailability(hotelId: string, stay: StayForm, signal?: AbortS
 export function quoteStay(hotelId: string, payload: QuoteInput, signal?: AbortSignal) {
   return http.request(`/hotels/${encodeURIComponent(hotelId)}/quote`, { method: 'POST', body: payload, signal, schema: quoteSchema })
 }
-export function createBooking(hotelId: string, payload: QuoteInput, booker: BookerForm, quotedTotalAmount: number, signal?: AbortSignal, guest?: BookerForm) {
-  return http.request('/bookings', { method: 'POST', body: { hotelId, ...payload, booker: bookerFormSchema.parse(booker), ...(guest ? { guest: bookerFormSchema.parse(guest) } : {}), quotedTotalAmount }, signal, schema: bookingDetailSchema })
+export function createBooking(hotelId: string, payload: QuoteInput, booker: BookerForm, quotedTotalAmount: number, signal?: AbortSignal, guest?: BookerForm, idempotencyKey: string = crypto.randomUUID()) {
+  return http.request('/bookings', {
+    method: 'POST',
+    headers: { 'Idempotency-Key': idempotencyKey },
+    body: { hotelId, ...payload, booker: bookerFormSchema.parse(booker), ...(guest ? { guest: bookerFormSchema.parse(guest) } : {}), quotedTotalAmount },
+    signal,
+    schema: bookingDetailSchema,
+  })
 }
 export interface BookingListParams { page: number; size: number; status?: string }
 export function listBookings(params: BookingListParams, hotelId?: string, signal?: AbortSignal) {
