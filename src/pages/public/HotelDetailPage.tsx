@@ -68,7 +68,8 @@ export function HotelDetailPage() {
   const nights = (Date.parse(params.checkOut) - Date.parse(params.checkIn)) / 86400000
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date())
   const valid = Boolean(params.checkIn && params.checkOut && params.checkIn >= today && nights > 0 && nights <= 30 && Number.isInteger(params.adults) && params.adults >= 1 && Number.isInteger(params.children) && params.children >= 0)
-  const { inventory, quote, available } = useStayQuote(hotelId, params, roomId, valid && validId)
+  const acceptingBookings = detail.hotel?.acceptingBookings !== false
+  const { inventory, quote, available } = useStayQuote(hotelId, params, roomId, valid && validId && acceptingBookings)
   const update = (values: Record<string, string>) => {
     const next = new URLSearchParams(url)
     Object.entries(values).forEach(([key, value]) => next.set(key, value))
@@ -81,6 +82,7 @@ export function HotelDetailPage() {
   if (detail.isLoading) return <div className="p-10" role="status">Đang tải khách sạn…</div>
   if (detail.isError || !detail.hotel) return <div className="p-10" role="alert">Không tìm thấy hoặc không tải được khách sạn. <button onClick={detail.refetch}>Thử lại</button> <Link to="/">Về trang chủ</Link></div>
   const hotel = detail.hotel
+  if (!acceptingBookings) return <div className="wrap py-12" role="status"><h1>{hotel.name}</h1><p>Khách sạn tạm ngừng nhận đặt phòng.</p><Link to="/explore">Tìm khách sạn khác</Link></div>
   const selectedInventory = valid && !inventory.isError && !inventory.isFetching ? inventory.data?.roomTypes.find(r => r.roomTypeId === roomId) : undefined
   return <div className="stay-detail-design">
     <div className="wrap">

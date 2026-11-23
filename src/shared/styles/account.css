@@ -25,7 +25,7 @@
 .account-avatar { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 48px; width: 48px; height: 48px; border-radius: 50%; background: #e3e3e3; color: var(--account-ink); font-size: 18.72px; font-weight: 500; line-height: 28px; }
 .account-avatar--large { flex-basis: 64px; width: 64px; height: 64px; font-size: 24.96px; line-height: 37px; }
 .account-identity-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.account-identity-name { overflow: hidden; padding: 0; border: 0; background: transparent; color: var(--account-ink); font-size: 16px; font-weight: 600; line-height: 24px; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.account-identity-name { overflow: hidden; padding: 0; border: 0; background: transparent; color: var(--account-ink); font-size: 16px; font-weight: 600; line-height: 24px; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: default; }
 .account-identity-text p { color: var(--account-muted); font-size: 13px; line-height: 20px; }
 .account-sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
 .account-nav-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 45px; padding: 12px; border: 0; border-radius: 8px; background: transparent; color: var(--account-ink); font-size: 14px; font-weight: 400; line-height: 21px; text-align: left; text-decoration: none; cursor: pointer; }

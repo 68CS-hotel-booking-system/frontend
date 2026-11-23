@@ -6,7 +6,6 @@ import { HotelSearchPage } from '@/pages/public/HotelSearchPage'
 import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider, ScrollRestoration } from 'react-router'
 import {
   BarChartOutlined,
-  CreditCardOutlined,
   MessageOutlined,
   TagOutlined,
   UserOutlined,
@@ -22,6 +21,7 @@ import { StayVibeHomePage } from '@/pages/public/StayVibeHomePage'
 
 const HotelReviewRequestPage = lazy(() => import('@/pages/management/HotelReviewRequestPage').then(module => ({ default: module.HotelReviewRequestPage })))
 const SystemStatusPage = lazy(() => import('@/pages/public/SystemStatusPage').then(module => ({ default: module.SystemStatusPage })))
+const FinanceDashboardPage = lazy(() => import('@/pages/management/FinanceDashboardPage').then(module => ({ default: module.FinanceDashboardPage })))
 const HotelModulePage = lazy(() => import('@/pages/management/HotelModulePage').then(module => ({ default: module.HotelModulePage })))
 const MyBookingsPage = lazy(() => import('@/pages/customer/MyBookingsPage').then(module => ({ default: module.MyBookingsPage })))
 const AccountSavedStaysPage = lazy(() => import('@/pages/customer/AccountSavedStaysPage').then(module => ({ default: module.AccountSavedStaysPage })))
@@ -138,17 +138,7 @@ const router = createBrowserRouter(createRoutesFromElements(<>
               />
             }
           />
-          <Route
-            path="finance"
-            element={
-              <ManagementPlaceholderPage
-                kicker="TÀI CHÍNH & DÒNG TIỀN"
-                title="Quản lý Doanh thu & Tài chính"
-                description="Giám sát doanh thu lưu trú, công nợ, đối soát thanh toán và dòng tiền chi tiết theo từng ngày."
-                icon={<CreditCardOutlined />}
-              />
-            }
-          />
+          <Route path="finance" element={<FinanceDashboardPage />} />
           <Route
             path="reports"
             element={

@@ -3,13 +3,18 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
 import { AccountSecuritySettings } from './AccountSecuritySettings'
 
-it('renders a masked password form and marks unavailable security settings', () => {
-  const html = renderToStaticMarkup(<QueryClientProvider client={new QueryClient()}><AccountSecuritySettings /></QueryClientProvider>)
+it('renders only the real password update form without mock security sections', () => {
+  const html = renderToStaticMarkup(
+    <QueryClientProvider client={new QueryClient()}>
+      <AccountSecuritySettings />
+    </QueryClientProvider>,
+  )
   expect(html.match(/<input[^>]*type="password"/g)).toHaveLength(3)
   expect(html).toContain('autoComplete="current-password"')
   expect(html).toContain('data-score="0"')
   expect(html.match(/<button[^>]*type="submit"[^>]*>/)?.[0]).toContain('disabled')
-  expect(html.match(/<button[^>]*aria-label="Liên kết Google"[^>]*>/)?.[0]).toContain('disabled')
-  expect(html).toContain('Danh sách các phiên khác hiện chưa khả dụng.')
-  expect(html).toContain('Trung tâm an toàn')
+  expect(html).not.toContain('Xác minh 2 bước')
+  expect(html).not.toContain('Thiết bị &amp; phiên đăng nhập')
+  expect(html).not.toContain('Liên kết Google')
+  expect(html).not.toContain('Trung tâm an toàn')
 })

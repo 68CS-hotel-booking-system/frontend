@@ -16,7 +16,7 @@ it('reads the real paginated contracts and backend status filter without inventi
   respond({ content: [contract], page: 1, size: 5, totalElements: 6, totalPages: 2, first: false, last: true })
   const { getHotelContracts } = await import('./contract-api')
   const result = await getHotelContracts(id, { page: 1, size: 5, status: 'DRAFT' }, new AbortController().signal)
-  expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/finance/hotels/${id}/contracts?page=1&size=5&status=DRAFT`)
+  expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/finance/hotels/${id}/contracts?page=1&size=5&status=DRAFT&sort=createdAt%2Cdesc&sort=id%2Cdesc`)
   expect(fetcher.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal)
   expect(result).toMatchObject({ content: [contract], totalElements: 6 })
   expect(result.content[0]).not.toHaveProperty('currency')
@@ -40,6 +40,19 @@ it('rejects equal contract instants before sending the request', async () => {
   await expect(createHotelContractDraft(id, { contractCode: 'a', ownerUserId: id, commissionRate: 100,
     commissionBasis: 'BEFORE_DISCOUNT', startsAt: '2027-01-01T00:00', endsAt: '2027-01-01T00:00' })).rejects.toMatchObject({ name: 'ZodError' })
   expect(fetcher).not.toHaveBeenCalled()
+})
+
+it('creates a linked renewal draft without sending the predecessor as an editable term', async () => {
+  respond(contract)
+  const { createHotelContractDraft } = await import('./contract-api')
+  await createHotelContractDraft(id, { contractCode: 'renewal', ownerUserId: id, commissionRate: 10,
+    commissionBasis: 'AFTER_DISCOUNT', startsAt: '2027-01-01T07:00:30', endsAt: '2028-01-01T07:00:30',
+    renewalOfContractId: id })
+  expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/admin/hotels/${id}/contracts/${id}/renewals`)
+  const body = JSON.parse(fetcher.mock.calls[0][1]?.body as string)
+  expect(body.status).toBe('DRAFT')
+  expect(body).not.toHaveProperty('renewalOfContractId')
+  expect(body.startsAt).toBe(new Date('2027-01-01T07:00:30').toISOString())
 })
 
 it('activates and terminates through supported status commands without resending terms', async () => {

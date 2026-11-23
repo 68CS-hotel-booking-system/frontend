@@ -58,9 +58,9 @@ describe('AdminOverviewPage component', () => {
 
     // Work queue and analytics visualizations from design.md
     expect(markup).toContain('Công việc cần xử lý')
-    expect(markup).toContain('Hiệu suất kinh doanh')
-    expect(markup).toContain('Lượng đặt phòng theo thời gian')
-    expect(markup).toContain('Doanh thu nền tảng theo thời gian')
+    expect(markup).toContain('Doanh thu &amp; hoa hồng')
+    expect(markup).not.toContain('Lượng đặt phòng theo thời gian')
+    expect(markup).not.toContain('Doanh thu nền tảng theo thời gian')
     expect(markup).not.toContain('Chạy kiểm tra mô phỏng')
   })
 

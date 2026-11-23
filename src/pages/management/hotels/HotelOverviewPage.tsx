@@ -13,6 +13,7 @@ import { useHotelWorkspace, HotelStatusBadge, CompletionChecklist, HotelSalesCon
 import { useCurrentUser } from '@/features/auth'
 import { HotelReviewResultPanel } from '@/features/hotel-review-requests'
 import { PageHeader } from '@/shared/ui/PageHeader'
+import { HotelContractNotice } from '@/features/finance'
 
 export function HotelOverviewPage() {
   const { hotel, hotelId, completion, refetch } = useHotelWorkspace()
@@ -60,6 +61,7 @@ export function HotelOverviewPage() {
       />
 
       <HotelReviewResultPanel hotelId={hotelId} isAdmin={isAdmin} />
+      <HotelContractNotice hotelId={hotelId} />
 
       {/* 2. Hero Card */}
       <div className="bg-white rounded-2xl border border-[#dce7e3] overflow-hidden shadow-xs">

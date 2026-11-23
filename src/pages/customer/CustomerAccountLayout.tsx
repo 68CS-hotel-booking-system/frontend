@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { App, Typography } from 'antd'
+import { App } from 'antd'
 import { Link, useNavigate } from 'react-router'
 import { UserAvatar, useAuthAction, useCurrentUser } from '@/features/auth'
 import { errorMessage } from '@/shared/api/api-error'
@@ -27,7 +27,7 @@ export function CustomerAccountLayout({
   const { currentUser } = useCurrentUser()
   const navigate = useNavigate()
   const logout = useAuthAction('logout')
-  const { message, modal } = App.useApp()
+  const { message } = App.useApp()
   const profileHref = checkoutReturn ? `/account?returnTo=${encodeURIComponent(checkoutReturn)}` : '/account'
   const securityHref = checkoutReturn
     ? `/account?section=security&returnTo=${encodeURIComponent(checkoutReturn)}`
@@ -89,31 +89,9 @@ export function CustomerAccountLayout({
                 {currentUser ? <UserAvatar userId={currentUser.id} name={currentUser.fullName} /> : 'N'}
               </span>
               <div className="account-identity-text">
-                <button
-                  type="button"
-                  className="account-identity-name"
-                  aria-label={`Thông tin tài khoản ${currentUser?.fullName ?? ''}`}
-                  onClick={() => {
-                    if (currentUser) {
-                      modal.info({
-                        title: 'Thông tin tài khoản',
-                        content: (
-                          <div>
-                            <p>{currentUser.email}</p>
-                            <p>
-                              Mã tài khoản:{' '}
-                              <Typography.Text copyable className="account-member-id">
-                                {currentUser.id}
-                              </Typography.Text>
-                            </p>
-                          </div>
-                        ),
-                      })
-                    }
-                  }}
-                >
+                <span className="account-identity-name">
                   {currentUser?.fullName || 'Tài khoản'}
-                </button>
+                </span>
                 <p>Tài khoản của bạn</p>
               </div>
             </div>

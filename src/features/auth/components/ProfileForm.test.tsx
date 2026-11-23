@@ -12,15 +12,17 @@ function renderProfile(phone: string) {
   return renderToStaticMarkup(<QueryClientProvider client={new QueryClient()}><ProfileForm user={user} /></QueryClientProvider>)
 }
 
-it('shows the signed-in profile, verification status and unavailable sections', () => {
+it('shows supported profile fields and removes unavailable sections', () => {
   const html = renderProfile('0900000000')
   expect(html).toContain('Khách kiểm thử')
   expect(html).toContain('qa@example.invalid')
   expect(html).toContain('Đã xác minh')
-  expect(html).toContain('Xác minh danh tính')
+  for (const removed of ['Tên hiển thị', 'Ngày sinh', 'Giới tính', 'Địa chỉ', 'Tùy chọn', 'Xác minh danh tính', 'Chưa hỗ trợ']) {
+    expect(html).not.toContain(removed)
+  }
   expect(html).toContain('Đổi ảnh')
   expect(html).toContain('accept="image/jpeg,image/png,image/webp"')
-  expect(html.match(/<input[^>]*id="profile-address"[^>]*>/)?.[0]).toContain('disabled')
+  expect(html).not.toContain('id="profile-address"')
   expect(html.match(/<input[^>]*id="profile-phone"[^>]*>/)?.[0]).not.toContain('disabled')
   expect(html.match(/<input[^>]*id="profile-phone"[^>]*>/)?.[0]).toContain('value="0900000000"')
   expect(html.match(/<button[^>]*type="submit"[^>]*>/)?.[0]).toContain('disabled')

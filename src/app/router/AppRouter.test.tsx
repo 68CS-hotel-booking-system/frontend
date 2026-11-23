@@ -18,6 +18,12 @@ vi.mock('react-router', async (importOriginal) => {
 await import('./AppRouter')
 
 describe('staff navigation', () => {
+  it('keeps the real revenue page inside the protected management layout', () => {
+    const matches = matchRoutes(captured.routes, '/finance')!
+    expect(matches.at(-1)?.route.path).toBe('finance')
+    expect(matches.some(({ route }) => isValidElement(route.element)
+      && (route.element as ReactElement).type === AdminRouteGuard)).toBe(true)
+  })
   it('keeps /staff inside the protected management layout', () => {
     const matches = matchRoutes(captured.routes, '/staff')!
     expect(matches.at(-1)?.route.path).toBe('staff')
