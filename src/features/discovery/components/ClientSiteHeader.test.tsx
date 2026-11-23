@@ -102,7 +102,7 @@ it('links experiences, services and saved stays to their own routes', () => {
 it('routes signed-in saved stays to account area and admin entry to /admin/overview', () => {
   state.session = { accessToken: 'test' }
   state.isAdmin = true
-  const html = renderHeader()
+  const html = renderHeader('/account')
   expect(html).toContain('href="/account/saved-stays"')
   const adminItem = state.items.find(item => item.key === 'admin')
   expect(adminItem).toBeDefined()
