@@ -121,7 +121,7 @@ export const MAIN_NAV_GROUPS: MainNavGroup[] = [
       },
       {
         key: 'contracts',
-        label: 'Hợp đồng lưu trú',
+        label: 'Hợp đồng hoa hồng',
         to: '/contracts',
         icon: FileTextOutlined,
       },

@@ -10,6 +10,7 @@ it('updates only profile fields with the observed version and propagates conflic
   const payload={fullName:'Guest',phone:'0912345678',expectedVersion:4}
   await expect(updateProfile(payload)).rejects.toMatchObject({status:409,code:'STALE_USER_VERSION'})
   expect(fetcher.mock.calls[0][0]).toBe('/api/v1/users/me')
+  expect(fetcher.mock.calls[0][1]?.method).toBe('PUT')
   expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual(payload)
   expect(new Headers(fetcher.mock.calls[0][1]?.headers).get('Authorization')).toBe('Bearer test-token')
 })

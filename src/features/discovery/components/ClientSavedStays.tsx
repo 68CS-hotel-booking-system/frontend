@@ -7,7 +7,7 @@ import { usePublicGallery } from '../hooks/use-public-gallery'
 import { useCover } from '../hooks/use-public-discovery'
 import { ClientReferenceIcon } from './ClientReferenceIcon'
 
-function SavedStay({ id, onRemove }: { id: string; onRemove: () => void }) {
+function SavedStay({ id, onRemove, listingReturn }: { id: string; onRemove: () => void; listingReturn: string }) {
   const hotel = useQuery({
     queryKey: ['hotels', 'public-detail', id],
     queryFn: ({ signal }) => getPublicHotelDetail(id, signal),
@@ -29,7 +29,7 @@ function SavedStay({ id, onRemove }: { id: string; onRemove: () => void }) {
   </li>
 
   return <li className="stayhub-saved-item">
-    <Link to={href} state={{ listingReturn: '/saved-stays' }} viewTransition>
+    <Link to={href} state={{ listingReturn }} viewTransition>
       <div className="stayhub-saved-photo">
         <ClientReferenceIcon name="home" size={24} />
         {cover.data?.url && <img key={cover.data.url} src={cover.data.url} alt="" loading="lazy"
@@ -44,16 +44,18 @@ function SavedStay({ id, onRemove }: { id: string; onRemove: () => void }) {
   </li>
 }
 
-export function ClientSavedStays() {
+export function ClientSavedStays({ inAccount = false }: { inAccount?: boolean }) {
   const { savedIds, toggleSaved } = useClientHomeContext()
-  return <div className="ref-ui">
-    <div className="ref-wrap stayhub-guide">
-      <header className="stayhub-guide-heading">
+  const listingReturn = inAccount ? '/account/saved-stays' : '/saved-stays'
+  const summary = savedIds.size ? `${savedIds.size} chỗ nghỉ đã lưu trên trình duyệt này.` : 'Bấm trái tim khi xem một chỗ nghỉ để lưu vào danh sách này.'
+  return <div className={inAccount ? undefined : 'ref-ui'}>
+    <div className={inAccount ? 'account-saved-stays' : 'ref-wrap stayhub-guide'}>
+      {inAccount ? <p role="status">{summary}</p> : <header className="stayhub-guide-heading">
         <h1>Chỗ nghỉ đã lưu</h1>
-        <p>{savedIds.size ? `${savedIds.size} chỗ nghỉ đã lưu trên trình duyệt này.` : 'Bấm trái tim khi xem một chỗ nghỉ để lưu vào danh sách này.'}</p>
-      </header>
+        <p>{summary}</p>
+      </header>}
       {savedIds.size > 0 && <ul className="stayhub-saved-list">
-        {[...savedIds].map(id => <SavedStay key={id} id={id} onRemove={() => toggleSaved(id)} />)}
+        {[...savedIds].map(id => <SavedStay key={id} id={id} listingReturn={listingReturn} onRemove={() => toggleSaved(id)} />)}
       </ul>}
       <Link className="stayhub-inline-link" to="/explore" viewTransition>Khám phá chỗ nghỉ <span aria-hidden="true">→</span></Link>
     </div>

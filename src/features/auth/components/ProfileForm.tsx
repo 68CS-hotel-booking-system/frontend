@@ -1,12 +1,13 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useRef, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Alert, Button, Input } from 'antd'
 import { Controller, useForm } from 'react-hook-form'
-import { errorMessage } from '@/shared/api/api-error'
+import { ApiError, errorMessage } from '@/shared/api/api-error'
 import { applyApiFieldErrors } from '@/shared/lib/form-errors'
 import { acceptedImageTypes, imageUploadError } from '@/shared/lib/image-upload'
 import { AccountIcon } from '@/shared/ui/AccountIcon'
 import { useProfileMutation } from '../hooks/use-profile'
+import { useCurrentUser } from '../hooks/use-current-user'
 import { useUploadUserAvatar } from '../hooks/use-user-avatar'
 import { UserAvatar } from './UserAvatar'
 import { profileRequestSchema, type CurrentUser, type UpdateProfileRequest } from '../api/auth-contracts'
@@ -20,17 +21,9 @@ const phoneCodes = [
   { value: '+81', label: '+81 JP' },
 ]
 
-function UnavailableField({ id, label, placeholder, wide = false, select = false, suffix }: {
-  id: string; label: string; placeholder: string; wide?: boolean; select?: boolean; suffix?: ReactNode
-}) {
-  return <div className={`account-field${wide ? ' profile-field-wide' : ''}`}>
-    <label htmlFor={id}>{label}</label>
-    {select ? <select id={id} className="profile-select" disabled><option>{placeholder}</option></select> : <Input id={id} placeholder={placeholder} suffix={suffix} disabled />}
-  </div>
-}
-
 export function ProfileForm({ user }: { user: CurrentUser }) {
   const mutation = useProfileMutation()
+  const currentUser = useCurrentUser()
   const avatarUpload = useUploadUserAvatar(user.id)
   const photoInput = useRef<HTMLInputElement>(null)
   const [photoError, setPhotoError] = useState<string>()
@@ -59,6 +52,7 @@ export function ProfileForm({ user }: { user: CurrentUser }) {
     }
   }
   const errors = form.formState.errors
+  const staleProfile = mutation.error instanceof ApiError && mutation.error.code === 'STALE_USER_VERSION'
   return <form onSubmit={event => void form.handleSubmit(submit)(event)} className="account-form account-profile-form" aria-labelledby="profile-form-title" noValidate>
     <section className="profile-card" aria-labelledby="profile-form-title">
       <h2 id="profile-form-title">Hồ sơ của bạn</h2>
@@ -88,7 +82,6 @@ export function ProfileForm({ user }: { user: CurrentUser }) {
               status={errors.fullName ? 'error' : undefined} aria-invalid={Boolean(errors.fullName)} aria-describedby={errors.fullName ? 'profile-name-error' : undefined} />} />
           {errors.fullName && <p className="account-field-error" id="profile-name-error" role="alert">{errors.fullName.message}</p>}
         </div>
-        <UnavailableField id="profile-display-name" label="Tên hiển thị (tuỳ chọn)" placeholder="Ví dụ: Đạt Nguyễn" />
         <div className="account-field">
           <div className="profile-label-row"><label htmlFor="profile-email">Email</label>
             <span className={`profile-verified${user.emailVerified ? ' is-verified' : ''}`}>{user.emailVerified && <AccountIcon name="badge-check" />}{user.emailVerified ? 'Đã xác minh' : 'Chưa xác minh'}</span>
@@ -120,38 +113,18 @@ export function ProfileForm({ user }: { user: CurrentUser }) {
           <p id="profile-phone-hint">Dùng để chủ nhà liên hệ khi nhận phòng.</p>
           {errors.phone && <p className="account-field-error" id="profile-phone-error" role="alert">{errors.phone.message}</p>}
         </div>
-        <UnavailableField id="profile-birth-date" label="Ngày sinh" placeholder="dd/mm/yyyy" suffix={<AccountIcon name="calendar" />} />
-        <UnavailableField id="profile-gender" label="Giới tính" placeholder="Chọn giới tính" select />
       </div>
       <p className="account-privacy-note"><AccountIcon name="lock-small" />Bạn có thể cập nhật ảnh đại diện, họ tên và số điện thoại.</p>
     </section>
-    <section className="profile-card" aria-labelledby="profile-address-title">
-      <h2 id="profile-address-title">Địa chỉ</h2>
-      <p className="profile-card-sub">Chưa hỗ trợ lưu địa chỉ.</p>
-      <div className="account-field-grid profile-grid">
-        <UnavailableField id="profile-country" label="Quốc gia / khu vực" placeholder="Chọn quốc gia / khu vực" select />
-        <UnavailableField id="profile-city" label="Thành phố" placeholder="Nhập thành phố" />
-        <UnavailableField id="profile-address" label="Địa chỉ (tuỳ chọn)" placeholder="Số nhà, đường, phường/xã" wide />
-      </div>
-    </section>
-    <section className="profile-card" aria-labelledby="profile-preferences-title">
-      <h2 id="profile-preferences-title">Tùy chọn</h2>
-      <p className="profile-card-sub">Chưa hỗ trợ lưu tùy chọn cá nhân.</p>
-      <div className="account-field-grid profile-grid">
-        <UnavailableField id="profile-language" label="Ngôn ngữ" placeholder="Tiếng Việt" select />
-        <UnavailableField id="profile-currency" label="Tiền tệ" placeholder="VND — ₫" select />
-        <UnavailableField id="profile-timezone" label="Múi giờ" placeholder="GMT+7 — Hà Nội" wide select />
-      </div>
-    </section>
-    <section className="profile-card" aria-labelledby="profile-verification-title">
-      <h2 id="profile-verification-title">Xác minh danh tính</h2>
-      <div className="profile-verification">
-        <AccountIcon name="shield" />
-        <div><strong>Trạng thái hiện tại</strong><p>Chưa hỗ trợ xác minh danh tính.</p></div>
-        <Button disabled>Bắt đầu</Button>
-      </div>
-    </section>
-    {mutation.isError && <Alert type="error" showIcon title={errorMessage(mutation.error)} />}
+    {mutation.isError && <Alert type="error" showIcon title={errorMessage(mutation.error)}
+      action={staleProfile && <Button loading={currentUser.isFetching} onClick={() => {
+        void currentUser.refetch().then(result => {
+          if (!result.isSuccess) return
+          form.reset({ fullName: result.data.fullName, phone: result.data.phone ?? '', expectedVersion: result.data.version })
+          mutation.reset()
+          setSaved(false)
+        })
+      }}>Tải lại hồ sơ</Button>} />}
     {saved && !form.formState.isDirty && <Alert type="success" showIcon title="Đã lưu hồ sơ." role="status" />}
     <div className="account-form-actions">
       <div className="profile-actions-left">

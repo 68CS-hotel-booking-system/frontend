@@ -1,3 +1,4 @@
+import '@/shared/styles/admin-dashboard.css'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import {
@@ -69,6 +70,8 @@ export function AdminLayout() {
     currentPageTitle = 'Tổng quan'
   } else if (location.pathname.startsWith('/hotels')) {
     currentPageTitle = 'Khách sạn'
+  } else if (location.pathname.startsWith('/staff')) {
+    currentPageTitle = 'Nhân sự khách sạn'
   } else if (location.pathname.includes('/bookings')) {
     currentPageTitle = 'Đặt phòng'
   } else if (location.pathname.includes('/customers')) {
@@ -197,6 +200,37 @@ export function AdminLayout() {
       theme={{
         token: {
           fontFamily: ADMIN_DASHBOARD_FONT_FAMILY,
+          colorPrimary: '#0b5f53',
+          colorInfo: '#0b5f53',
+          colorSuccess: '#0f7a5f',
+          colorError: '#9b2c22',
+          colorText: '#12211d',
+          colorTextSecondary: '#5f736e',
+          colorBgLayout: '#f4f8f7',
+          colorBgContainer: '#ffffff',
+          colorBorder: '#dce7e3',
+          borderRadius: 10,
+          borderRadiusLG: 14,
+        },
+        components: {
+          Button: {
+            fontWeight: 600,
+            borderRadius: 10,
+          },
+          Card: {
+            borderRadiusLG: 14,
+            colorBorderSecondary: '#dce7e3',
+          },
+          Tabs: {
+            inkBarColor: '#0b5f53',
+            itemSelectedColor: '#0b5f53',
+            itemHoverColor: '#08473e',
+          },
+          Table: {
+            headerBg: '#f4f8f7',
+            headerColor: '#12211d',
+            borderColor: '#dce7e3',
+          },
         },
       }}
     >

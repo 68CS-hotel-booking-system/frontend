@@ -14,7 +14,7 @@ export function apiContractMutationOptions(client: QueryClient, hotelId: string)
   return mutationOptions({
     mutationFn: (payload: CreateApiContractFormValues) => createHotelContractDraft(hotelId, payload),
     retry: false,
-    onSuccess: async () => { await client.invalidateQueries({ queryKey: contractKeys.byHotel('api', hotelId) }) },
+    onSuccess: async () => { await Promise.all([client.invalidateQueries({ queryKey: contractKeys.byHotel('api', hotelId) }), client.invalidateQueries({ queryKey: ['finance-dashboard'] })]) },
   })
 }
 export function useCreateApiHotelContractMutation(hotelId: string) {
@@ -23,5 +23,5 @@ export function useCreateApiHotelContractMutation(hotelId: string) {
 export function useChangeContractStatus(hotelId: string) {
   const client = useQueryClient()
   return useMutation({ mutationFn: (value: { id: string; action: 'activate' | 'terminate' }) => changeContractStatus(hotelId, value.id, value.action), retry: false,
-    onSuccess: async () => { await client.invalidateQueries({ queryKey: contractKeys.byHotel('api', hotelId) }) } })
+    onSuccess: async () => { await Promise.all([client.invalidateQueries({ queryKey: contractKeys.byHotel('api', hotelId) }), client.invalidateQueries({ queryKey: ['finance-dashboard'] })]) } })
 }

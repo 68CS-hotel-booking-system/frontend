@@ -6,6 +6,7 @@ import {
   ClockCircleOutlined,
   ToolOutlined,
 } from '@ant-design/icons'
+import { PageHeader } from '@/shared/ui/PageHeader'
 
 interface ManagementPlaceholderPageProps {
   title: string
@@ -25,26 +26,21 @@ export function ManagementPlaceholderPage({
   const navigate = useNavigate()
 
   return (
-    <div className="management-page p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="mb-6 pb-6 border-b border-[#dce7e3] flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[11px] font-bold uppercase tracking-[.12em] text-[#0b5f53] flex items-center gap-1.5">
-              {icon ?? <ToolOutlined />} {kicker}
-            </span>
-            <Tag color="cyan" className="font-semibold !rounded-full text-xs">
-              {badge}
-            </Tag>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#12211d] tracking-tight m-0">
-            {title}
-          </h1>
-          <p className="text-sm text-[#5f736e] mt-1.5 mb-0 max-w-2xl leading-relaxed">
-            {description}
-          </p>
-        </div>
-      </div>
+    <div className="w-full max-w-6xl mx-auto space-y-6">
+      <PageHeader
+        kicker={
+          <span className="inline-flex items-center gap-1.5">
+            {icon ?? <ToolOutlined />} {kicker}
+          </span>
+        }
+        title={title}
+        description={description}
+        extra={
+          <Tag color="cyan" className="font-semibold !rounded-full text-xs">
+            {badge}
+          </Tag>
+        }
+      />
 
       {/* Main card */}
       <Card className="shadow-xs border-[#dce7e3] rounded-2xl bg-white overflow-hidden">

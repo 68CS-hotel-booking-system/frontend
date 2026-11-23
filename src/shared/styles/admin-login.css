@@ -1,29 +1,27 @@
 /* ==========================================================================
-   Admin Login — Warm Editorial Design System Specification (design.md)
+   Admin Login — Teal Admin Console Specification (synchronized with AdminLayout)
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 .admin-login-shell {
-  --bg: #fbf6ee;
-  --surface: #fffdf8;
-  --surface-warm: #f1e3cf;
-  --fg: #201914;
-  --fg-2: #4c4037;
-  --muted: #6f6258;
-  --accent: #9b5b32;
-  --accent-hover: #7c4527;
-  --accent-soft: #efdccb;
-  --border: #ded2c3;
-  --border-soft: #eee4d7;
-  --border-strong: #9a8772;
-  --success: #467d46;
-  --warn: #b06a24;
-  --warn-ink: #82501c;
-  --danger: #b33a3a;
+  --bg: #f4f8f7;
+  --surface: #ffffff;
+  --surface-warm: #eef8f5;
+  --fg: #12211d;
+  --fg-2: #344a44;
+  --muted: #5f736e;
+  --accent: #0b5f53;
+  --accent-hover: #08473e;
+  --accent-soft: #d9f0ea;
+  --border: #dce7e3;
+  --border-soft: #e6f0ec;
+  --border-strong: #bfd3cd;
+  --success: #0f7a5f;
+  --warn: #946412;
+  --warn-ink: #734c0b;
+  --danger: #9b2c22;
 
-  --font-display: Georgia, "Times New Roman", serif;
-  --font-body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -63,10 +61,10 @@
 /* 1. H1 Main Heading */
 .admin-login-shell .admin-h1 {
   font-family: var(--font-display) !important;
-  font-weight: 400 !important;
-  font-size: clamp(46px, 4.2vw, 62px);
-  line-height: 0.94;
-  letter-spacing: -0.035em;
+  font-weight: 700 !important;
+  font-size: clamp(34px, 3.4vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
   color: var(--fg);
   text-wrap: balance;
   margin: 0;
@@ -74,37 +72,37 @@
 
 @media (max-width: 480px) {
   .admin-login-shell .admin-h1 {
-    font-size: 42px;
+    font-size: 32px;
   }
 }
 
 @media (max-width: 360px) {
   .admin-login-shell .admin-h1 {
-    font-size: 38px;
+    font-size: 30px;
   }
 }
 
 .admin-login-shell .admin-h1 em {
-  font-style: italic;
-  font-weight: 400 !important;
+  font-style: normal;
+  font-weight: 700 !important;
   color: var(--accent);
 }
 
 /* 2. Brand Headline (Caption Card) */
 .admin-login-shell .admin-brand-headline {
   font-family: var(--font-display) !important;
-  font-weight: 400 !important;
-  font-size: clamp(30px, 2.6vw, 40px);
-  line-height: 1.04;
-  letter-spacing: -0.03em;
+  font-weight: 700 !important;
+  font-size: clamp(24px, 2.2vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
   color: var(--fg);
   text-wrap: balance;
   margin: 0;
 }
 
 .admin-login-shell .admin-brand-headline em {
-  font-style: italic;
-  font-weight: 400 !important;
+  font-style: normal;
+  font-weight: 700 !important;
   color: var(--accent);
 }
 
@@ -128,9 +126,9 @@
 /* 4. Dialog Heading */
 .admin-login-shell .admin-dialog-heading {
   font-family: var(--font-display) !important;
-  font-weight: 400 !important;
-  font-size: 32px;
-  line-height: 1.1;
+  font-weight: 700 !important;
+  font-size: 22px;
+  line-height: 1.2;
   color: var(--fg);
   margin: 0;
 }
@@ -266,6 +264,17 @@
 .admin-login-shell .admin-primary-btn:disabled {
   opacity: 0.85;
   cursor: progress;
+}
+
+.admin-login-shell .admin-login-btn-primary {
+  background-color: var(--accent);
+  color: #ffffff;
+  border: 1px solid var(--accent);
+}
+
+.admin-login-shell .admin-login-btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 /* 12. Footers */

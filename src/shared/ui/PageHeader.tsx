@@ -48,7 +48,7 @@ export function PageHeader({
   })
 
   return (
-    <header className={`page-header-container mb-6 ${className}`}>
+    <header className={`page-header-container mb-6 pb-5 border-b border-[#dce7e3] ${className}`}>
       {breadcrumbItems.length > 0 && (
         <nav aria-label="Đường dẫn trang" className="mb-2">
           <Breadcrumb

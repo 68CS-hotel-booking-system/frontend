@@ -106,4 +106,37 @@ describe('AuthModal and Client Auth Forms', () => {
     expect(markup).toContain('autoComplete="new-password"')
     expect(markup).toContain('Đã có tài khoản?')
   })
+
+  it('renders forgot-password mode in AuthModal without Google sign-in button', () => {
+    const markup = renderWithProviders(
+      <AuthModal
+        isOpen={true}
+        initialMode="forgot-password"
+        onClose={() => {}}
+      />,
+    )
+
+    expect(markup).toContain('role="dialog"')
+    expect(markup).toContain('Quên mật khẩu')
+    expect(markup).toContain('type="email"')
+    expect(markup).toContain('Quay lại đăng nhập')
+    expect(markup).not.toContain('Đăng nhập bằng Google')
+  })
+
+  it('renders reset-password mode in AuthModal without Google sign-in button', () => {
+    const markup = renderWithProviders(
+      <AuthModal
+        isOpen={true}
+        initialMode="reset-password"
+        onClose={() => {}}
+      />,
+    )
+
+    expect(markup).toContain('role="dialog"')
+    expect(markup).toContain('Đặt lại mật khẩu')
+    expect(markup).toContain('autoComplete="one-time-code"')
+    expect(markup).toContain('autoComplete="new-password"')
+    expect(markup).toContain('Quay lại đăng nhập')
+    expect(markup).not.toContain('Đăng nhập bằng Google')
+  })
 })

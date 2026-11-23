@@ -3,6 +3,7 @@ import { http } from '@/shared/api/http'
 import { amenitySchema } from '../model/hotel'
 
 export const publicHotelResponseSchema = z.object({
+  acceptingBookings: z.boolean().optional(),
   id: z.string().uuid(),
   cityId: z.string().uuid(),
   name: z.string(),

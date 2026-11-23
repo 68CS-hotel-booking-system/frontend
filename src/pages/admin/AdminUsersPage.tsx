@@ -1,4 +1,5 @@
 import { Button, message } from 'antd'
+import { PageHeader } from '@/shared/ui/PageHeader'
 import { formatPhoneNumber, formatRoleLabel } from '@/shared/lib/format'
 import type { UserFilterTab } from '@/features/users'
 import { UserActionMenu, UserDetailModal, ChangeRoleModal, CreateUserModal, useAdminUsers } from '@/features/users'
@@ -56,44 +57,18 @@ export function AdminUsersPage() {
     isCreateModalOpen, setIsCreateModalOpen, handleCreateUser,
   } = useAdminUsers()
   return (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* PAGE TITLE ROW */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '16px',
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontSize: '24px',
-              fontWeight: 600,
-              color: '#17212B',
-              letterSpacing: '-0.02em',
-              lineHeight: 1.2,
-              margin: 0,
-            }}
-          >
-            Quản lý người dùng
-          </h1>
-          <p
-            style={{
-              fontSize: '13px',
-              color: '#5F6B76',
-              marginTop: '4px',
-              marginBottom: 0,
-            }}
-          >
-            Theo dõi tài khoản, vai trò và trạng thái người dùng trên hệ thống StayHub.
-          </p>
-        </div>
-        <Button type="primary" disabled={isBusy} onClick={() => setIsCreateModalOpen(true)}>Thêm người dùng</Button>
-      </div>
+    <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
+      <PageHeader
+        kicker="QUẢN TRỊ HỆ THỐNG"
+        title="Quản lý người dùng"
+        description="Theo dõi tài khoản, vai trò và trạng thái người dùng trên hệ thống StayHub."
+        extra={
+          <Button type="primary" disabled={isBusy} onClick={() => setIsCreateModalOpen(true)}>
+            Thêm người dùng
+          </Button>
+        }
+        className="mb-0"
+      />
 
       {/* MAIN TABLE CONTAINER */}
       <div

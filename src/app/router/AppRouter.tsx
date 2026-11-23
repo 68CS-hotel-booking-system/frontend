@@ -6,7 +6,6 @@ import { HotelSearchPage } from '@/pages/public/HotelSearchPage'
 import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider, ScrollRestoration } from 'react-router'
 import {
   BarChartOutlined,
-  CreditCardOutlined,
   MessageOutlined,
   TagOutlined,
   UserOutlined,
@@ -22,8 +21,10 @@ import { StayVibeHomePage } from '@/pages/public/StayVibeHomePage'
 
 const HotelReviewRequestPage = lazy(() => import('@/pages/management/HotelReviewRequestPage').then(module => ({ default: module.HotelReviewRequestPage })))
 const SystemStatusPage = lazy(() => import('@/pages/public/SystemStatusPage').then(module => ({ default: module.SystemStatusPage })))
+const FinanceDashboardPage = lazy(() => import('@/pages/management/FinanceDashboardPage').then(module => ({ default: module.FinanceDashboardPage })))
 const HotelModulePage = lazy(() => import('@/pages/management/HotelModulePage').then(module => ({ default: module.HotelModulePage })))
 const MyBookingsPage = lazy(() => import('@/pages/customer/MyBookingsPage').then(module => ({ default: module.MyBookingsPage })))
+const AccountSavedStaysPage = lazy(() => import('@/pages/customer/AccountSavedStaysPage').then(module => ({ default: module.AccountSavedStaysPage })))
 const MyComplaintsPage = lazy(() => import('@/pages/customer/MyComplaintsPage').then(module => ({ default: module.MyComplaintsPage })))
 const AdminLayout = lazy(() => import('@/app/layouts/AdminLayout').then(module => ({ default: module.AdminLayout })))
 const HotelWorkspaceLayout = lazy(() => import('@/app/layouts/HotelWorkspaceLayout').then(module => ({ default: module.HotelWorkspaceLayout })))
@@ -76,6 +77,7 @@ const router = createBrowserRouter(createRoutesFromElements(<>
           <Route path="admin/overview" element={<AdminOverviewPage />} />
           <Route path="admin/hotel-review-requests" element={<AdminHotelReviewRequestsPage />} />
           <Route path="admin/users" element={<AdminUsersPage />} />
+          <Route path="system-status" element={<SystemStatusPage />} />
           <Route path="hotel-review-requests/:requestId" element={<HotelReviewRequestPage />} />
 
           {/* CẤP 1: Danh sách Khách sạn & Thêm mới */}
@@ -102,6 +104,7 @@ const router = createBrowserRouter(createRoutesFromElements(<>
 
           {/* CẤP 1: Các phân hệ toàn hệ thống */}
           <Route path="bookings" element={<HotelModulePage module="bookings" />} />
+          <Route path="staff" element={<HotelStaffPage />} />
           <Route
             path="customers"
             element={
@@ -135,17 +138,7 @@ const router = createBrowserRouter(createRoutesFromElements(<>
               />
             }
           />
-          <Route
-            path="finance"
-            element={
-              <ManagementPlaceholderPage
-                kicker="TÀI CHÍNH & DÒNG TIỀN"
-                title="Quản lý Doanh thu & Tài chính"
-                description="Giám sát doanh thu lưu trú, công nợ, đối soát thanh toán và dòng tiền chi tiết theo từng ngày."
-                icon={<CreditCardOutlined />}
-              />
-            }
-          />
+          <Route path="finance" element={<FinanceDashboardPage />} />
           <Route
             path="reports"
             element={
@@ -181,8 +174,8 @@ const router = createBrowserRouter(createRoutesFromElements(<>
             <Route path="payment/return" element={<PaymentReturnPage />} />
             <Route path="account" element={<ProfilePage />} />
             <Route path="my-bookings" element={<MyBookingsPage />} />
+            <Route path="account/saved-stays" element={<AccountSavedStaysPage />} />
             <Route path="my-complaints" element={<MyComplaintsPage />} />
-            <Route path="staff" element={<HotelStaffPage />} />
           </Route>
           <Route index element={<StayVibeHomePage />} />
           <Route path="explore" element={<HotelSearchPage />} />
@@ -190,7 +183,6 @@ const router = createBrowserRouter(createRoutesFromElements(<>
           <Route path="services" element={<ClientTripServices />} />
           <Route path="saved-stays" element={<ClientSavedStays />} />
           <Route path="stays/:hotelId" element={<HotelDetailPage />} />
-          <Route path="system-status" element={<SystemStatusPage />} />
           <Route path="management/live" element={<Navigate to="/" replace />} />
           <Route path="reset-password" element={<ResetPasswordPage />} />
           <Route path="login" element={<LoginPage />} />

@@ -48,7 +48,7 @@ export function ClientSiteHeader({ savedCount, onOpenMobileMenu, isMobileMenuOpe
     ...(isOwner ? [{ key: 'my-hotels', label: 'Khách sạn của tôi', ...openRoute('/admin/overview') }] : []),
     { key: 'bookings', label: 'Đặt phòng của tôi', ...openRoute('/my-bookings') },
     { key: 'complaints', label: 'Khiếu nại của tôi', ...openRoute('/my-complaints') },
-    ...(isAdmin ? [{ key: 'admin', label: 'StayHub Admin', ...openRoute('/admin/users') }] : []),
+    ...(isAdmin ? [{ key: 'admin', label: 'StayHub Admin', ...openRoute('/admin/overview') }] : []),
     { type: 'divider' },
     { key: 'logout', label: logout.isPending ? 'Đang đăng xuất…' : 'Đăng xuất', disabled: logout.isPending, onClick: handleLogout },
   ]
@@ -63,7 +63,7 @@ export function ClientSiteHeader({ savedCount, onOpenMobileMenu, isMobileMenuOpe
       ))}
     </nav>
     <div className="ref-header-actions">
-      <NavLink to="/saved-stays" viewTransition className="stayhub-icon-link"
+      <NavLink to={session ? '/account/saved-stays' : '/saved-stays'} viewTransition className="stayhub-icon-link"
         aria-label={`Chỗ nghỉ đã lưu (${savedCount})`} title="Chỗ nghỉ đã lưu">
         <ClientReferenceIcon name="heart" size={20} />
         {savedCount > 0 && <span aria-hidden="true">{savedCount}</span>}

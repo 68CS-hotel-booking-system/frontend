@@ -1,5 +1,17 @@
-import { AuthPanel } from '@/features/auth'
+import { useNavigate } from 'react-router'
+import { AuthModal } from '@/features/auth'
 
 export function ForgotPasswordPage() {
-  return <AuthPanel initialAction="forgot-password" />
+  const navigate = useNavigate()
+  return (
+    <div className="min-h-[60vh] w-full">
+      <AuthModal
+        isOpen
+        initialMode="forgot-password"
+        onClose={() => {
+          void navigate('/', { replace: true })
+        }}
+      />
+    </div>
+  )
 }

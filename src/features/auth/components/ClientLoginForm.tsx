@@ -21,6 +21,7 @@ export interface ClientLoginFormProps {
   defaultEmail?: string
   onSuccess?: (user: unknown) => void
   onSwitchToRegister?: (currentEmail?: string) => void
+  onSwitchToForgot?: (currentEmail?: string) => void
   inModal?: boolean
 }
 
@@ -28,6 +29,7 @@ export function ClientLoginForm({
   defaultEmail = '',
   onSuccess,
   onSwitchToRegister,
+  onSwitchToForgot,
 }: ClientLoginFormProps) {
   const id = useId()
   const inFlight = useRef(false)
@@ -206,16 +208,27 @@ export function ClientLoginForm({
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
             disabled={busy}
-            className="w-4 h-4 rounded cursor-pointer accent-[#9b5b32]"
+            className="w-4 h-4 rounded cursor-pointer accent-[#c91f4b]"
           />
           <span>Ghi nhớ đăng nhập</span>
         </label>
-        <Link
-          to="/forgot-password"
-          className="text-sm font-medium text-[var(--color-primary)] hover:underline"
-        >
-          Quên mật khẩu?
-        </Link>
+        {onSwitchToForgot ? (
+          <button
+            type="button"
+            onClick={() => onSwitchToForgot(getValues('email'))}
+            disabled={busy}
+            className="text-sm font-medium text-[#c91f4b] hover:underline bg-transparent border-0 p-0 cursor-pointer"
+          >
+            Quên mật khẩu?
+          </button>
+        ) : (
+          <Link
+            to="/forgot-password"
+            className="text-sm font-medium text-[#c91f4b] hover:underline"
+          >
+            Quên mật khẩu?
+          </Link>
+        )}
       </div>
 
       {/* Submit Button & Switch Line */}

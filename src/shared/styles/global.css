@@ -83,7 +83,7 @@ body {
 }
 
 a {
-  color: var(--color-primary);
+  color: inherit;
   text-underline-offset: 3px;
 }
 
@@ -93,17 +93,17 @@ input {
 }
 
 ::selection {
-  background: #EFE4CC;
-  color: #141413;
+  background: rgba(11, 95, 83, 0.14);
+  color: inherit;
 }
 
 :focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 3px;
+  outline: 2px solid var(--focus-ring, #0b5f53);
+  outline-offset: 2px;
 }
 
 input {
-  caret-color: var(--color-primary);
+  caret-color: auto;
 }
 
 h1,

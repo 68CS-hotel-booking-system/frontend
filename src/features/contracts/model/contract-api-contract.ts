@@ -16,9 +16,9 @@ export const contractPageSchema = z.object({
 const localDateTime = z.string().min(1, 'Chọn thời điểm hiệu lực.').refine((value) => Number.isFinite(new Date(value).getTime()), 'Thời điểm không hợp lệ.')
 export const createApiContractFormSchema = z.object({
   contractCode: z.string().trim().min(1, 'Nhập mã hợp đồng.').max(50),
-  ownerUserId: z.uuid('Nhập UUID chủ sở hữu hợp lệ.'),
-  commissionRate: z.number().min(0).max(100), commissionBasis: commissionBasisSchema,
-  startsAt: localDateTime, endsAt: localDateTime,
+  ownerUserId: z.uuid('Chưa xác định được chủ sở hữu khách sạn. Vui lòng tải lại.'),
+  commissionRate: z.number().min(0).max(100).multipleOf(0.01, 'Tỷ lệ hoa hồng có tối đa hai chữ số thập phân.'), commissionBasis: commissionBasisSchema,
+  startsAt: localDateTime, endsAt: localDateTime, renewalOfContractId: z.uuid().optional(),
 }).refine((value) => new Date(value.endsAt).getTime() > new Date(value.startsAt).getTime(), {
   path: ['endsAt'], message: 'Thời điểm kết thúc phải sau thời điểm bắt đầu.',
 })

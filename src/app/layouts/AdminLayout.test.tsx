@@ -139,5 +139,19 @@ describe('AdminLayout component', () => {
     expect(markup).not.toContain('href="/admin/users"')
     expect(markup).not.toContain('href="/system-status"')
   })
+
+  it('displays exact breadcrumb title for /staff route', () => {
+    setSession(adminTokens)
+    const qc = new QueryClient()
+    const markup = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/staff']}>
+        <QueryClientProvider client={qc}>
+          <AdminLayout />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+
+    expect(markup).toContain('Nhân sự khách sạn')
+  })
 })
 

@@ -8,7 +8,7 @@ export function ClientSiteFooter() {
   const { isOwner, isAdmin } = useCurrentUser()
   const groups = [
     { title: 'Khám phá', links: [{ label: 'Tìm chỗ nghỉ', to: '/explore' }, { label: 'Trải nghiệm', to: '/experiences' }, { label: 'Dịch vụ', to: '/services' }] },
-    { title: 'Chuyến đi của bạn', links: [{ label: 'Chỗ nghỉ đã lưu', to: '/saved-stays' }, { label: 'Đặt phòng của tôi', to: '/my-bookings' }, { label: 'Khiếu nại của tôi', to: '/my-complaints' }] },
+    { title: 'Chuyến đi của bạn', links: [{ label: 'Chỗ nghỉ đã lưu', to: session ? '/account/saved-stays' : '/saved-stays' }, { label: 'Đặt phòng của tôi', to: '/my-bookings' }, { label: 'Khiếu nại của tôi', to: '/my-complaints' }] },
     { title: 'Tài khoản', links: [
       { label: 'Tài khoản của tôi', to: '/account' },
       ...(isOwner ? [{ label: 'Khách sạn của tôi', to: '/admin/overview' }] : []),

@@ -39,7 +39,7 @@ export function LoginPage() {
     Boolean(session && !isChecking && currentUser && returnTo?.startsWith('/admin') && !isAdmin)
 
   return (
-    <div style={{ width: '100%' }}>
+    <div className="min-h-[60vh] w-full">
       {hasForbiddenAdminAttempt && (
         <div style={{ maxWidth: 640, margin: '0 auto 16px' }} role="alert">
           <Alert
@@ -50,7 +50,7 @@ export function LoginPage() {
           />
         </div>
       )}
-      <AuthModal isOpen initialMode="login" variant="checkout" onClose={() => { if (!authenticated.current) void navigate('/', { replace: true }) }} onSuccess={() => { authenticated.current = true; if (!returnTo) void navigate('/', { replace: true }) }} />
+      <AuthModal isOpen initialMode="login" onClose={() => { if (!authenticated.current) void navigate('/', { replace: true }) }} onSuccess={() => { authenticated.current = true; if (!returnTo) void navigate('/', { replace: true }) }} />
     </div>
   )
 }

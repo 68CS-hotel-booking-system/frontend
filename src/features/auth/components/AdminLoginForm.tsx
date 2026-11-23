@@ -48,7 +48,7 @@ export function AdminLoginForm() {
         >
           Email
         </label>
-        <div className={`relative border-b transition-colors ${errors.email ? 'border-warm-danger' : 'border-warm-border-strong focus-within:border-warm-accent'}`}>
+        <div className={`relative border-b transition-colors ${errors.email ? 'border-admin-danger' : 'border-admin-border-strong focus-within:border-admin-teal'}`}>
           <Controller
             name="email"
             control={control}
@@ -71,14 +71,14 @@ export function AdminLoginForm() {
           <div
             className={`absolute right-0 bottom-[-1px] left-0 h-[2px] pointer-events-none origin-left transition-transform duration-[260ms] ease-[cubic-bezier(.16,1,.3,1)] ${
               errors.email
-                ? 'bg-warm-danger scale-x-100'
-                : 'bg-warm-accent scale-x-0 group-focus-within:scale-x-100'
+                ? 'bg-admin-danger scale-x-100'
+                : 'bg-admin-teal scale-x-0 group-focus-within:scale-x-100'
             }`}
           />
         </div>
         <div className="min-h-[18px]">
           {errors.email && (
-            <p className="m-0 text-xs leading-[18px] text-warm-danger" id={`${id}-email-error`} role="alert">
+            <p className="m-0 text-xs leading-[18px] text-admin-danger" id={`${id}-email-error`} role="alert">
               {errors.email.message}
             </p>
           )}
@@ -93,7 +93,7 @@ export function AdminLoginForm() {
         >
           Mật khẩu
         </label>
-        <div className={`relative border-b transition-colors ${errors.password ? 'border-warm-danger' : 'border-warm-border-strong focus-within:border-warm-accent'}`}>
+        <div className={`relative border-b transition-colors ${errors.password ? 'border-admin-danger' : 'border-admin-border-strong focus-within:border-admin-teal'}`}>
           <Controller
             name="password"
             control={control}
@@ -127,7 +127,7 @@ export function AdminLoginForm() {
             disabled={busy}
             aria-pressed={showPassword}
             aria-label={showPassword ? 'Hiện mật khẩu' : 'Ẩn mật khẩu'}
-            className="absolute right-[-4px] bottom-[3px] grid place-items-center w-10 h-10 p-0 border-0 rounded-md bg-transparent text-warm-muted hover:text-warm-accent transition-colors cursor-pointer"
+            className="absolute right-[-4px] bottom-[3px] grid place-items-center w-10 h-10 p-0 border-0 rounded-md bg-transparent text-admin-muted hover:text-admin-teal transition-colors cursor-pointer"
           >
             {showPassword ? (
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -146,19 +146,19 @@ export function AdminLoginForm() {
           <div
             className={`absolute right-0 bottom-[-1px] left-0 h-[2px] pointer-events-none origin-left transition-transform duration-[260ms] ease-[cubic-bezier(.16,1,.3,1)] ${
               errors.password
-                ? 'bg-warm-danger scale-x-100'
-                : 'bg-warm-accent scale-x-0 group-focus-within:scale-x-100'
+                ? 'bg-admin-danger scale-x-100'
+                : 'bg-admin-teal scale-x-0 group-focus-within:scale-x-100'
             }`}
           />
         </div>
         <div className="min-h-[18px] flex flex-col gap-0.5">
           {capsLock && (
-            <p className="m-0 text-xs leading-[18px] text-[#82501c] italic" id={`${id}-caps-hint`}>
+            <p className="m-0 text-xs leading-[18px] text-[#946412] italic" id={`${id}-caps-hint`}>
               Caps Lock đang bật.
             </p>
           )}
           {errors.password && (
-            <p className="m-0 text-xs leading-[18px] text-warm-danger" id={`${id}-password-error`} role="alert">
+            <p className="m-0 text-xs leading-[18px] text-admin-danger" id={`${id}-password-error`} role="alert">
               {errors.password.message}
             </p>
           )}
@@ -174,7 +174,7 @@ export function AdminLoginForm() {
             checked={remember}
             onChange={(e) => setRemember(e.target.checked)}
             disabled={busy}
-            className="w-[18px] h-[18px] m-0 border border-warm-border-strong rounded-[2px] bg-transparent text-warm-accent focus:ring-0 focus:ring-offset-0 cursor-pointer accent-[#9b5b32]"
+            className="w-[18px] h-[18px] m-0 border border-admin-border-strong rounded-[2px] bg-transparent text-admin-teal focus:ring-0 focus:ring-offset-0 cursor-pointer accent-[#0b5f53]"
           />
           <span className="admin-remember-label">Ghi nhớ đăng nhập</span>
         </label>
@@ -189,7 +189,7 @@ export function AdminLoginForm() {
       {/* Server error alert */}
       {mutation.isError && (
         <div
-          className="p-3 border border-warm-danger/30 rounded-[8px] bg-warm-surface flex items-center gap-2.5 text-warm-danger text-sm"
+          className="p-3 border border-admin-danger/30 rounded-[8px] bg-admin-surface flex items-center gap-2.5 text-admin-danger text-sm"
           role="alert"
         >
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
