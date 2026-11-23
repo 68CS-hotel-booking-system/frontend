@@ -1,4 +1,4 @@
-import { setAuthStatus, setSession, type Session } from '@/shared/api/session'
+import { getSession, getSessionIdentity, setAuthStatus, setSession, type Session } from '@/shared/api/session'
 import { ApiError } from '@/shared/api/api-error'
 import { queryClient } from '@/shared/lib/query-client'
 import { setTokenRefresher } from '@/shared/api/http'
@@ -8,16 +8,31 @@ import { loginResponseSchema } from '../api/auth-contracts'
 const CHANNEL_NAME = 'stayhub_auth_channel'
 let channel: BroadcastChannel | null = null
 
+export function applyIncomingSession(nextSession: Session) {
+  const currentIdentity = getSessionIdentity(getSession())
+  const nextIdentity = getSessionIdentity(nextSession)
+  if (currentIdentity !== nextIdentity) {
+    void queryClient.cancelQueries()
+    queryClient.clear()
+  }
+  setSession(nextSession)
+}
+
+export function applyIncomingLogout() {
+  void queryClient.cancelQueries()
+  setSession(null)
+  setAuthStatus('unauthenticated')
+  queryClient.clear()
+}
+
 if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
   try {
     channel = new BroadcastChannel(CHANNEL_NAME)
     channel.onmessage = (event: MessageEvent<{ type?: string; session?: Session }>) => {
       if (event.data?.type === 'SESSION_UPDATED' && event.data?.session) {
-        setSession(event.data.session)
+        applyIncomingSession(event.data.session)
       } else if (event.data?.type === 'LOGOUT') {
-        setSession(null)
-        setAuthStatus('unauthenticated')
-        queryClient.clear()
+        applyIncomingLogout()
       }
     }
   } catch {
@@ -63,8 +78,9 @@ export async function restoreSession(): Promise<Session | null> {
       const newSession: Session = {
         accessToken: parsed.accessToken,
         expiresAt: parsed.expiresAt,
+        userId: parsed.user?.id ?? null,
       }
-      setSession(newSession)
+      applyIncomingSession(newSession)
       broadcastAuth('SESSION_UPDATED', newSession)
       return newSession
     } catch (err) {
@@ -117,8 +133,9 @@ export async function refreshAccessToken(): Promise<string | null> {
       const newSession: Session = {
         accessToken: parsed.accessToken,
         expiresAt: parsed.expiresAt,
+        userId: parsed.user?.id ?? null,
       }
-      setSession(newSession)
+      applyIncomingSession(newSession)
       broadcastAuth('SESSION_UPDATED', newSession)
       return parsed.accessToken
     } catch (err) {
@@ -126,9 +143,7 @@ export async function refreshAccessToken(): Promise<string | null> {
         err instanceof ApiError &&
         (err.status === 401 || err.code === 'INVALID_REFRESH_TOKEN')
       ) {
-        setSession(null)
-        setAuthStatus('unauthenticated')
-        queryClient.clear()
+        applyIncomingLogout()
         broadcastAuth('LOGOUT')
       }
       return null

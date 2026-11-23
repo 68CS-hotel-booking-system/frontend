@@ -17,6 +17,7 @@ import { broadcastAuth, markLogoutRequested } from '../model/session-manager'
 /** Ends this browser's local session; server token revocation uses the logout API. */
 export function clearAuthSession() {
   markLogoutRequested()
+  void queryClient.cancelQueries()
   setSession(null)
   setAuthStatus('unauthenticated')
   queryClient.clear()
@@ -79,10 +80,17 @@ export async function runAuthAction(
 }
 
 function adoptAuthSession(session: ReturnType<typeof loginResponseSchema.parse>) {
+  void queryClient.cancelQueries()
   queryClient.clear()
-  setSession(session)
+  const nextSession = {
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
+    expiresAt: session.expiresAt,
+    userId: session.user?.id ?? null,
+  }
+  setSession(nextSession)
   setAuthStatus('authenticated')
-  broadcastAuth('SESSION_UPDATED', session)
+  broadcastAuth('SESSION_UPDATED', nextSession)
   return { user: session.user, expiresAt: session.expiresAt }
 }
 

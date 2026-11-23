@@ -23,11 +23,11 @@ function render(role: 'ADMIN' | 'HOTEL_OWNER', review: HotelReviewSummary | unde
   client.setQueryData(['auth', 'current-user', token], {
     id: role === 'ADMIN' ? reviewAdminId : reviewOwnerId, email: 'review@test.local', fullName: 'Test', roles: [role],
   })
-  client.setQueryData(hotelReviewKeys.management(hotel.id), reviewPage(review ? [review] : []))
+  client.setQueryData(hotelReviewKeys.management(hotel.id, 0, 1, token), reviewPage(review ? [review] : []))
   if (failedReviewRead) {
-    client.getQueryCache().find({ queryKey: hotelReviewKeys.management(hotel.id) })?.setState({ status: 'error', error: new Error('Review unavailable') })
+    client.getQueryCache().find({ queryKey: hotelReviewKeys.management(hotel.id, 0, 1, token) })?.setState({ status: 'error', error: new Error('Review unavailable') })
   }
-  client.setQueryData(hotelReviewKeys.detail(submittedReview.id), submittedReview)
+  client.setQueryData(hotelReviewKeys.detail(submittedReview.id, token), submittedReview)
   const html = renderToStaticMarkup(<MemoryRouter><QueryClientProvider client={client}><App>{node}</App></QueryClientProvider></MemoryRouter>)
   client.clear()
   return html
