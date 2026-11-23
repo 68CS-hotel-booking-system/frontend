@@ -4,10 +4,10 @@ export const hotelManagementKeys = {
   all: ['hotels'] as const,
   cities: (mode: string) => ['hotels', 'catalog', 'cities', mode] as const,
   amenities: (mode: string) => ['hotels', 'catalog', 'amenities', mode] as const,
-  list: (mode: string, query: ManagementHotelListQuery) =>
-    ['hotels', 'management-list', mode, query] as const,
-  detail: (mode: string, hotelId: string) =>
-    ['hotels', 'management-detail', mode, hotelId] as const,
+  list: (mode: string, query: ManagementHotelListQuery, identity?: string | null) =>
+    identity ? (['hotels', 'management-list', mode, query, identity] as const) : (['hotels', 'management-list', mode, query] as const),
+  detail: (mode: string, hotelId: string, identity?: string | null) =>
+    identity ? (['hotels', 'management-detail', mode, hotelId, identity] as const) : (['hotels', 'management-detail', mode, hotelId] as const),
   images: (mode: string, hotelId: string) =>
     ['hotels', 'images', mode, hotelId] as const,
   rates: (

@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { useSessionIdentity } from '@/shared/hooks/use-session-identity'
 import { listBookings } from '../api/booking-api'
 import { bookingKeys } from './use-bookings'
 
@@ -9,8 +10,9 @@ export const tripGroups = {
 } as const
 
 export function useCustomerTrips(statuses: readonly string[], enabled = true) {
+  const identity = useSessionIdentity()
   return useInfiniteQuery({
-    queryKey: [...bookingKeys.list(), 'trips', statuses],
+    queryKey: bookingKeys.trips(statuses, identity),
     initialPageParam: statuses.map(status => ({ status, page: 0, size: 10 })),
     queryFn: ({ pageParam, signal }) => Promise.all(pageParam.map(async params => ({
       params,

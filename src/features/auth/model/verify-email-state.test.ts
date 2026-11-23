@@ -65,6 +65,7 @@ describe('verify-email-state logic', () => {
       session: {
         accessToken: 'access-jwt-token',
         expiresAt: '2026-11-07T12:00:00Z',
+        userId: apiResponse.user.id,
       },
       user: apiResponse.user,
     })

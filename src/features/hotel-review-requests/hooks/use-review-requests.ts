@@ -1,22 +1,29 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useSessionIdentity } from '@/shared/hooks/use-session-identity'
 import { ApiError } from '@/shared/api/api-error'
 import { getHotelPublishReadiness, decideHotelReview, getAdminReviewRequests, getHotelReviewRequests, getReviewRequest, submitHotelReview } from '../api/review-requests-api'
 import type { ReviewListQuery, ReviewRequest } from '../model/review-request'
 
 export const reviewKeys = {
   all: ['hotel-review-requests'] as const,
-  hotel: (hotelId: string, page: number, size: number) => ['hotel-review-requests', 'hotel', hotelId, page, size] as const,
-  admin: (query: ReviewListQuery) => ['hotel-review-requests', 'admin', query] as const,
-  detail: (id: string) => ['hotel-review-requests', 'detail', id] as const,
+  hotel: (hotelId: string, page: number, size: number, identity?: string | null) =>
+    identity ? (['hotel-review-requests', 'hotel', hotelId, page, size, identity] as const) : (['hotel-review-requests', 'hotel', hotelId, page, size] as const),
+  admin: (query: ReviewListQuery, identity?: string | null) =>
+    identity ? (['hotel-review-requests', 'admin', query, identity] as const) : (['hotel-review-requests', 'admin', query] as const),
+  detail: (id: string, identity?: string | null) =>
+    identity ? (['hotel-review-requests', 'detail', id, identity] as const) : (['hotel-review-requests', 'detail', id] as const),
 }
 export function useHotelReviewRequests(hotelId: string, page = 0, size = 10, enabled = true) {
-  return useQuery({ queryKey: reviewKeys.hotel(hotelId, page, size), queryFn: ({ signal }) => getHotelReviewRequests(hotelId, page, size, signal), enabled: Boolean(hotelId) && enabled, retry: false, refetchOnWindowFocus: true, refetchInterval: size === 1 ? 15000 : false })
+  const identity = useSessionIdentity()
+  return useQuery({ queryKey: reviewKeys.hotel(hotelId, page, size, identity), queryFn: ({ signal }) => getHotelReviewRequests(hotelId, page, size, signal), enabled: Boolean(hotelId) && enabled, retry: false, refetchOnWindowFocus: true, refetchInterval: size === 1 ? 15000 : false })
 }
 export function useAdminReviewRequests(query: ReviewListQuery, enabled: boolean) {
-  return useQuery({ queryKey: reviewKeys.admin(query), queryFn: ({ signal }) => getAdminReviewRequests(query, signal), enabled, retry: false, refetchInterval: 15000 })
+  const identity = useSessionIdentity()
+  return useQuery({ queryKey: reviewKeys.admin(query, identity), queryFn: ({ signal }) => getAdminReviewRequests(query, signal), enabled, retry: false, refetchInterval: 15000 })
 }
 export function useReviewRequest(id: string | null) {
-  return useQuery({ queryKey: reviewKeys.detail(id ?? ''), queryFn: ({ signal }) => getReviewRequest(id!, signal), enabled: Boolean(id), retry: false, staleTime: 0 })
+  const identity = useSessionIdentity()
+  return useQuery({ queryKey: reviewKeys.detail(id ?? '', identity), queryFn: ({ signal }) => getReviewRequest(id!, signal), enabled: Boolean(id), retry: false, staleTime: 0 })
 }
 export function useReviewMutations() {
   const client = useQueryClient()

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { ApiError } from '@/shared/api/api-error'
 import { createBooking, getAvailability, quoteStay, stayFormSchema, type BookerForm, type PreparedBookingQuote, type StayForm } from '../api/booking-api'
+import { resolveBookingIdempotencyKey, type BookingIdempotencyState } from '../model/booking-idempotency'
 
 export function stayKey(stay: StayForm) {
   return JSON.stringify([stay.checkIn, stay.checkOut, stay.adults, stay.children, stay.quantity])
@@ -10,6 +11,7 @@ export function useBookingCheckout(hotelId: string, stay: StayForm, preparedQuot
   const [roomTypeId, setRoomTypeId] = useState('')
   const [uncertain, setUncertain] = useState(false)
   const inFlight = useRef(false)
+  const idempotencyRef = useRef<BookingIdempotencyState | null>(null)
   const validation = stayFormSchema.safeParse(stay)
   const signature = stayKey(stay)
   const availability = useMutation({ mutationFn: (value: StayForm) => getAvailability(hotelId, value), retry: false })
@@ -24,20 +26,38 @@ export function useBookingCheckout(hotelId: string, stay: StayForm, preparedQuot
     : selected && quote.data?.signature === signature && quote.data.roomTypeId === roomTypeId ? quote.data : undefined
   const create = useMutation({ mutationFn: (booker: BookerForm) => {
     if (!currentQuote) throw new Error('Cần lấy lại báo giá cho lựa chọn hiện tại.')
-    return createBooking(hotelId, currentQuote.input, booker, currentQuote.quote.totalAmount)
+    const idempotencyKey = resolveBookingIdempotencyKey(idempotencyRef, {
+      hotelId,
+      input: currentQuote.input,
+      booker,
+      quotedTotalAmount: currentQuote.quote.totalAmount,
+    })
+    return createBooking(hotelId, currentQuote.input, booker, currentQuote.quote.totalAmount, undefined, undefined, idempotencyKey)
   }, retry: false })
   async function submit(booker: BookerForm) {
-    if (inFlight.current || !currentQuote || create.data || uncertain) return
+    if (inFlight.current || !currentQuote || create.data) return
     inFlight.current = true
-    try { return await create.mutateAsync(booker) } catch (error) {
-      if (error instanceof ApiError && (error.kind === 'network' || error.kind === 'timeout' || error.status >= 500)) setUncertain(true)
-      quote.reset()
+    try {
+      const booking = await create.mutateAsync(booker)
+      idempotencyRef.current = null
+      setUncertain(false)
+      return booking
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        idempotencyRef.current = null
+        setUncertain(false)
+        quote.reset()
+      } else if (error instanceof ApiError && (error.kind === 'network' || error.kind === 'timeout' || error.status >= 500)) {
+        setUncertain(true)
+      } else {
+        quote.reset()
+      }
       throw error
     } finally { inFlight.current = false }
   }
   return { validation, availability, checked, selected, roomTypeId,
     selectRoom: (id: string) => { setRoomTypeId(id); quote.reset() },
     quote, currentQuote, create, submit, uncertain,
-    busy: create.isPending || Boolean(create.data) || uncertain,
+    busy: create.isPending || Boolean(create.data),
   }
 }

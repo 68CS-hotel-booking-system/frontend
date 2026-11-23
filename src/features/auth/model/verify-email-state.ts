@@ -93,6 +93,7 @@ export async function executeEmailVerification(
           ? {
               accessToken: res.accessToken,
               expiresAt: res.expiresAt,
+              userId: res.user?.id ?? null,
             }
           : undefined
       const successResult: VerifyEmailResult = {

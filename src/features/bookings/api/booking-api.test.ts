@@ -19,7 +19,7 @@ it('keeps the server quote including surcharges and sends only the quote input',
   expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual(input)
   expect(fetcher.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal)
 })
-it('creates a real booking with the confirmed server total, not a payment success', async () => {
+it('creates a real booking with the confirmed server total and sends a UUID v4 Idempotency-Key header', async () => {
   response({ ...quote, id: roomId, bookingCode: 'BK-QA', customerId: hotelId, adults: 2, children: 0, status: 'PENDING_PAYMENT', expiresAt: '2030-01-01T00:00:00Z', createdAt: '2030-01-01T00:00:00Z',
     booker, guest: booker, items: [{ ...quote.items[0], id: roomId }] })
   const { createBooking } = await import('./booking-api')
@@ -27,6 +27,20 @@ it('creates a real booking with the confirmed server total, not a payment succes
   expect(result.status).toBe('PENDING_PAYMENT')
   expect(fetcher.mock.calls[0][0]).toBe('/api/v1/bookings')
   expect(JSON.parse(fetcher.mock.calls[0][1]?.body as string)).toEqual({ hotelId, ...input, booker, quotedTotalAmount: 2050000 })
+  const key = new Headers(fetcher.mock.calls[0][1]?.headers).get('Idempotency-Key')
+  expect(key).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)
+})
+it('sends the caller-provided Idempotency-Key header and surfaces 409 idempotency conflicts', async () => {
+  const idempotencyKey = '33333333-3333-4333-8333-333333333333'
+  response({ ...quote, id: roomId, bookingCode: 'BK-IDEMP', customerId: hotelId, adults: 2, children: 0, status: 'PENDING_PAYMENT', expiresAt: null, createdAt: '2030-01-01T00:00:00Z',
+    booker, guest: booker, items: [{ ...quote.items[0], id: roomId }] })
+  const { createBooking } = await import('./booking-api')
+  await createBooking(hotelId, input, booker, quote.totalAmount, undefined, undefined, idempotencyKey)
+  expect(new Headers(fetcher.mock.calls[0][1]?.headers).get('Idempotency-Key')).toBe(idempotencyKey)
+
+  fetcher.mockResolvedValue(new Response(JSON.stringify({ code: 'IDEMPOTENCY_CONFLICT', detail: 'Yêu cầu đặt phòng đã thay đổi so với lần gửi trước.' }), { status: 409 }))
+  await expect(createBooking(hotelId, input, booker, quote.totalAmount, undefined, undefined, idempotencyKey))
+    .rejects.toMatchObject({ status: 409, code: 'IDEMPOTENCY_CONFLICT', message: 'Yêu cầu đặt phòng đã thay đổi so với lần gửi trước.' })
 })
 it('uses availability date names from the controller and checks total occupancy inputs', async () => {
   response({ hotelId, checkInDate: input.checkIn, checkOutDate: input.checkOut, totalNights: 2, roomTypes: [] })
