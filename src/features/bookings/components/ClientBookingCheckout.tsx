@@ -8,11 +8,12 @@ import { bookerFormSchema, type BookerForm } from '../api/booking-api'
 import { checkoutContacts, checkoutDetailHref, checkoutDate, checkoutMoney, type CheckoutSelection } from '../model/client-checkout'
 import { useClientCheckout } from '../hooks/use-client-checkout'
 import { CheckoutPriceDetails } from './CheckoutPriceDetails'
+import { AdminBookingNotice } from './AdminBookingNotice'
 import '@/shared/styles/checkout-reference.css'
 
 interface Props {
   selection: CheckoutSelection
-  user: { id: string; fullName: string; email: string; phone: string | null; emailVerified: boolean }
+  user: { id: string; fullName: string; email: string; phone: string | null; emailVerified: boolean; roles?: string[] }
   hotelName: string
   roomName: string
   coverUrl?: string
@@ -31,7 +32,8 @@ export function ClientBookingCheckout({ selection, user, hotelName, roomName, co
   const profileComplete = bookerFormSchema.safeParse(profile).success
   const busy = flow.submit.isPending
   const quoteReady = flow.available && Boolean(flow.current) && !flow.quote.isFetching && !flow.quote.isError
-  const disabled = busy || !quoteReady || !profileComplete || !user.emailVerified || flow.needsAcceptance
+  const admin = user.roles?.includes('ADMIN') === true
+  const disabled = admin || busy || !quoteReady || !profileComplete || !user.emailVerified || flow.needsAcceptance
   const detailHref = checkoutDetailHref(selection)
   const dates = `${checkoutDate(selection.stay.checkIn)} → ${checkoutDate(selection.stay.checkOut)}`
   const guests = `${selection.stay.adults} người lớn${selection.stay.children > 0 ? `, ${selection.stay.children} trẻ em` : ''}`
@@ -51,6 +53,7 @@ export function ClientBookingCheckout({ selection, user, hotelName, roomName, co
       }
     }
   }
+  if (admin) return <div className="client-checkout"><AdminBookingNotice /></div>
   if (flow.submit.data) return <Navigate to={`/stays/${selection.hotelId}/booking/${flow.submit.data.id}`} replace />
   return <div className="client-checkout checkout-reference">
     <Link className="checkout-back" to={detailHref}>

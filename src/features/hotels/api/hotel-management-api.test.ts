@@ -207,36 +207,6 @@ describe('management API compatibility with the implemented backend', () => {
   })
 })
 
-describe('mock financial access', () => {
-  it('enforces optimistic locking (expectedVersion) on FN00 financial access updates', async () => {
-    const { getMockFinancialAccess, updateMockFinancialAccess } = await import('@/features/finance/mocks/financial-access-mock')
-    const { ApiError } = await import('@/shared/api/api-error')
-    const current = await getMockFinancialAccess({
-      hotelId: '33333333-3333-4333-8333-333333333301',
-      userId: '99999999-9999-4999-8999-999999999901',
-    })
-
-    await expect(
-      updateMockFinancialAccess(
-        {
-          hotelId: '33333333-3333-4333-8333-333333333301',
-          userId: '99999999-9999-4999-8999-999999999901',
-        },
-        {
-          contractId: current.contractId,
-          status: 'GRANTED',
-          canReadContracts: true,
-          canReadSettlements: true,
-          canExportReports: true,
-          expectedVersion: current.version + 99,
-          reason: 'Test version mismatch',
-        },
-      ),
-    ).rejects.toThrowError(ApiError)
-  })
-})
-
-
 describe('private contact fields in hotel creation', () => {
   it('sends contacts with the initial POST and returns saved management fields', async () => {
     respond({ ...hotel, contactPhone: '0901234567', contactEmail: 'desk@hotel.vn' }, 201)

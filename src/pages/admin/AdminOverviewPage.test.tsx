@@ -46,19 +46,19 @@ describe('AdminOverviewPage component', () => {
     expect(markup).toContain('Vũ Quản Trị Hệ Thống')
     expect(markup).toContain('lead.admin@stayhub.vn')
 
-    // Operational shortcuts
+    // Real operational & status sections
     expect(markup).toContain('Quản lý tài khoản')
     expect(markup).toContain('Khách sạn')
     expect(markup).toContain('Trạng thái máy chủ')
-
-    // Explicit truthful mock labels per design.md
-    expect(markup).toContain('Phiên demo')
-    expect(markup).toContain('Dữ liệu minh họa')
-    expect(markup).toContain('Chưa kết nối')
-
-    // Work queue and analytics visualizations from design.md
-    expect(markup).toContain('Công việc cần xử lý')
     expect(markup).toContain('Doanh thu &amp; hoa hồng')
+
+    // All mock data & demo labels removed
+    expect(markup).not.toContain('Phiên demo')
+    expect(markup).not.toContain('Dữ liệu minh họa')
+    expect(markup).not.toContain('dữ liệu mô phỏng')
+    expect(markup).not.toContain('Công việc cần xử lý')
+    expect(markup).not.toContain('đơn chờ xử lý')
+    expect(markup).not.toContain('Chưa kết nối')
     expect(markup).not.toContain('Lượng đặt phòng theo thời gian')
     expect(markup).not.toContain('Doanh thu nền tảng theo thời gian')
     expect(markup).not.toContain('Chạy kiểm tra mô phỏng')

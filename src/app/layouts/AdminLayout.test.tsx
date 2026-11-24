@@ -16,6 +16,22 @@ describe('AdminLayout component', () => {
     setSession(null)
   })
 
+  it('hides owner-only staff navigation when the account also has ADMIN', () => {
+    setSession(adminTokens)
+    const qc = new QueryClient()
+    qc.setQueryData(['auth', 'current-user', 'admin-layout-test-token'], {
+      id: '99999999-9999-4999-8999-999999999999', email: 'admin-owner@stayhub.vn',
+      fullName: 'Admin kiêm owner', phone: null, status: 'ACTIVE', emailVerified: true, version: 1,
+      roles: ['ADMIN', 'HOTEL_OWNER'],
+    })
+    const html = renderToStaticMarkup(<MemoryRouter><QueryClientProvider client={qc}><AdminLayout /></QueryClientProvider></MemoryRouter>)
+    expect(html).not.toContain('href="/staff"')
+    expect(html).not.toContain('href="/vouchers"')
+    expect(html).not.toContain('href="/financial-access"')
+    expect(html).toContain('href="/admin/users"')
+    qc.clear()
+  })
+
   it('renders navigation drawer groups and items with Material 3 structure', () => {
     setSession(adminTokens)
     const qc = new QueryClient()
@@ -50,6 +66,10 @@ describe('AdminLayout component', () => {
     expect(markup).toContain('href="/admin/users"')
     expect(markup).toContain('href="/hotels"')
     expect(markup).toContain('href="/system-status"')
+    expect(markup).not.toContain('href="/staff"')
+    expect(markup).not.toContain('href="/vouchers"')
+
+    expect(markup).not.toContain('href="/financial-access"')
 
     // Active link has is-active class
     expect(markup).toContain('is-active')
@@ -130,12 +150,15 @@ describe('AdminLayout component', () => {
     expect(markup).toContain('href="/hotels"')
     expect(markup).toContain('href="/bookings"')
     expect(markup).toContain('href="/customers"')
+    expect(markup).toContain('href="/staff"')
+    expect(markup).toContain('href="/vouchers"')
     expect(markup).toContain('href="/finance"')
     expect(markup).toContain('href="/reports"')
     expect(markup).not.toContain('tab=create')
     expect(markup).not.toContain('href="/management/rates"')
 
     // Admin-only menus MUST NOT be present
+    expect(markup).not.toContain('href="/financial-access"')
     expect(markup).not.toContain('href="/admin/users"')
     expect(markup).not.toContain('href="/system-status"')
   })

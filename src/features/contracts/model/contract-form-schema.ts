@@ -5,12 +5,6 @@ const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/
 /** FN02: POST /api/v1/admin/hotels/{hotelId}/contracts — Tạo dự thảo hợp đồng hoa hồng */
 export const createHotelContractFormSchema = z
   .object({
-    contractCode: z
-      .string()
-      .trim()
-      .min(4, 'Mã hợp đồng cần ít nhất 4 ký tự.')
-      .max(50, 'Mã hợp đồng tối đa 50 ký tự.')
-      .regex(/^[A-Z0-9-]+$/, 'Mã hợp đồng chỉ gồm chữ in hoa, số và dấu gạch ngang.'),
     commissionPercentage: z
       .number({ error: 'Nhập tỷ lệ hoa hồng hợp lệ.' })
       .min(1, 'Tỷ lệ hoa hồng từ 1% đến 50%.')

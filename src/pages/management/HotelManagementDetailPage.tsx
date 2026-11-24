@@ -12,9 +12,8 @@ import {
 import { Button, Modal, Space, Tabs, Tag, message } from 'antd'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { useCurrentUser } from '@/features/auth'
-import { HotelContractsSection, useHotelContractsQuery } from '@/features/contracts'
+import { HotelContractsSection } from '@/features/contracts'
 
-import { FinancialAccessSection } from '@/features/finance'
 import {
   HotelAmenitiesManager,
   HotelGeneralEditForm,
@@ -37,7 +36,6 @@ export function HotelManagementDetailPage() {
   const { isAdmin } = useCurrentUser()
   const citiesQuery = useCitiesQuery()
   const detailQuery = useManagementHotelDetailQuery(hotelId)
-  const contractsQuery = useHotelContractsQuery(hotelId)
   const approveMutation = useApproveHotelMutation()
 
   const handleApprove = () => {
@@ -82,7 +80,6 @@ export function HotelManagementDetailPage() {
 
   const hotel = detailQuery.data
   const cities = citiesQuery.data ?? []
-  const contracts = contractsQuery.data ?? []
 
   return (
     <div className="management-page">
@@ -194,17 +191,12 @@ export function HotelManagementDetailPage() {
             key: 'finance',
             label: (
               <span>
-                <FileProtectOutlined aria-hidden="true" /> Hợp đồng &amp; Phân quyền Tài chính
+                <FileProtectOutlined aria-hidden="true" /> Hợp đồng hoa hồng
               </span>
             ),
             children: (
               <div className="stack-lg">
                 <HotelContractsSection hotelId={hotel.id} ownerUserId={hotel.ownerUserId} />
-                <FinancialAccessSection
-                  hotelId={hotel.id}
-                  defaultOwnerUserId={hotel.ownerUserId}
-                  contracts={contracts}
-                />
               </div>
             ),
           },

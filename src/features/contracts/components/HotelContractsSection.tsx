@@ -83,7 +83,6 @@ function MockHotelContractsSection({
   } = useForm<CreateHotelContractFormValues>({
     resolver: zodResolver(createHotelContractFormSchema),
     defaultValues: {
-      contractCode: 'CTR-2027-PARTNER-01',
       commissionPercentage: 12,
       currency: 'VND',
       effectiveFrom: '2027-01-01',
@@ -99,7 +98,6 @@ function MockHotelContractsSection({
         `Đã tạo dự thảo hợp đồng "${created.contractCode}".`,
       )
       reset({
-        contractCode: 'CTR-2027-PARTNER-02',
         commissionPercentage: 12,
         currency: 'VND',
         effectiveFrom: '2027-01-01',
@@ -318,27 +316,7 @@ function MockHotelContractsSection({
             noValidate
             className="admin-form"
           >
-            <Form.Item
-              layout="vertical"
-              label="Mã hợp đồng thỏa thuận"
-              htmlFor={`${formId}-contractCode`}
-              validateStatus={errors.contractCode ? 'error' : undefined}
-              help={errors.contractCode?.message}
-              required
-            >
-              <Controller
-                name="contractCode"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    id={`${formId}-contractCode`}
-                    placeholder="CTR-2027-IHG-01"
-                    size="large"
-                  />
-                )}
-              />
-            </Form.Item>
+            <p>Mã hợp đồng demo được tạo tự động sau khi lưu.</p>
 
             <div className="form-grid-2">
               <Form.Item

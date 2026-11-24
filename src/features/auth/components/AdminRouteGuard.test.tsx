@@ -17,6 +17,24 @@ describe('AdminRouteGuard component', () => {
     setSession(null)
   })
 
+  it.each([
+    { roles: ['ADMIN'], allowed: false },
+    { roles: ['ADMIN', 'HOTEL_OWNER'], allowed: false },
+    { roles: ['HOTEL_OWNER'], allowed: true },
+  ].flatMap(entry => ['/staff', '/vouchers'].map(path => ({ ...entry, path }))))('limits $path to the owner context: $roles', ({ roles, allowed, path }) => {
+    setSession(tokens)
+    const qc = new QueryClient()
+    qc.setQueryData(['auth', 'current-user', 'test-token'], {
+      id: '33333333-3333-4333-8333-333333333333', email: 'staff-scope@stayhub.vn',
+      fullName: 'Kiểm thử quyền', phone: null, status: 'ACTIVE', emailVerified: true, version: 1, roles,
+    })
+    const markup = renderToStaticMarkup(<MemoryRouter initialEntries={[`${path}?hotelId=test#team`]}>
+      <QueryClientProvider client={qc}><AdminRouteGuard><div data-testid="owner-staff-page">Nhân sự owner</div></AdminRouteGuard></QueryClientProvider>
+    </MemoryRouter>)
+    expect(markup.includes('owner-staff-page')).toBe(allowed)
+    qc.clear()
+  })
+
   it('renders loading state when restoring session on boot/F5', () => {
     setAuthStatus('restoring')
     const qc = new QueryClient()

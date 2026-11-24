@@ -11,7 +11,7 @@ it('validates OTHER descriptions before sending and rejects unknown categories',
 })
 it('submits only content/category against the owned booking and preserves server state', async () => {
   const payload = { category: 'BILLING' as const, content: 'Đơn chưa xác nhận sau thanh toán.' }
-  fetcher.mockResolvedValue(new Response(JSON.stringify({ message: 'ok', data: { id, bookingId: id, hotelId: id, ...payload, status: 'OPEN', createdAt: '2030-01-01T00:00:00Z', updatedAt: '2030-01-01T00:00:00Z' } })))
+  fetcher.mockResolvedValue(new Response(JSON.stringify({ message: 'ok', data: { id, bookingId: id, hotelId: id, ...payload, status: 'OPEN', version: 0, history: [], createdAt: '2030-01-01T00:00:00Z', updatedAt: '2030-01-01T00:00:00Z' } })))
   const { submitComplaint } = await import('./complaint-api')
   expect((await submitComplaint(id, payload)).status).toBe('OPEN')
   expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/bookings/${id}/complaints`)

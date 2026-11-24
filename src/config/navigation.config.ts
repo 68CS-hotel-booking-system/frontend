@@ -70,7 +70,7 @@ export const MAIN_NAV_GROUPS: MainNavGroup[] = [
   {
     title: 'Quản lý cơ sở & Vận hành',
     items: [
-      { key: 'staff', label: 'Nhân sự khách sạn', to: '/staff', icon: TeamOutlined },
+      { key: 'staff', label: 'Nhân sự khách sạn', to: '/staff', icon: TeamOutlined, ownerOnly: true },
       {
         key: 'hotels',
         label: 'Khách sạn',
@@ -95,6 +95,7 @@ export const MAIN_NAV_GROUPS: MainNavGroup[] = [
         label: 'Voucher & Ưu đãi',
         to: '/vouchers',
         icon: TagOutlined,
+        ownerOnly: true,
       },
       {
         key: 'complaints',
@@ -124,12 +125,6 @@ export const MAIN_NAV_GROUPS: MainNavGroup[] = [
         label: 'Hợp đồng hoa hồng',
         to: '/contracts',
         icon: FileTextOutlined,
-      },
-      {
-        key: 'financial-access',
-        label: 'Phân quyền tài chính',
-        to: '/financial-access',
-        icon: SafetyCertificateOutlined,
       },
     ],
   },

@@ -1,0 +1,25 @@
+.complaint-workspace { min-width: 0; display: grid; gap: 24px; }
+.complaint-toolbar { display: flex; gap: 20px; align-items: end; justify-content: space-between; flex-wrap: wrap; }
+.complaint-toolbar .ant-input-search { max-width: 460px; }
+.complaint-filter { display: grid; gap: 8px; min-width: 220px; }
+.complaint-filter label, .complaint-handling-form label { font-weight: 600; }
+.complaint-detail-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr); gap: 24px; align-items: start; }
+.complaint-case-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.complaint-workspace h2, .complaint-history h3 { margin-top: 0; font-weight: 600; }
+.complaint-prose { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; max-width: 72ch; }
+.complaint-excerpt { margin: 6px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.complaint-handling-form { display: grid; gap: 12px; }
+.complaint-response-field { min-width: 0; padding-bottom: 16px; }
+.complaint-handling-form .ant-btn { justify-self: start; }
+.complaint-handling-form p { margin: 0 0 8px; }
+.complaint-field-error { color: #a51c30; font-size: 14px; }
+.complaint-history { border-top: 1px solid #dce7e3; margin-top: 28px; padding-top: 24px; }
+.complaint-history ol { list-style: none; margin: 0; padding: 0; }
+.complaint-history li { padding: 16px 0; border-bottom: 1px solid #e7eeeb; }
+.complaint-history-meta { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.complaint-history-meta time { color: #5f736e; font-size: 13px; }
+.complaint-history li p { margin: 8px 0 0; }
+.complaint-mobile-hint { display: none; color: #5f736e; font-size: 13px; }
+.complaint-back { justify-self: start; }
+@media(max-width: 900px) { .complaint-detail-grid { grid-template-columns: minmax(0,1fr); } }
+@media(max-width: 600px) { .complaint-toolbar { align-items: stretch; } .complaint-filter, .complaint-toolbar .ant-input-search { width: 100%; max-width: none; } .complaint-mobile-hint { display: block; } }

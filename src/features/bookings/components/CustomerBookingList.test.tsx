@@ -58,6 +58,13 @@ it('renders the upcoming empty state instead of a sample trip', () => {
   expect(html).not.toContain('Thanh toán qua VNPay')
 })
 
+it('does not offer cancellation for confirmed paid bookings', () => {
+  const { html } = renderTrips([{ ...booking, status: 'CONFIRMED' }])
+  expect(html).not.toContain('Hủy đặt phòng')
+  expect(html).not.toContain('Thanh toán qua VNPay')
+  expect(html).toContain('Xem chi tiết')
+})
+
 it('scopes the trips query key by user identity so switching accounts never renders the previous user guest name or booking', () => {
   expect(bookingKeys.trips(tripGroups.upcoming, userAId)).toContain(userAId)
   expect(bookingKeys.trips(tripGroups.upcoming, userAId)).not.toEqual(bookingKeys.trips(tripGroups.upcoming, userBId))

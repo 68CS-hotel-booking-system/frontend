@@ -39,9 +39,9 @@ export function AdminLayout() {
   const navGroups = useMemo(() => {
     return MAIN_NAV_GROUPS.filter((g) => (isAdmin ? true : !g.adminOnly)).map((g) => ({
       ...g,
-      items: g.items.filter((item) => (isAdmin ? true : !item.adminOnly)),
+      items: g.items.filter((item) => (!item.adminOnly || isAdmin) && (!item.ownerOnly || isOwnerOnly)),
     }))
-  }, [isAdmin])
+  }, [isAdmin, isOwnerOnly])
 
   // Trạng thái đang ở trong ngữ cảnh 1 khách sạn cụ thể (/hotels/:hotelId/*)
   const isHotelWorkspace =
@@ -86,8 +86,6 @@ export function AdminLayout() {
     currentPageTitle = 'Báo cáo doanh thu'
   } else if (location.pathname.includes('/contracts')) {
     currentPageTitle = 'Hợp đồng lưu trú'
-  } else if (location.pathname.includes('/financial-access')) {
-    currentPageTitle = 'Phân quyền tài chính'
   } else if (location.pathname.includes('/system-status')) {
     currentPageTitle = 'Trạng thái máy chủ'
   }

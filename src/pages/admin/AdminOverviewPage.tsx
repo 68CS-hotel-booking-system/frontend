@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { RevenueDashboard } from '@/features/finance'
 import { useNavigate } from 'react-router'
 import {
@@ -14,11 +15,13 @@ import {
   UserAddOutlined,
 } from '@ant-design/icons'
 import { useCurrentUser } from '@/features/auth'
+import { useBackendHealth } from '@/features/system-status'
 import { formatRoleLabel } from '@/shared/lib/format'
 
 export function AdminOverviewPage() {
   const navigate = useNavigate()
   const { currentUser, isChecking, isAdmin } = useCurrentUser()
+  const health = useBackendHealth(60)
 
   const userFullName = currentUser?.fullName || (currentUser?.email ? currentUser.email.split('@')[0] : 'Tài khoản')
   const userEmail = currentUser?.email || ''
@@ -32,10 +35,21 @@ export function AdminOverviewPage() {
       .join('')
       .toUpperCase() || 'SH'
 
+  const healthStatus = health.isPending
+    ? { label: 'Đang kiểm tra...', tone: 'neutral' as const }
+    : health.isError
+      ? { label: 'Mất kết nối', tone: 'danger' as const }
+      : health.data?.status === 'UP'
+        ? { label: 'Đang hoạt động', tone: 'live' as const }
+        : { label: health.data?.status ?? 'Không xác định', tone: 'neutral' as const }
+
   return (
     <div className="flex flex-col gap-7 w-full max-w-6xl mx-auto">
       {/* 1. Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#dce7e3]">
+      <div
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#dce7e3] dash-enter"
+        style={{ '--dash-delay': '0ms' } as CSSProperties}
+      >
         <div>
           <h1
             id="dashboardTitle"
@@ -66,156 +80,26 @@ export function AdminOverviewPage() {
         </button>
       </div>
 
-      {/* 2. Priority Work Queue */}
-      <section className="flex flex-col gap-3" aria-labelledby="queue-heading">
-        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
-          <h2
-            id="queue-heading"
-            className="text-[11px] font-bold uppercase tracking-[.12em] text-[#40564f] m-0"
-          >
-            Công việc cần xử lý
-          </h2>
-          <span className="text-[12.5px] text-[#5f736e]">
-            Dữ liệu minh họa · Ưu tiên theo hạn xử lý
-          </span>
-        </div>
+      {/* 2. Real Revenue & Commission Analytics + Charts */}
+      <div className="dash-enter" style={{ '--dash-delay': '60ms' } as CSSProperties}>
+        <RevenueDashboard />
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Queue Card 1: Bookings */}
-          <button
-            type="button"
-            onClick={() => navigate('/bookings')}
-            className="queue-card p-4 flex flex-col justify-between text-left cursor-pointer border-[#dce7e3] bg-white group min-h-[108px]"
-          >
-            <div className="text-[11px] font-bold text-[#5f736e] uppercase tracking-[.11em] text-center mb-1">
-              ĐẶT PHÒNG
-            </div>
-            <div className="flex items-center justify-between gap-2 w-full">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center shrink-0 text-base">
-                  <CalendarOutlined />
-                </div>
-                <div className="flex items-baseline gap-1.5 min-w-0">
-                  <span className="text-2xl font-bold text-[#0b5f53] tabular-nums leading-none tracking-[-0.04em]">
-                    28
-                  </span>
-                  <span className="text-[12.5px] font-semibold text-[#12211d] truncate">
-                    đơn chờ xử lý
-                  </span>
-                </div>
-              </div>
-              <ArrowRightOutlined className="queue-arrow text-xs text-[#5f736e] transition-transform duration-150 shrink-0" />
-            </div>
-            <div className="text-[11.5px] font-semibold text-[#8a5a13] mt-2 text-center sm:text-left truncate">
-              7 đơn quá 12 giờ
-            </div>
-          </button>
-
-          {/* Queue Card 2: Complaints */}
-          <button
-            type="button"
-            onClick={() => navigate('/complaints')}
-            className="queue-card p-4 flex flex-col justify-between text-left cursor-pointer border-[#dce7e3] bg-white group min-h-[108px]"
-          >
-            <div className="text-[11px] font-bold text-[#5f736e] uppercase tracking-[.11em] text-center mb-1">
-              KHIẾU NẠI
-            </div>
-            <div className="flex items-center justify-between gap-2 w-full">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center shrink-0 text-base">
-                  <MessageOutlined />
-                </div>
-                <div className="flex items-baseline gap-1.5 min-w-0">
-                  <span className="text-2xl font-bold text-[#0b5f53] tabular-nums leading-none tracking-[-0.04em]">
-                    6
-                  </span>
-                  <span className="text-[12.5px] font-semibold text-[#12211d] truncate">
-                    khiếu nại mở
-                  </span>
-                </div>
-              </div>
-              <ArrowRightOutlined className="queue-arrow text-xs text-[#5f736e] transition-transform duration-150 shrink-0" />
-            </div>
-            <div className="text-[11.5px] font-semibold text-[#8a5a13] mt-2 text-center sm:text-left truncate">
-              2 quá SLA
-            </div>
-          </button>
-
-          {/* Queue Card 3: Finance */}
-          <button
-            type="button"
-            onClick={() => navigate('/finance')}
-            className="queue-card p-4 flex flex-col justify-between text-left cursor-pointer border-[#dce7e3] bg-white group min-h-[108px]"
-          >
-            <div className="text-[11px] font-bold text-[#5f736e] uppercase tracking-[.11em] text-center mb-1">
-              TÀI CHÍNH
-            </div>
-            <div className="flex items-center justify-between gap-2 w-full">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center shrink-0 text-base">
-                  <CreditCardOutlined />
-                </div>
-                <div className="flex items-baseline gap-1.5 min-w-0">
-                  <span className="text-2xl font-bold text-[#0b5f53] tabular-nums leading-none tracking-[-0.04em]">
-                    4
-                  </span>
-                  <span className="text-[12.5px] font-semibold text-[#12211d] truncate">
-                    hoàn tiền chờ duyệt
-                  </span>
-                </div>
-              </div>
-              <ArrowRightOutlined className="queue-arrow text-xs text-[#5f736e] transition-transform duration-150 shrink-0" />
-            </div>
-            <div className="text-[11.5px] text-[#5f736e] mt-2 text-center sm:text-left truncate">
-              Tổng 12,6 triệu
-            </div>
-          </button>
-
-          {/* Queue Card 4: Vouchers */}
-          <button
-            type="button"
-            onClick={() => navigate('/vouchers')}
-            className="queue-card p-4 flex flex-col justify-between text-left cursor-pointer border-[#dce7e3] bg-white group min-h-[108px]"
-          >
-            <div className="text-[11px] font-bold text-[#5f736e] uppercase tracking-[.11em] text-center mb-1">
-              VOUCHER
-            </div>
-            <div className="flex items-center justify-between gap-2 w-full">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center shrink-0 text-base">
-                  <TagOutlined />
-                </div>
-                <div className="flex items-baseline gap-1.5 min-w-0">
-                  <span className="text-2xl font-bold text-[#0b5f53] tabular-nums leading-none tracking-[-0.04em]">
-                    3
-                  </span>
-                  <span className="text-[12.5px] font-semibold text-[#12211d] truncate">
-                    voucher sắp hết h...
-                  </span>
-                </div>
-              </div>
-              <ArrowRightOutlined className="queue-arrow text-xs text-[#5f736e] transition-transform duration-150 shrink-0" />
-            </div>
-            <div className="text-[11.5px] text-[#5f736e] mt-2 text-center sm:text-left truncate">
-              Trong 7 ngày
-            </div>
-          </button>
-        </div>
-      </section>
-
-      <RevenueDashboard />
-
-      {/* 4. Session and Infrastructure Status */}
-      <section className="flex flex-col gap-3" aria-labelledby="status-heading">
+      {/* 3. Session and Infrastructure Status */}
+      <section
+        className="flex flex-col gap-3 dash-enter"
+        style={{ '--dash-delay': '120ms' } as CSSProperties}
+        aria-labelledby="status-heading"
+      >
         <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
           <h2
             id="status-heading"
             className="text-[11px] font-bold uppercase tracking-[.12em] text-[#40564f] m-0"
           >
-            Phiên quản trị & Hạ tầng
+            Phiên quản trị &amp; Hạ tầng
           </h2>
           <span className="text-[12.5px] text-[#5f736e]">
-            Bản xem trước · dữ liệu mô phỏng
+            Thông tin phiên làm việc và trạng thái kết nối backend thực tế
           </span>
         </div>
 
@@ -227,9 +111,9 @@ export function AdminOverviewPage() {
                 <span className="text-[11px] font-bold text-[#0b5f53] uppercase tracking-wider">
                   Tài khoản phiên làm việc
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#f7fbfa] text-[#5f736e] border border-[#dce7e3]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#5f736e]" />
-                  <span>Phiên demo</span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#eaf6f1] text-[#0f7a5f] border border-[#cde9dc]">
+                  <span className={`w-1.5 h-1.5 rounded-full bg-[#0f7a5f] ${currentUser ? 'status-dot-live' : ''}`} />
+                  <span>{isChecking ? 'Đang kiểm tra' : 'Đang hoạt động'}</span>
                 </span>
               </div>
 
@@ -253,9 +137,6 @@ export function AdminOverviewPage() {
                         {formatRoleLabel(role)}
                       </span>
                     ))}
-                    <span className="px-2 py-0.5 rounded text-[10.5px] font-semibold bg-[#eef8f5] text-[#0b5f53] border border-[#d6ebe5]">
-                      Phiên demo
-                    </span>
                   </div>
                 </div>
               </div>
@@ -281,10 +162,22 @@ export function AdminOverviewPage() {
                 <span className="text-[11px] font-bold text-[#5f736e] uppercase tracking-wider">
                   Trạng thái máy chủ
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#f7fbfa] text-[#5f736e] border border-[#dce7e3]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#5f736e]" />
-                  <span>Chưa kết nối</span>
-                </span>
+                {healthStatus.tone === 'live' ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#eaf6f1] text-[#0f7a5f] border border-[#cde9dc]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0f7a5f] status-dot-live" />
+                    <span>{healthStatus.label}</span>
+                  </span>
+                ) : healthStatus.tone === 'danger' ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#fef2f2] text-[#9b2c22] border border-[#fecaca]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#9b2c22]" />
+                    <span>{healthStatus.label}</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#f7fbfa] text-[#5f736e] border border-[#dce7e3]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#5f736e]" />
+                    <span>{healthStatus.label}</span>
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-3.5 mt-3 min-w-0">
@@ -325,8 +218,12 @@ export function AdminOverviewPage() {
         </div>
       </section>
 
-      {/* 5. Seven Module Operational Cards */}
-      <section className="flex flex-col gap-3" aria-labelledby="modules-heading">
+      {/* 4. Module Operational Cards */}
+      <section
+        className="flex flex-col gap-3 dash-enter"
+        style={{ '--dash-delay': '180ms' } as CSSProperties}
+        aria-labelledby="modules-heading"
+      >
         <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
           <h2
             id="modules-heading"
@@ -348,14 +245,10 @@ export function AdminOverviewPage() {
                   <div className="w-[42px] h-[42px] rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center text-lg">
                     <TeamOutlined />
                   </div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#eaf6f1] text-[#0f7a5f] border border-[#cde9dc]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#0f7a5f]" />
-                    <span>Đã kết nối</span>
-                  </span>
                 </div>
                 <div>
                   <h3 className="text-[17.5px] font-semibold tracking-[-0.02em] text-[#12211d] m-0">
-                    Người dùng & Phân quyền
+                    Người dùng &amp; Phân quyền
                   </h3>
                   <p className="text-[14.5px] text-[#5f736e] mt-1.5 mb-0 leading-[22px]">
                     Quản lý tài khoản, khóa/mở khóa và phân quyền quản trị viên, chủ khách sạn.
@@ -380,10 +273,6 @@ export function AdminOverviewPage() {
                 <div className="w-[42px] h-[42px] rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center text-lg">
                   <ShopOutlined />
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#eaf6f1] text-[#0f7a5f] border border-[#cde9dc]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0f7a5f]" />
-                  <span>Đã kết nối</span>
-                </span>
               </div>
               <div>
                 <h3 className="text-[17.5px] font-semibold tracking-[-0.02em] text-[#12211d] m-0">
@@ -411,10 +300,6 @@ export function AdminOverviewPage() {
                 <div className="w-[42px] h-[42px] rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center text-lg">
                   <CalendarOutlined />
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#eaf6f1] text-[#0f7a5f] border border-[#cde9dc]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0f7a5f]" />
-                  <span>Đã kết nối</span>
-                </span>
               </div>
               <div>
                 <h3 className="text-[17.5px] font-semibold tracking-[-0.02em] text-[#12211d] m-0">
@@ -442,9 +327,6 @@ export function AdminOverviewPage() {
                 <div className="w-[42px] h-[42px] rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center text-lg">
                   <TagOutlined />
                 </div>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#f7fbfa] text-[#5f736e] border border-[#dce7e3]">
-                  Dữ liệu minh họa
-                </span>
               </div>
               <div>
                 <h3 className="text-[17.5px] font-semibold tracking-[-0.02em] text-[#12211d] m-0">
@@ -472,9 +354,6 @@ export function AdminOverviewPage() {
                 <div className="w-[42px] h-[42px] rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center text-lg">
                   <MessageOutlined />
                 </div>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#f7fbfa] text-[#5f736e] border border-[#dce7e3]">
-                  Dữ liệu minh họa
-                </span>
               </div>
               <div>
                 <h3 className="text-[17.5px] font-semibold tracking-[-0.02em] text-[#12211d] m-0">
@@ -502,9 +381,6 @@ export function AdminOverviewPage() {
                 <div className="w-[42px] h-[42px] rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center text-lg">
                   <CreditCardOutlined />
                 </div>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#f7fbfa] text-[#5f736e] border border-[#dce7e3]">
-                  Dữ liệu minh họa
-                </span>
               </div>
               <div>
                 <h3 className="text-[17.5px] font-semibold tracking-[-0.02em] text-[#12211d] m-0">
@@ -532,9 +408,6 @@ export function AdminOverviewPage() {
                 <div className="w-[42px] h-[42px] rounded-[11px] bg-[#eef8f5] border border-[#d6ebe5] text-[#0b5f53] flex items-center justify-center text-lg">
                   <LineChartOutlined />
                 </div>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#f7fbfa] text-[#5f736e] border border-[#dce7e3]">
-                  Dữ liệu minh họa
-                </span>
               </div>
               <div>
                 <h3 className="text-[17.5px] font-semibold tracking-[-0.02em] text-[#12211d] m-0">

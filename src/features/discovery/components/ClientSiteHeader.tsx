@@ -15,8 +15,7 @@ interface ClientSiteHeaderProps {
 
 export function ClientSiteHeader({ savedCount, onOpenMobileMenu, isMobileMenuOpen, onOpenAuthModal }: ClientSiteHeaderProps) {
   const navigate = useNavigate()
-  const { pathname, search } = useLocation()
-  const isProfile = pathname === '/account' && new URLSearchParams(search).get('section') !== 'security'
+  const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const logout = useAuthAction('logout')
   const { message } = App.useApp()
@@ -68,7 +67,7 @@ export function ClientSiteHeader({ savedCount, onOpenMobileMenu, isMobileMenuOpe
         <ClientReferenceIcon name="heart" size={20} />
         {savedCount > 0 && <span aria-hidden="true">{savedCount}</span>}
       </NavLink>
-      {session && isProfile && (
+      {session && (
         <Dropdown open={menuOpen} onOpenChange={setMenuOpen} menu={{ items, onClick: () => setMenuOpen(false) }}
           trigger={['click']} placement="bottomRight" getPopupContainer={trigger => trigger.parentElement ?? trigger}
           classNames={{ root: 'cf-account-dropdown ref-theme ref-account-dropdown' }}>
@@ -77,11 +76,6 @@ export function ClientSiteHeader({ savedCount, onOpenMobileMenu, isMobileMenuOpe
             <span className="ref-user-initial" aria-hidden="true">{avatar}</span>
           </button>
         </Dropdown>
-      )}
-      {session && !isProfile && (
-        <Link to="/account" className="ref-user-pill" aria-label={`Xem thông tin cá nhân của ${userName}`} title="Xem thông tin cá nhân">
-          <span className="ref-user-initial" aria-hidden="true">{avatar}</span>
-        </Link>
       )}
       {!session && (
         <button type="button" className="ref-user-pill" aria-label="Đăng nhập" title="Đăng nhập"
