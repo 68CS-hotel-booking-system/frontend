@@ -1,4 +1,5 @@
 import { Modal, Descriptions, Tag } from 'antd'
+import { UserOutlined } from '@ant-design/icons'
 import { formatPhoneNumber } from '@/shared/lib/format'
 import type { AdminUser } from '../model/user'
 
@@ -6,9 +7,15 @@ interface UserDetailModalProps {
   user: AdminUser | null
   open: boolean
   onClose: () => void
+  title?: string
 }
 
-export function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
+export function UserDetailModal({
+  user,
+  open,
+  onClose,
+  title = 'Thông tin người dùng',
+}: UserDetailModalProps) {
   if (!user) return null
 
   const getRoleLabel = (role: string) => {
@@ -47,17 +54,15 @@ export function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
   return (
     <Modal
       title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="material-symbols-outlined" style={{ color: '#0E6B6F', fontSize: '22px' }}>
-            account_circle
-          </span>
-          <span style={{ fontSize: '16px', fontWeight: 600 }}>Thông tin người dùng</span>
+        <div className="flex items-center gap-2">
+          <UserOutlined className="text-[#0b5f53] text-lg" aria-hidden="true" />
+          <span className="text-base font-semibold text-[#12211d]">{title}</span>
         </div>
       }
       open={open}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
     >
       <div style={{ marginTop: '16px' }}>
         <Descriptions column={1} bordered size="small">

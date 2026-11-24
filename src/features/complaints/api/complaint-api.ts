@@ -2,8 +2,12 @@ import { z } from 'zod'
 import { http } from '@/shared/api/http'
 
 export const complaintCategories = ['ROOM_CONDITION', 'SERVICE_QUALITY', 'STAFF_BEHAVIOR', 'BILLING', 'CANCELLATION_REFUND', 'OFF_PLATFORM_PAYMENT', 'OTHER'] as const
+export const complaintStatuses = ['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const
+export const complaintHistorySchema = z.object({ id: z.uuid(), actorRole: z.enum(['ADMIN', 'HOTEL_OWNER']),
+  fromStatus: z.enum(complaintStatuses), toStatus: z.enum(complaintStatuses), response: z.string(),
+  createdAt: z.iso.datetime({ offset: true }), version: z.number().int().positive() })
 export const complaintSchema = z.object({ id: z.uuid(), bookingId: z.uuid(), hotelId: z.uuid(),
-  category: z.enum(complaintCategories), content: z.string(), status: z.enum(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED']), createdAt: z.string(), updatedAt: z.string() })
+  category: z.enum(complaintCategories), content: z.string(), status: z.enum(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED']), createdAt: z.string(), updatedAt: z.string(), version: z.number().int().nonnegative(), history: z.array(complaintHistorySchema) })
 export const complaintFormSchema = z.object({ category: z.enum(complaintCategories), content: z.string().trim().min(1, 'Nhập nội dung khiếu nại.').max(2000) })
   .refine((value) => value.category !== 'OTHER' || value.content.length >= 20, { path: ['content'], message: 'Với loại Khác, mô tả cần ít nhất 20 ký tự.' })
 export type ComplaintFormValues = z.infer<typeof complaintFormSchema>
@@ -19,3 +23,5 @@ export function listMyComplaints(params: { page: number; size: number; status?: 
 export function getMyComplaint(id: string, signal?: AbortSignal) {
   return http.request(`/me/complaints/${encodeURIComponent(id)}`, { signal, schema: complaintSchema })
 }
+
+export type ComplaintData = z.infer<typeof complaintSchema>

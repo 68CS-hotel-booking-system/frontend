@@ -37,3 +37,15 @@ it('renders the checkout quote in the summary and mobile bar, with guest and tri
   expect(html).toContain('Người nhận phòng khác với người đặt')
   expect(html).toContain('Chuyến đi của bạn')
 })
+
+it('does not render a booking form for an admin even with the customer role', () => {
+  const hotelId = '11111111-1111-4111-8111-111111111111'
+  const selection = parseCheckoutSelection(hotelId, new URLSearchParams({ roomTypeId: '22222222-2222-4222-8222-222222222222', checkIn: '2099-01-10', checkOut: '2099-01-12', adults: '2' }))!
+  const html = renderToStaticMarkup(<MemoryRouter>
+    <ClientBookingCheckout selection={selection} user={{ id: hotelId, fullName: 'Admin', email: 'admin@example.test', phone: '0900000000', emailVerified: true, roles: ['ADMIN', 'CUSTOMER'] }}
+      hotelName="Khách sạn kiểm thử" roomName="Deluxe" checkInTime="14:00" checkOutTime="12:00" />
+  </MemoryRouter>)
+  expect(html).toContain('Tài khoản quản trị không được đặt phòng')
+  expect(html).not.toContain('<form')
+  expect(html).not.toContain('form="checkout-form"')
+})

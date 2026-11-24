@@ -45,11 +45,10 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
   const { message, modal } = App.useApp()
 
   function confirmCancellation(booking: BookingSummary) {
+    if (booking.status !== 'PENDING_PAYMENT' || cancel.isPending) return
     modal.confirm({
       title: 'Hủy đơn đặt phòng?',
-      content: booking.status === 'CONFIRMED'
-        ? `Đơn ${booking.bookingCode} đã được xác nhận. Phí hủy và khoản hoàn tiền áp dụng theo chính sách của đơn.`
-        : `Bạn có muốn hủy đơn ${booking.bookingCode}?`,
+      content: `Hủy đơn ${booking.bookingCode} chưa thanh toán và giải phóng phòng đang giữ? Nếu đang thanh toán qua VNPay, hãy kiểm tra giao dịch trước khi hủy.`,
       okText: 'Hủy đặt phòng',
       cancelText: 'Giữ đặt phòng',
       okButtonProps: { danger: true },
@@ -67,7 +66,6 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
           void message.success(`Đã hủy đặt phòng.${fee}${refund}`)
         } catch (error) {
           void message.error(errorMessage(error))
-          throw error
         }
       },
     })
@@ -99,7 +97,7 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
       <>
         <ul className="tr-list">
           {bookings.map(booking => <CustomerTripCard key={booking.id} booking={booking} CoverImage={CoverImage}
-            onDetails={() => setSelectedId(booking.id)} onCancel={() => confirmCancellation(booking)} />)}
+            onDetails={() => setSelectedId(booking.id)} onCancel={() => confirmCancellation(booking)} cancelling={cancel.isPending} />)}
         </ul>
         {query.isError && <ErrorState error={query.error} onRetry={() => void (query.isFetchNextPageError ? query.fetchNextPage() : query.refetch())} />}
         {query.hasNextPage && <Button className="tr-more" loading={query.isFetchingNextPage} disabled={query.isFetching && !query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>Xem thêm</Button>}
@@ -114,8 +112,8 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
   </section>
 }
 
-function CustomerTripCard({ booking, CoverImage, onDetails, onCancel }: {
-  booking: BookingSummary; CoverImage: Cover; onDetails: () => void; onCancel: () => void
+function CustomerTripCard({ booking, CoverImage, onDetails, onCancel, cancelling }: {
+  booking: BookingSummary; CoverImage: Cover; onDetails: () => void; onCancel: () => void; cancelling: boolean
 }) {
   const { hotel } = usePublicHotelDetailQuery(booking.hotelId)
   const pending = booking.status === 'PENDING_PAYMENT'
@@ -140,9 +138,9 @@ function CustomerTripCard({ booking, CoverImage, onDetails, onCancel }: {
           <p className="tr-price-note">Tổng tiền đặt phòng</p>
           {pending && booking.expiresAt && <p className="tr-deadline"><ClockCircleOutlined />Thanh toán trước {tripDateTime.format(new Date(booking.expiresAt))}</p>}
           <div className="tr-buttons">
-            {pending && <PaymentButton bookingId={booking.id} />}
+            {pending && <PaymentButton bookingId={booking.id} disabled={cancelling} />}
             <Button onClick={onDetails}>Xem chi tiết</Button>
-            {(pending || booking.status === 'CONFIRMED') && <button className="tr-link is-danger" type="button" onClick={onCancel}>Hủy đặt phòng</button>}
+            {pending && <button disabled={cancelling} className="tr-link is-danger" type="button" onClick={onCancel}>Hủy đặt phòng</button>}
           </div>
         </div>
       </div>

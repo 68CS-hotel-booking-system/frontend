@@ -81,13 +81,15 @@ it.each(['guest', 'customer', 'admin'])('hides the owner entry and registration 
   expect(state.items.some(item => item.key === 'admin')).toBe(role === 'admin')
 })
 
-it.each(['/', '/experiences', '/my-bookings', '/account?section=security'])('links the signed-in avatar directly to the profile from %s', (path) => {
+it.each(['/', '/experiences', '/my-bookings', '/account', '/account?section=security'])('opens the account dropdown menu from the signed-in avatar on %s', (path) => {
   state.session = { accessToken: 'test' }
   state.user = { id: 'user-1', fullName: 'Khách StayHub', email: 'guest@example.test' }
   const html = renderHeader(path)
-  expect(html).toContain('href="/account"')
-  expect(html).toContain('aria-label="Xem thông tin cá nhân của Khách StayHub"')
-  expect(state.items).toEqual([])
+  expect(html).toContain('aria-label="Menu tài khoản Khách StayHub"')
+  expect(html).toContain('aria-haspopup="menu"')
+  expect(state.items.map(item => item.key)).toEqual(['account', 'bookings', 'complaints', undefined, 'logout'])
+  state.items[0].onClick?.()
+  expect(state.navigate).toHaveBeenCalledWith('/account')
 })
 
 it('links experiences, services and saved stays to their own routes', () => {

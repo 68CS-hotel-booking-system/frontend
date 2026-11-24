@@ -46,3 +46,10 @@ it('renders the upcoming empty state instead of a sample trip', () => {
   expect(html).toContain('Chưa có đơn đặt phòng sắp tới')
   expect(html).not.toContain('Thanh toán qua VNPay')
 })
+
+it('does not offer cancellation for confirmed paid bookings', () => {
+  const html = renderTrips([{ ...booking, status: 'CONFIRMED' }])
+  expect(html).not.toContain('Hủy đặt phòng')
+  expect(html).not.toContain('Thanh toán qua VNPay')
+  expect(html).toContain('Xem chi tiết')
+})

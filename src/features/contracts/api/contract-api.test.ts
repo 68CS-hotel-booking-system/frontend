@@ -26,18 +26,18 @@ it('creates only the supported draft contract fields and serializes dates as ins
   respond(contract)
   const { createHotelContractDraft } = await import('./contract-api')
   await createHotelContractDraft(id, {
-    contractCode: 'a', ownerUserId: id, commissionRate: 0, commissionBasis: 'AFTER_HOTEL_DISCOUNT',
+    ownerUserId: id, commissionRate: 0, commissionBasis: 'AFTER_HOTEL_DISCOUNT',
     startsAt: '2027-01-01T07:00', endsAt: '2028-01-01T07:00',
   })
   const body = JSON.parse(fetcher.mock.calls[0][1]?.body as string)
   expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/admin/hotels/${id}/contracts`)
-  expect(body).toEqual({ contractCode: 'a', ownerUserId: id, commissionRate: 0, commissionBasis: 'AFTER_HOTEL_DISCOUNT',
+  expect(body).toEqual({ ownerUserId: id, commissionRate: 0, commissionBasis: 'AFTER_HOTEL_DISCOUNT',
     startsAt: new Date('2027-01-01T07:00').toISOString(), endsAt: new Date('2028-01-01T07:00').toISOString(), status: 'DRAFT' })
 })
 
 it('rejects equal contract instants before sending the request', async () => {
   const { createHotelContractDraft } = await import('./contract-api')
-  await expect(createHotelContractDraft(id, { contractCode: 'a', ownerUserId: id, commissionRate: 100,
+  await expect(createHotelContractDraft(id, { ownerUserId: id, commissionRate: 100,
     commissionBasis: 'BEFORE_DISCOUNT', startsAt: '2027-01-01T00:00', endsAt: '2027-01-01T00:00' })).rejects.toMatchObject({ name: 'ZodError' })
   expect(fetcher).not.toHaveBeenCalled()
 })
@@ -45,13 +45,14 @@ it('rejects equal contract instants before sending the request', async () => {
 it('creates a linked renewal draft without sending the predecessor as an editable term', async () => {
   respond(contract)
   const { createHotelContractDraft } = await import('./contract-api')
-  await createHotelContractDraft(id, { contractCode: 'renewal', ownerUserId: id, commissionRate: 10,
+  await createHotelContractDraft(id, { ownerUserId: id, commissionRate: 10,
     commissionBasis: 'AFTER_DISCOUNT', startsAt: '2027-01-01T07:00:30', endsAt: '2028-01-01T07:00:30',
     renewalOfContractId: id })
   expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/admin/hotels/${id}/contracts/${id}/renewals`)
   const body = JSON.parse(fetcher.mock.calls[0][1]?.body as string)
   expect(body.status).toBe('DRAFT')
   expect(body).not.toHaveProperty('renewalOfContractId')
+  expect(body).not.toHaveProperty('contractCode')
   expect(body.startsAt).toBe(new Date('2027-01-01T07:00:30').toISOString())
 })
 

@@ -6,9 +6,7 @@ import { HotelSearchPage } from '@/pages/public/HotelSearchPage'
 import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider, ScrollRestoration } from 'react-router'
 import {
   BarChartOutlined,
-  MessageOutlined,
   TagOutlined,
-  UserOutlined,
 } from '@ant-design/icons'
 import { AppLayout } from '@/app/layouts/AppLayout'
 import { ClientExperiences, ClientSavedStays, ClientTripServices } from '@/features/discovery'
@@ -38,6 +36,8 @@ const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage').
 const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })))
 const VerifyEmailPage = lazy(() => import('@/pages/auth/VerifyEmailPage').then(module => ({ default: module.VerifyEmailPage })))
 const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage').then(module => ({ default: module.AdminUsersPage })))
+const ComplaintsPage = lazy(() => import('@/pages/management/ComplaintsPage').then(module => ({ default: module.ComplaintsPage })))
+const CustomersPage = lazy(() => import('@/pages/management/CustomersPage').then(module => ({ default: module.CustomersPage })))
 const AdminHotelReviewRequestsPage = lazy(() => import('@/pages/admin/AdminHotelReviewRequestsPage').then(module => ({ default: module.AdminHotelReviewRequestsPage })))
 const HotelReviewRequestsPage = lazy(() => import('@/pages/management/hotels/HotelReviewRequestsPage').then(module => ({ default: module.HotelReviewRequestsPage })))
 const HotelProfileEditGuard = lazy(() => import('@/pages/management/hotels/HotelProfileEditGuard').then(module => ({ default: module.HotelProfileEditGuard })))
@@ -105,17 +105,7 @@ const router = createBrowserRouter(createRoutesFromElements(<>
           {/* CẤP 1: Các phân hệ toàn hệ thống */}
           <Route path="bookings" element={<HotelModulePage module="bookings" />} />
           <Route path="staff" element={<HotelStaffPage />} />
-          <Route
-            path="customers"
-            element={
-              <ManagementPlaceholderPage
-                kicker="DỮ LIỆU KHÁCH HÀNG"
-                title="Quản lý Khách hàng"
-                description="Tra cứu thông tin khách lưu trú, lịch sử đặt phòng và hồ sơ liên hệ khách hàng thân thiết."
-                icon={<UserOutlined />}
-              />
-            }
-          />
+          <Route path="customers" element={<CustomersPage />} />
           <Route
             path="vouchers"
             element={
@@ -127,17 +117,8 @@ const router = createBrowserRouter(createRoutesFromElements(<>
               />
             }
           />
-          <Route
-            path="complaints"
-            element={
-              <ManagementPlaceholderPage
-                kicker="DỊCH VỤ KHÁCH HÀNG"
-                title="Tiếp nhận & Xử lý Khiếu nại"
-                description="Theo dõi phản hồi, khiếu nại chất lượng phòng từ khách và cập nhật tiến độ giải quyết nhanh chóng."
-                icon={<MessageOutlined />}
-              />
-            }
-          />
+          <Route path="complaints" element={<ComplaintsPage />} />
+          <Route path="complaints/:complaintId" element={<ComplaintsPage />} />
           <Route path="finance" element={<FinanceDashboardPage />} />
           <Route
             path="reports"
@@ -151,7 +132,6 @@ const router = createBrowserRouter(createRoutesFromElements(<>
             }
           />
           <Route path="contracts" element={<HotelModulePage module="contracts" />} />
-          <Route path="financial-access" element={<HotelModulePage module="financial-access" />} />
 
           {/* Redirects từ routes cũ */}
           <Route path="management/hotels" element={<Navigate to="/hotels" replace />} />
@@ -163,7 +143,6 @@ const router = createBrowserRouter(createRoutesFromElements(<>
           <Route path="management/finance" element={<Navigate to="/finance" replace />} />
           <Route path="management/reports" element={<Navigate to="/reports" replace />} />
           <Route path="management/contracts" element={<Navigate to="/contracts" replace />} />
-          <Route path="management/financial-access" element={<Navigate to="/financial-access" replace />} />
         </Route>
 
         {/* Public / Customer Main Layout Routes */}

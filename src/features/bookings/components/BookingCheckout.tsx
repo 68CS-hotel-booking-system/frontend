@@ -9,6 +9,7 @@ import { errorMessage } from '@/shared/api/api-error'
 import { applyApiFieldErrors } from '@/shared/lib/form-errors'
 import { bookerFormSchema, localDate, type BookerForm, type PreparedBookingQuote, type StayForm } from '../api/booking-api'
 import { useBookingCheckout } from '../hooks/use-booking-checkout'
+import { AdminBookingNotice } from './AdminBookingNotice'
 
 interface Props { hotelId: string; hotelName?: string; stay?: StayForm; initialStay?: Partial<StayForm>; onStayChange?: (stay: StayForm) => void; preparedQuote?: PreparedBookingQuote | null; onQuoteInvalidated?: () => void }
 const dateLabel = (date: string) => date.split('-').reverse().join('/')
@@ -32,12 +33,13 @@ export function BookingCheckout({ hotelId, hotelName, stay: controlledStay, init
   const confirmationKey = flow.currentQuote ? JSON.stringify([hotelId, flow.currentQuote.input, current?.totalAmount, current?.currency]) : null
   const prepared = preparedQuote !== undefined
   const pending = flow.availability.isPending || flow.quote.isPending || flow.busy
+  const admin = currentUser?.roles.includes('ADMIN') === true
   function showCalendar() {
     document.getElementById('booking-calendar')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     document.querySelector<HTMLButtonElement>('#booking-calendar button[data-date]')?.focus({ preventScroll: true })
   }
   function reserve() {
-    if (!flow.validation.success || pending) return
+    if (admin || !flow.validation.success || pending) return
     if (prepared) { if (current) setConfirm(confirmationKey); return }
     if (!flow.checked) { flow.availability.mutate(stay); return }
     if (!flow.selected) return
@@ -45,6 +47,7 @@ export function BookingCheckout({ hotelId, hotelName, stay: controlledStay, init
     flow.quote.mutate(stay, { onSuccess: (result) => setConfirm(JSON.stringify([hotelId, result.input, result.quote.totalAmount, result.quote.currency])) })
   }
   const cta = flow.availability.isPending ? 'Đang kiểm tra phòng…' : flow.quote.isPending ? 'Đang lấy báo giá…' : !flow.checked ? 'Kiểm tra phòng trống' : !flow.selected ? 'Chọn hạng phòng bên dưới' : 'Đặt phòng'
+  if (admin) return <section aria-label="Đặt phòng và thanh toán"><AdminBookingNotice /></section>
   return <section className={prepared ? undefined : 'lg:col-span-5 xl:col-span-4 relative'} data-od-id="booking-rail" id="booking-rail" aria-label="Đặt phòng và thanh toán">
     <div className={prepared ? undefined : 'stay-booking-card lg:sticky lg:top-28'}>
       {flow.create.data ? <div role="status" className="stay-booking-success">

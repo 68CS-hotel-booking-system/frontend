@@ -31,7 +31,7 @@ export async function createMockHotelContractDraft(
   const created: HotelCommissionContract = {
     id: `55555555-5555-4555-8555-${String(Date.now()).slice(-12).padStart(12, '0')}`,
     hotelId,
-    contractCode: payload.contractCode,
+    contractCode: `DEMO-HD-${new Date().getFullYear()}-${String(mockContractsStore.length + 1).padStart(6, '0')}`,
     commissionPercentage: payload.commissionPercentage,
     currency: payload.currency,
     effectiveFrom: payload.effectiveFrom,

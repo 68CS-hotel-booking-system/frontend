@@ -82,6 +82,12 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
     return <Navigate to="/hotels" replace />
   }
 
+  // Các phân hệ vận hành riêng của owner vẫn được bảo vệ khi admin nhập URL trực tiếp.
+  const ownerOnlyRoute = ['/staff', '/vouchers'].some(path => location.pathname === path || location.pathname.startsWith(`${path}/`))
+  if (isAdmin && ownerOnlyRoute) {
+    return <Navigate to="/admin/overview" replace />
+  }
+
   // 8. Đã xác minh có thẩm quyền: cho phép truy cập
   return children ? <>{children}</> : <Outlet />
 }

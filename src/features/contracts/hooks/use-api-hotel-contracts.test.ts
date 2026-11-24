@@ -22,7 +22,7 @@ it('refreshes the active contract page and invalidates other pages after creatio
   const query = new QueryObserver(client, { queryKey, queryFn: () => getHotelContracts(id), staleTime: Infinity })
   const unsubscribe = query.subscribe(() => undefined)
   const mutation = new MutationObserver(client, apiContractMutationOptions(client, id))
-  await mutation.mutate({ contractCode: 'created', ownerUserId: id, commissionRate: 100, commissionBasis: 'BEFORE_DISCOUNT', startsAt: contract.startsAt, endsAt: contract.endsAt })
+  await mutation.mutate({ ownerUserId: id, commissionRate: 100, commissionBasis: 'BEFORE_DISCOUNT', startsAt: contract.startsAt, endsAt: contract.endsAt })
   expect(client.getQueryData(queryKey)).toMatchObject({ totalElements: 1, content: [contract] })
   expect(client.getQueryState(secondPageKey)?.isInvalidated).toBe(true)
   unsubscribe()
