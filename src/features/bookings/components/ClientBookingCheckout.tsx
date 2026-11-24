@@ -33,7 +33,7 @@ export function ClientBookingCheckout({ selection, user, hotelName, roomName, co
   const busy = flow.submit.isPending
   const quoteReady = flow.available && Boolean(flow.current) && !flow.quote.isFetching && !flow.quote.isError
   const admin = user.roles?.includes('ADMIN') === true
-  const disabled = admin || busy || !quoteReady || !profileComplete || !user.emailVerified || flow.needsAcceptance || flow.uncertain
+  const disabled = admin || busy || !quoteReady || !profileComplete || !user.emailVerified || flow.needsAcceptance
   const detailHref = checkoutDetailHref(selection)
   const dates = `${checkoutDate(selection.stay.checkIn)} → ${checkoutDate(selection.stay.checkOut)}`
   const guests = `${selection.stay.adults} người lớn${selection.stay.children > 0 ? `, ${selection.stay.children} trẻ em` : ''}`
@@ -87,7 +87,7 @@ export function ClientBookingCheckout({ selection, user, hotelName, roomName, co
         <p className="checkout-section-description">Thông tin này được dùng để liên hệ khi nhận phòng.</p>
         {!profileComplete && <Alert type="warning" showIcon title="Cần hoàn thiện thông tin tài khoản" description={<span>Kiểm tra họ tên, email và số điện thoại liên hệ (tối đa 20 ký tự) trước khi đặt phòng. <Link to={`/account?returnTo=${encodeURIComponent(location.pathname + location.search)}`}>Cập nhật hồ sơ</Link></span>} />}
         {!user.emailVerified && <Alert type="warning" showIcon title="Vui lòng xác minh email tài khoản trước khi đặt phòng." />}
-        <fieldset disabled={busy || flow.uncertain} aria-label="Thông tin người nhận phòng">
+        <fieldset disabled={busy} aria-label="Thông tin người nhận phòng">
           <div className="checkout-contact-fields">{(['fullName', 'email', 'phone'] as const).map(name => <label key={name} htmlFor={`checkout-${name}`}><span>{{ fullName: 'Họ và tên người nhận', phone: 'Số điện thoại liên hệ', email: 'Địa chỉ email' }[name]}</span><input {...form.register(name)} id={`checkout-${name}`} type={name === 'phone' ? 'tel' : name === 'email' ? 'email' : 'text'} readOnly={!changeGuest} autoComplete={name === 'fullName' ? 'name' : name === 'phone' ? 'tel' : 'email'} maxLength={name === 'fullName' ? 100 : name === 'phone' ? 20 : 255} aria-invalid={Boolean(form.formState.errors[name])} aria-describedby={form.formState.errors[name] ? `checkout-${name}-error` : undefined} />{form.formState.errors[name] && <span className="checkout-field-error" role="alert" id={`checkout-${name}-error`}>{form.formState.errors[name]?.message}</span>}</label>)}</div>
           <label className="checkout-checkbox"><input type="checkbox" checked={changeGuest} onChange={event => { setChangeGuest(event.target.checked); if (!event.target.checked) form.reset(profile, { keepDirtyValues: false, keepDirty: false, keepErrors: false }) }} /><span>Người nhận phòng khác với người đặt</span></label>
           <p className="checkout-muted">{changeGuest ? 'Thông tin này chỉ áp dụng cho đơn đặt phòng, không thay đổi hồ sơ tài khoản.' : 'Tích ô phía trên nếu người nhận phòng có thông tin khác.'}</p>
@@ -113,9 +113,9 @@ export function ClientBookingCheckout({ selection, user, hotelName, roomName, co
         {flow.available && flow.quote.isFetching && <p role="status">Đang cập nhật báo giá…</p>}
         {flow.available && flow.quote.isError && <Alert type="error" title="Không lấy được báo giá" description={errorMessage(flow.quote.error)} action={<button type="button" onClick={() => void flow.quote.refetch()}>Thử lại</button>} />}
         {quoteReady && flow.current && <CheckoutPriceDetails quote={flow.current} />}
-        {flow.priceChanged && quoteReady && <div className="checkout-price-changed" role="alert"><strong>Báo giá đã thay đổi</strong><p>Vui lòng kiểm tra chi tiết giá mới trước khi xác nhận.</p><label className="checkout-checkbox"><input type="checkbox" checked={!flow.needsAcceptance} disabled={busy || flow.uncertain} onChange={event => flow.acceptPrice(event.target.checked)} /><span>Tôi đồng ý với báo giá mới.</span></label></div>}
+        {flow.priceChanged && quoteReady && <div className="checkout-price-changed" role="alert"><strong>Báo giá đã thay đổi</strong><p>Vui lòng kiểm tra chi tiết giá mới trước khi xác nhận.</p><label className="checkout-checkbox"><input type="checkbox" checked={!flow.needsAcceptance} disabled={busy} onChange={event => flow.acceptPrice(event.target.checked)} /><span>Tôi đồng ý với báo giá mới.</span></label></div>}
         {flow.submit.isError && <Alert type="error" showIcon title="Chưa thể xác nhận đặt phòng" description={errorMessage(flow.submit.error)} />}
-        {flow.uncertain && <Alert type="warning" showIcon title="Chưa xác định được kết quả tạo đơn" description={<span>Kết nối bị gián đoạn sau khi gửi yêu cầu. <Link to="/my-bookings">Kiểm tra đơn đặt phòng của tôi</Link> trước khi tạo lại để tránh trùng đơn.</span>} />}
+        {flow.uncertain && <Alert type="warning" showIcon title="Chưa xác định được kết quả tạo đơn" description={<span>Kết nối bị gián đoạn sau khi gửi yêu cầu. Bạn có thể bấm xác nhận lại an toàn hoặc <Link to="/my-bookings">kiểm tra đơn đặt phòng của tôi</Link>.</span>} />}
         <button className="checkout-confirm" type="submit" form="checkout-form" disabled={disabled}>{confirmLabel}</button>
         <p className="checkout-submit-note">Xác nhận sẽ tạo đơn chờ thanh toán. Bạn chưa bị trừ tiền.</p>
       </section>

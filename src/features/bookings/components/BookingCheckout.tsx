@@ -95,7 +95,7 @@ export function BookingCheckout({ hotelId, hotelName, stay: controlledStay, init
         {flow.availability.isError && <Alert type="error" showIcon title="Không thể kiểm tra phòng" description={errorMessage(flow.availability.error)} />}
         {flow.quote.isError && <Alert type="error" showIcon title="Không thể lấy báo giá" description={errorMessage(flow.quote.error)} />}
         {flow.create.isError && <Alert type="error" showIcon title="Chưa thể xác nhận đặt phòng" description={errorMessage(flow.create.error)} />}
-        {flow.uncertain && <Alert type="warning" title="Kết nối bị gián đoạn sau khi gửi đơn" description={<Link to="/my-bookings">Kiểm tra đơn của tôi trước khi tạo lại để tránh trùng đơn.</Link>} />}
+        {flow.uncertain && <Alert type="warning" title="Kết nối bị gián đoạn sau khi gửi đơn" description={<span>Bạn có thể thử gửi lại an toàn hoặc <Link to="/my-bookings">kiểm tra đơn của tôi</Link>.</span>} />}
       </>}
     </div>
     <Modal open={confirm !== null && confirm === confirmationKey && Boolean(current) && !flow.create.data} onCancel={() => { if (!flow.create.isPending) setConfirm(null) }} footer={null} title="Xác nhận đặt phòng" className="stay-booking-modal" mask={{ closable: !flow.create.isPending }} destroyOnHidden>

@@ -20,6 +20,7 @@ export function VerifyEmailPage({ overrideToken }: VerifyEmailPageProps = {}) {
     handledRef.current = true
 
     if (result.session) {
+      void queryClient.cancelQueries()
       queryClient.clear()
       setSession(result.session)
       setAuthStatus('authenticated')
