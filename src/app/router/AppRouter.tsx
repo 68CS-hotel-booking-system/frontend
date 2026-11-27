@@ -6,7 +6,6 @@ import { HotelSearchPage } from '@/pages/public/HotelSearchPage'
 import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider, ScrollRestoration } from 'react-router'
 import {
   BarChartOutlined,
-  TagOutlined,
 } from '@ant-design/icons'
 import { AppLayout } from '@/app/layouts/AppLayout'
 import { ClientExperiences, ClientSavedStays, ClientTripServices } from '@/features/discovery'
@@ -25,6 +24,7 @@ const MyBookingsPage = lazy(() => import('@/pages/customer/MyBookingsPage').then
 const AccountSavedStaysPage = lazy(() => import('@/pages/customer/AccountSavedStaysPage').then(module => ({ default: module.AccountSavedStaysPage })))
 const MyComplaintsPage = lazy(() => import('@/pages/customer/MyComplaintsPage').then(module => ({ default: module.MyComplaintsPage })))
 const MyRefundsPage = lazy(() => import('@/pages/customer/MyRefundsPage').then(module => ({ default: module.MyRefundsPage })))
+const VouchersPage = lazy(() => import('@/pages/management/VouchersPage').then(module => ({ default: module.VouchersPage })))
 const RefundsPage = lazy(() => import('@/pages/management/RefundsPage').then(module => ({ default: module.RefundsPage })))
 const AdminLayout = lazy(() => import('@/app/layouts/AdminLayout').then(module => ({ default: module.AdminLayout })))
 const HotelWorkspaceLayout = lazy(() => import('@/app/layouts/HotelWorkspaceLayout').then(module => ({ default: module.HotelWorkspaceLayout })))
@@ -108,17 +108,7 @@ const router = createBrowserRouter(createRoutesFromElements(<>
           <Route path="bookings" element={<HotelModulePage module="bookings" />} />
           <Route path="staff" element={<HotelStaffPage />} />
           <Route path="customers" element={<CustomersPage />} />
-          <Route
-            path="vouchers"
-            element={
-              <ManagementPlaceholderPage
-                kicker="MARKETING & KHUYẾN MÃI"
-                title="Quản lý Voucher & Ưu đãi"
-                description="Tạo mã giảm giá, chương trình khuyến mãi theo mùa và thiết lập điều kiện áp dụng cho từng khách sạn."
-                icon={<TagOutlined />}
-              />
-            }
-          />
+          <Route path="vouchers" element={<VouchersPage />} />
           <Route path="complaints" element={<ComplaintsPage />} />
           <Route path="complaints/:complaintId" element={<ComplaintsPage />} />
           <Route path="finance" element={<FinanceDashboardPage />} />

@@ -167,7 +167,59 @@
         "name": "guest-reviews-compact",
         "value": "640px"
       }
-    ]
+    ],
+    "vouchers": {
+      "generatedAt": "2026-11-27T13:38:58.054694+00:00",
+      "scope": {
+        "feature": "vouchers",
+        "designFile": "src/features/vouchers/DESIGN.md",
+        "authority": "Incumbent Operate extension; voucher management and existing customer checkout only.",
+        "sources": [
+          "src/features/vouchers/vouchers.css",
+          "src/features/vouchers/components/VoucherPanel.tsx",
+          "src/features/vouchers/components/CheckoutVoucher.tsx",
+          "src/pages/management/VouchersPage.tsx",
+          "src/features/bookings/components/ClientBookingCheckout.tsx"
+        ]
+      },
+      "breakpoints": [
+        {
+          "name": "voucher-compact",
+          "value": "640px",
+          "purpose": "One-column form and detail grid; stacked hotel selector; wrapping row title."
+        }
+      ],
+      "focus": {
+        "management": "2px solid #0b5f53",
+        "customer": "2px solid #c91f4b",
+        "outlineOffset": "3px"
+      },
+      "elevation": "No voucher-specific shadows; retain incumbent Ant Design Modal.",
+      "typography": "Native controls inherit their container font. Global body uses Plus Jakarta Sans; shell Ant Design providers use Be Vietnam Pro. No voucher font override.",
+      "behavior": [
+        "Owner selects a hotel; creates a percent or fixed voucher with immutable terms.",
+        "Money fields use text inputs with numeric inputMode; datetime-local represents Vietnam time and is converted from +07:00 to UTC.",
+        "Pause/resume sends expectedVersion; conflict locks actions until explicit reload.",
+        "Customer applies/removes one code through the server quote; quote error disables confirmation.",
+        "Pending or uncertain booking blocks code changes."
+      ],
+      "review": {
+        "decision": "SHIP",
+        "evidencePrefix": ".impeccable/review/voucher-confirm-",
+        "viewports": [
+          "1440",
+          "390"
+        ],
+        "surfaces": [
+          "owner-form",
+          "owner-list",
+          "checkout-discount",
+          "checkout-error"
+        ],
+        "additionalEvidence": ".impeccable/review/voucher-confirm-owner-form-bottom-390.png",
+        "note": "Review evidence retained by the parent workflow; no new visual review performed during documentation."
+      }
+    }
   },
   "components": [
     {
@@ -207,6 +259,43 @@
       "description": "Minh họa textarea quản lý; production dùng Input.TextArea của provider hiện hành.",
       "html": "<label class=\"ds-gr-field\">Phản hồi công khai của khách sạn<textarea rows=\"4\" maxlength=\"2000\"></textarea></label>",
       "css": ".ds-gr-field{display:grid;gap:12px;font:600 14px \"Be Vietnam Pro\",sans-serif;color:#12211d}.ds-gr-field textarea{font:400 14px \"Be Vietnam Pro\",sans-serif;line-height:1.7;padding:4px 11px;border:1px solid #dce7e3;border-radius:10px;color:#12211d;resize:vertical}.ds-gr-field textarea:focus-visible{outline:2px solid #0b5f53;outline-offset:2px}.ds-gr-field textarea:disabled{opacity:.6}"
+    },
+    {
+      "name": "Voucher: Owner text input",
+      "kind": "input",
+      "refersTo": "voucher-owner-input",
+      "description": "Native labeled money input; no numeric spinner.",
+      "html": "<label class=\"ds-voucher-field\">Số tiền giảm (VND)<input type=\"text\" inputmode=\"numeric\" value=\"100000\"></label>",
+      "css": ".ds-voucher-field{display:grid;gap:8px;color:#12211d;font:600 14px var(--font-sans,sans-serif)}.ds-voucher-field input{min-height:42px;padding:8px 12px;border:1px solid #b7c6c1;border-radius:8px;background:#fff;color:#12211d;font:inherit}.ds-voucher-field input:focus-visible{outline:2px solid #0b5f53;outline-offset:3px}.ds-voucher-field input[aria-invalid=\"true\"]{border-color:#a51c30}.ds-voucher-field input:disabled{opacity:.6}"
+    },
+    {
+      "name": "Voucher: Hotel selector",
+      "kind": "input",
+      "description": "Labeled native selector within the management context.",
+      "html": "<label class=\"ds-voucher-hotel\">Khách sạn<select><option>Khách sạn đã chọn</option></select></label>",
+      "css": ".ds-voucher-hotel{display:grid;gap:12px;color:#12211d;font:14px var(--font-sans,sans-serif)}.ds-voucher-hotel select{width:min(100%,400px);min-height:42px;padding:8px 12px;border:1px solid #b7c6c1;border-radius:8px;background:#fff;color:#12211d;font:inherit}.ds-voucher-hotel select:focus-visible{outline:2px solid #0b5f53;outline-offset:3px}"
+    },
+    {
+      "name": "Voucher: Unboxed list row",
+      "kind": "custom",
+      "description": "Divider-led terms and occupied-use summary; no individual card.",
+      "html": "<article class=\"ds-voucher-row\"><header><h3>Ưu đãi đặt phòng</h3><span>Đang áp dụng</span></header><code>SUMMER10</code><dl><div><dt>Mức giảm</dt><dd>10%</dd></div><div><dt>Lượt đã giữ / dùng</dt><dd>2 / 100</dd></div></dl></article>",
+      "css": ".ds-voucher-row{padding:24px 0;border-bottom:1px solid #dce7e3;color:#12211d;font:14px var(--font-sans,sans-serif)}.ds-voucher-row header{display:flex;justify-content:space-between;gap:16px;align-items:start;flex-wrap:wrap}.ds-voucher-row h3{margin:0 0 8px}.ds-voucher-row code{font-size:16px;overflow-wrap:anywhere}.ds-voucher-row dl{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;margin:20px 0}.ds-voucher-row dt{color:#52635d;margin-bottom:4px}.ds-voucher-row dd{margin:0;font-variant-numeric:tabular-nums}@media(max-width:640px){.ds-voucher-row dl{grid-template-columns:1fr}}"
+    },
+    {
+      "name": "Voucher: Checkout apply action",
+      "kind": "button",
+      "refersTo": "voucher-checkout-action",
+      "description": "Customer outline action; production disabled during quote refresh or pending/uncertain booking.",
+      "html": "<button class=\"ds-voucher-apply\" type=\"button\">Áp dụng</button>",
+      "css": ".ds-voucher-apply{border:1px solid #c91f4b;border-radius:8px;color:#a6173d;background:#fff;padding:10px 12px;font:14px var(--font-sans,sans-serif);white-space:nowrap;cursor:pointer}.ds-voucher-apply:focus-visible{outline:2px solid #c91f4b;outline-offset:3px}.ds-voucher-apply:disabled{opacity:.55;cursor:default}"
+    },
+    {
+      "name": "Voucher: Checkout code field",
+      "kind": "input",
+      "description": "Single code input with nearby apply action and local validation text.",
+      "html": "<label class=\"ds-voucher-code\">Mã của khách sạn<input type=\"text\" maxlength=\"30\" autocomplete=\"off\"></label>",
+      "css": ".ds-voucher-code{display:grid;gap:8px;font:14px var(--font-sans,sans-serif)}.ds-voucher-code input{min-width:0;border:1px solid #b9aeb1;border-radius:8px;padding:10px;font:inherit}.ds-voucher-code input:focus-visible{outline:2px solid #c91f4b;outline-offset:3px}.ds-voucher-code input:disabled{opacity:.6}"
     }
   ],
   "narrative": {

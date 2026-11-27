@@ -50,6 +50,7 @@ export const bookerFormSchema = z.object({
 })
 export type BookerForm = z.infer<typeof bookerFormSchema>
 export interface QuoteInput {
+  voucherCode?: string
   checkIn: string; checkOut: string
   items: { roomTypeId: string; quantity: number; adults: number; children: number }[]
 }
