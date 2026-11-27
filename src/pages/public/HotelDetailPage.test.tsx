@@ -41,7 +41,8 @@ it('shows room cards and server prices while ignoring multiple-room links', () =
   expect(priceCard).toContain('Ngày lưu trú và số khách')
   expect(priceCard).toContain('client-guest-trigger')
   expect(markup).toContain('aria-controls="stay-booking"')
-  expect(markup).toContain('Chưa có thông tin đánh giá.')
+  expect(markup).toContain('Đánh giá từ khách lưu trú')
+  expect(markup).toContain('Lọc theo điểm')
 })
 
 it('shows an invalid hotel ID without falling back to a sample hotel', () => {

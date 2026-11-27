@@ -1,9 +1,10 @@
 import { useState, type ComponentType } from 'react'
 import { CalendarOutlined, ClockCircleOutlined, EnvironmentOutlined, ReloadOutlined, TeamOutlined } from '@ant-design/icons'
-import { Button } from 'antd'
+import { Button, Modal } from 'antd'
 import { Link } from 'react-router'
 import { usePublicHotelDetailQuery } from '@/features/hotels'
 import { PaymentButton } from '@/features/payments'
+import { BookingGuestReview } from '@/features/guest-reviews'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
 import { type BookingSummary } from '../api/booking-api'
@@ -41,6 +42,7 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
     .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
   const currentTab = tabs.find(item => item.id === tab)!
   const [cancellationId, setCancellationId] = useState<string>()
+  const [reviewBookingId, setReviewBookingId] = useState<string>()
 
   return <section className="customer-trips" aria-label="Danh sách đặt phòng">
     <div className="tr-toolbar">
@@ -68,7 +70,7 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
       <>
         <ul className="tr-list">
           {bookings.map(booking => <CustomerTripCard key={booking.id} booking={booking} CoverImage={CoverImage}
-            onDetails={() => setSelectedId(booking.id)} onCancel={() => setCancellationId(booking.id)} cancelling={Boolean(cancellationId)} />)}
+            onDetails={() => setSelectedId(booking.id)} onCancel={() => setCancellationId(booking.id)} onReview={() => setReviewBookingId(booking.id)} cancelling={Boolean(cancellationId)} />)}
         </ul>
         {query.isError && <ErrorState error={query.error} onRetry={() => void (query.isFetchNextPageError ? query.fetchNextPage() : query.refetch())} />}
         {query.hasNextPage && <Button className="tr-more" loading={query.isFetchingNextPage} disabled={query.isFetching && !query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>Xem thêm</Button>}
@@ -81,11 +83,14 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
     </div>}
     <BookingDetailsDrawer selectedId={selectedId} onClose={() => setSelectedId(undefined)} />
     {cancellationId && <CancellationDialog bookingId={cancellationId} onClose={() => setCancellationId(undefined)} />}
+    <Modal open={Boolean(reviewBookingId)} title="Đánh giá kỳ nghỉ" onCancel={() => setReviewBookingId(undefined)} footer={null} destroyOnHidden maskClosable={false}>
+      {reviewBookingId && <BookingGuestReview bookingId={reviewBookingId} />}
+    </Modal>
   </section>
 }
 
-function CustomerTripCard({ booking, CoverImage, onDetails, onCancel, cancelling }: {
-  booking: BookingSummary; CoverImage: Cover; onDetails: () => void; onCancel: () => void; cancelling: boolean
+function CustomerTripCard({ booking, CoverImage, onDetails, onCancel, onReview, cancelling }: {
+  booking: BookingSummary; CoverImage: Cover; onDetails: () => void; onCancel: () => void; onReview: () => void; cancelling: boolean
 }) {
   const { hotel } = usePublicHotelDetailQuery(booking.hotelId)
   const pending = booking.status === 'PENDING_PAYMENT'
@@ -112,6 +117,7 @@ function CustomerTripCard({ booking, CoverImage, onDetails, onCancel, cancelling
           <div className="tr-buttons">
             {pending && <PaymentButton bookingId={booking.id} disabled={cancelling} />}
             <Button onClick={onDetails}>Xem chi tiết</Button>
+            {booking.status === 'CHECKED_OUT' && <Button onClick={onReview}>Đánh giá kỳ nghỉ</Button>}
             {(pending || booking.status === 'CONFIRMED') && <button disabled={cancelling} className="tr-link is-danger" type="button" onClick={onCancel}>Hủy đặt phòng</button>}
             {cancelled && <Link to={`/my-refunds?bookingId=${encodeURIComponent(booking.id)}`}>Theo dõi hoàn tiền</Link>}
           </div>
