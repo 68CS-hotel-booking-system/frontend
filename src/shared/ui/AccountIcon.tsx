@@ -2,11 +2,11 @@ import {
   ArrowLeftOutlined, CalendarOutlined, CheckCircleOutlined, CheckOutlined, DesktopOutlined, DownOutlined,
   EyeInvisibleOutlined, EyeOutlined, HeartOutlined, HomeOutlined, KeyOutlined,
   LockOutlined, LogoutOutlined, MessageOutlined, SafetyOutlined, TeamOutlined, UploadOutlined,
-  UserOutlined, WarningOutlined,
+  UserOutlined, WarningOutlined, TransactionOutlined,
 } from '@ant-design/icons'
 
 export type AccountIconName = 'back' | 'user' | 'lock' | 'lock-small' | 'bed' | 'heart' | 'chat' | 'staff' | 'logout' | 'calendar' | 'down' | 'eye' | 'upload' | 'badge-check' | 'shield'
-  | 'eye-off' | 'check' | 'device' | 'key' | 'alert-triangle'
+  | 'eye-off' | 'check' | 'device' | 'key' | 'alert-triangle' | 'refund'
 
 const icons = {
   back: ArrowLeftOutlined, user: UserOutlined, lock: LockOutlined, 'lock-small': LockOutlined,
@@ -14,6 +14,7 @@ const icons = {
   logout: LogoutOutlined, calendar: CalendarOutlined, down: DownOutlined, eye: EyeOutlined,
   upload: UploadOutlined, 'badge-check': CheckCircleOutlined, shield: SafetyOutlined, 'eye-off': EyeInvisibleOutlined,
   check: CheckOutlined, device: DesktopOutlined, key: KeyOutlined, 'alert-triangle': WarningOutlined,
+  refund: TransactionOutlined,
 } satisfies Record<AccountIconName, typeof UserOutlined>
 
 export function AccountIcon({ name }: { name: AccountIconName }) {

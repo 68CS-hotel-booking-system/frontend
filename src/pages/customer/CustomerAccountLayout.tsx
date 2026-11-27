@@ -8,7 +8,7 @@ import '@/shared/styles/account.css'
 import '@/shared/styles/customer-account-reference.css'
 
 interface CustomerAccountLayoutProps {
-  section: 'profile' | 'security' | 'bookings' | 'complaints' | 'saved'
+  section: 'profile' | 'security' | 'bookings' | 'complaints' | 'refunds' | 'saved'
   title: string
   description: string
   mobileDescription?: string
@@ -38,6 +38,7 @@ export function CustomerAccountLayout({
     { key: 'bookings', label: 'Đặt phòng của tôi', icon: 'bed', href: '/my-bookings' },
     { key: 'saved', label: 'Chỗ nghỉ đã lưu', icon: 'heart', href: '/account/saved-stays' },
     { key: 'complaints', label: 'Khiếu nại của tôi', icon: 'chat', href: '/my-complaints' },
+    { key: 'refunds', label: 'Hoàn tiền của tôi', icon: 'refund', href: '/my-refunds' },
   ]
 
   async function handleLogout() {

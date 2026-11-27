@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-27T04:15:22Z",
+  "title": "Design System: StayHub Refunds",
+  "extensions": {
+    "colorMeta": {
+      "management-primary": {"role":"primary","displayName":"Management green","tonalRamp":["oklch(15% 0.06 175)","oklch(25% 0.06 175)","oklch(35% 0.06 175)","oklch(45% 0.06 175)","oklch(55% 0.06 175)","oklch(70% 0.06 175)","oklch(85% 0.06 175)","oklch(95% 0.06 175)"]},
+      "customer-accent": {"role":"primary","displayName":"Customer rose","tonalRamp":["oklch(15% 0.14 10)","oklch(25% 0.14 10)","oklch(35% 0.14 10)","oklch(45% 0.14 10)","oklch(55% 0.14 10)","oklch(70% 0.14 10)","oklch(85% 0.14 10)","oklch(95% 0.14 10)"]},
+      "surface": {"role":"neutral","displayName":"White surface","tonalRamp":["oklch(15% 0 0)","oklch(25% 0 0)","oklch(35% 0 0)","oklch(45% 0 0)","oklch(55% 0 0)","oklch(70% 0 0)","oklch(85% 0 0)","oklch(95% 0 0)"]},
+      "management-canvas": {"role":"neutral","displayName":"Management canvas","tonalRamp":["oklch(15% 0.005 170)","oklch(25% 0.005 170)","oklch(35% 0.005 170)","oklch(45% 0.005 170)","oklch(55% 0.005 170)","oklch(70% 0.005 170)","oklch(85% 0.005 170)","oklch(95% 0.005 170)"]},
+      "management-ink": {"role":"neutral","displayName":"Management ink","tonalRamp":["oklch(15% 0.02 170)","oklch(25% 0.02 170)","oklch(35% 0.02 170)","oklch(45% 0.02 170)","oklch(55% 0.02 170)","oklch(70% 0.02 170)","oklch(85% 0.02 170)","oklch(95% 0.02 170)"]},
+      "pending-text": {"role":"semantic","displayName":"Pending amber text","tonalRamp":["oklch(15% 0.1 60)","oklch(25% 0.1 60)","oklch(35% 0.1 60)","oklch(45% 0.1 60)","oklch(55% 0.1 60)","oklch(70% 0.1 60)","oklch(85% 0.1 60)","oklch(95% 0.1 60)"]},
+      "completed-text": {"role":"semantic","displayName":"Completed green text","tonalRamp":["oklch(15% 0.1 135)","oklch(25% 0.1 135)","oklch(35% 0.1 135)","oklch(45% 0.1 135)","oklch(55% 0.1 135)","oklch(70% 0.1 135)","oklch(85% 0.1 135)","oklch(95% 0.1 135)"]},
+      "history-secondary": {"role":"neutral","displayName":"History secondary","tonalRamp":["oklch(15% 0.02 160)","oklch(25% 0.02 160)","oklch(35% 0.02 160)","oklch(45% 0.02 160)","oklch(55% 0.02 160)","oklch(70% 0.02 160)","oklch(85% 0.02 160)","oklch(95% 0.02 160)"]},
+      "history-divider": {"role":"neutral","displayName":"History divider","tonalRamp":["oklch(15% 0.01 160)","oklch(25% 0.01 160)","oklch(35% 0.01 160)","oklch(45% 0.01 160)","oklch(55% 0.01 160)","oklch(70% 0.01 160)","oklch(85% 0.01 160)","oklch(95% 0.01 160)"]}
+    },
+    "typographyMeta": {
+      "body":{"displayName":"Inherited shell sans","purpose":"Vietnamese interface labels and financial details; use the active Ant Design provider."},
+      "booking-title":{"displayName":"Booking title","purpose":"Compact booking identity in the detail drawer."},
+      "amount":{"displayName":"Refund total","purpose":"Largest financial figure in the drawer, with tabular numerals."}
+    },
+    "shadows": [{"name":"shared-surface","value":"0 2px 8px -2px rgba(20, 20, 19, 0.05), 0 1px 3px -1px rgba(20, 20, 19, 0.03)","purpose":"Existing shared surface card; no feature-specific shadow system."}],
+    "breakpoints": [{"name":"refund-mobile","value":"640px"}]
+  },
+  "components": [
+    {
+      "name":"Management primary action","kind":"button","refersTo":"button-management","description":"Existing Ant Design treatment for admin refund actions; live controls retain Ant Design states.",
+      "html":"<button class=\"ds-refund-primary\">Bắt đầu xử lý</button>",
+      "css":".ds-refund-primary{font:600 14px 'Be Vietnam Pro',sans-serif;background:#0b5f53;color:#fff;border:1px solid #0b5f53;border-radius:10px;min-height:40px;padding:4px 15px;cursor:pointer}.ds-refund-primary:hover{filter:brightness(1.08)}.ds-refund-primary:focus-visible{outline:2px solid #0b5f53;outline-offset:3px}.ds-refund-primary:active{filter:brightness(.9)}.ds-refund-primary:disabled{opacity:.5;cursor:default}"
+    },
+    {
+      "name":"Booking navigation","kind":"nav","description":"Underlined booking-code button opens refund detail; color inherits the existing primary CSS variable.",
+      "html":"<button class=\"ds-refund-link\" type=\"button\">BK20260001</button>",
+      "css":".ds-refund-link{cursor:pointer;border:0;background:none;padding:0;color:var(--color-primary,#0b5f53);text-decoration:underline;text-underline-offset:3px;font:600 14px 'Be Vietnam Pro',sans-serif}.ds-refund-link:hover{text-decoration-thickness:2px}.ds-refund-link:focus-visible{outline:2px solid currentColor;outline-offset:4px}.ds-refund-link:active{opacity:.85}"
+    },
+    {
+      "name":"Pending status","kind":"chip","refersTo":"tag-pending","description":"Noninteractive semantic status label with the scoped contrast correction.",
+      "html":"<span class=\"ds-refund-pending\">Chờ hoàn tiền</span>",
+      "css":".ds-refund-pending{display:inline-block;font:12px/20px 'Be Vietnam Pro',sans-serif;color:#944600;background:#fff7e6;border-radius:4px;padding:0 7px}"
+    },
+    {
+      "name":"Completed status","kind":"chip","refersTo":"tag-completed","description":"Noninteractive completed label; text and Ant Design semantic tint carry the result together.",
+      "html":"<span class=\"ds-refund-completed\">Đã hoàn tiền</span>",
+      "css":".ds-refund-completed{display:inline-block;font:12px/20px 'Be Vietnam Pro',sans-serif;color:#236b09;background:#f6ffed;border-radius:4px;padding:0 7px}"
+    },
+    {
+      "name":"Refund note field","kind":"input","description":"Labeled admin textarea; the live form uses Ant Design validation and disabled states.",
+      "html":"<label class=\"ds-refund-label\" for=\"ds-refund-note\">Ghi chú hiển thị cho khách</label><textarea class=\"ds-refund-note\" id=\"ds-refund-note\" rows=\"4\" maxlength=\"1000\"></textarea>",
+      "css":".ds-refund-label{display:block;margin-bottom:12px;font:14px 'Be Vietnam Pro',sans-serif;color:#12211d}.ds-refund-note{display:block;width:100%;font:14px/1.6 'Be Vietnam Pro',sans-serif;color:#12211d;background:#fff;border:1px solid #dce7e3;border-radius:10px;padding:4px 11px}.ds-refund-note:hover{border-color:#0b5f53}.ds-refund-note:focus-visible{outline:2px solid #0b5f53;outline-offset:2px}.ds-refund-note:disabled{background:#f4f8f7;opacity:.65}"
+    },
+    {
+      "name":"Management working surface","kind":"card","description":"Shared bordered panel used around the management queue.",
+      "html":"<section class=\"ds-refund-surface\"><strong>Danh sách hoàn tiền</strong><p>Đơn / Khách sạn · Số tiền hoàn · Trạng thái</p></section>",
+      "css":".ds-refund-surface{font:14px/1.6 'Be Vietnam Pro',sans-serif;color:#12211d;background:var(--bg-surface,#fff);border:1px solid var(--border-subtle,#E6E1D6);border-radius:var(--radius-xl,12px);padding:28px;box-shadow:var(--shadow-card,0 2px 8px -2px rgba(20,20,19,.05),0 1px 3px -1px rgba(20,20,19,.03));min-width:0;overflow:hidden}.ds-refund-surface p{margin:12px 0 0}@media(max-width:640px){.ds-refund-surface{padding:16px}}"
+    },
+    {
+      "name":"Dated refund history","kind":"custom","refersTo":"refund-history","description":"Compact chronological evidence; amounts and notes remain ordinary readable text.",
+      "html":"<ol class=\"ds-refund-history\"><li><strong>Ghi nhận yêu cầu hoàn tiền</strong><time datetime=\"2026-11-27T00:00:00Z\">07:00:00 27/11/2026</time></li><li><strong>Đang xử lý</strong><time datetime=\"2026-11-27T01:00:00Z\">08:00:00 27/11/2026</time><p>Đã tiếp nhận và liên hệ người đặt.</p></li></ol>",
+      "css":".ds-refund-history{list-style:none;margin:0 0 24px;padding:0;font:14px/1.6 'Be Vietnam Pro',sans-serif;color:#12211d;overflow-wrap:anywhere}.ds-refund-history li{display:grid;gap:8px;padding:16px 0;border-bottom:1px solid #dce7e3}.ds-refund-history time{color:#52635d}.ds-refund-history p{margin:0;white-space:pre-wrap}"
+    }
+  ],
+  "narrative": {
+    "northStar":"Readable refund ledger",
+    "overview":"This is code-led evidence for an incumbent app expansion in Operate mode, limited to the refund workspace and its cancellation entry point. The phrase above describes the implemented financial hierarchy; it is not a new project identity or an approved visual comp. Management retains its green Ant Design shell; customer pages retain the rose account shell. Both present the same refund facts with clear amounts, status labels, and dated history.",
+    "keyCharacteristics":["Quiet white surfaces with restrained shell accents.","Tabular amounts and explicit Vietnamese status labels.","A compact queue with a separate detail drawer.","Processing controls appear only when the server grants permission."],
+    "rules":[{"name":"The Explicit Status Rule","body":"Always pair the semantic tag color with the readable Vietnamese status label in both queue and detail.","section":"colors"},{"name":"The Stable Amount Rule","body":"Reuse the shared money formatter and tabular numerals for every refund amount; preserve currency in queue, detail, and cancellation confirmation.","section":"typography"}],
+    "dos":["Do preserve the active management or customer shell when reusing refund components.","Do keep amounts, status labels, and dated processing history readable together.","Do show the quoted amount and Vietnam-localized cutoff before confirming cancellation.","Do keep owner and customer progress views read-only and follow server-granted processing permission."],
+    "donts":["Don't use tag color as the only expression of refund status.","Don't present cancellation success or refund-request creation as money already returned.","Don't shrink the table's financial columns to fit mobile; retain inner scrolling and its hint.","Don't derive a global brand or redesign unrelated screens from these scoped conventions."]
+  }
+}

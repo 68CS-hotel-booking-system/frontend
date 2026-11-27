@@ -24,6 +24,8 @@ const HotelModulePage = lazy(() => import('@/pages/management/HotelModulePage').
 const MyBookingsPage = lazy(() => import('@/pages/customer/MyBookingsPage').then(module => ({ default: module.MyBookingsPage })))
 const AccountSavedStaysPage = lazy(() => import('@/pages/customer/AccountSavedStaysPage').then(module => ({ default: module.AccountSavedStaysPage })))
 const MyComplaintsPage = lazy(() => import('@/pages/customer/MyComplaintsPage').then(module => ({ default: module.MyComplaintsPage })))
+const MyRefundsPage = lazy(() => import('@/pages/customer/MyRefundsPage').then(module => ({ default: module.MyRefundsPage })))
+const RefundsPage = lazy(() => import('@/pages/management/RefundsPage').then(module => ({ default: module.RefundsPage })))
 const AdminLayout = lazy(() => import('@/app/layouts/AdminLayout').then(module => ({ default: module.AdminLayout })))
 const HotelWorkspaceLayout = lazy(() => import('@/app/layouts/HotelWorkspaceLayout').then(module => ({ default: module.HotelWorkspaceLayout })))
 const ProfilePage = lazy(() => import('@/pages/customer/ProfilePage').then(module => ({ default: module.ProfilePage })))
@@ -120,6 +122,7 @@ const router = createBrowserRouter(createRoutesFromElements(<>
           <Route path="complaints" element={<ComplaintsPage />} />
           <Route path="complaints/:complaintId" element={<ComplaintsPage />} />
           <Route path="finance" element={<FinanceDashboardPage />} />
+          <Route path="refunds" element={<RefundsPage />} />
           <Route
             path="reports"
             element={
@@ -155,6 +158,7 @@ const router = createBrowserRouter(createRoutesFromElements(<>
             <Route path="my-bookings" element={<MyBookingsPage />} />
             <Route path="account/saved-stays" element={<AccountSavedStaysPage />} />
             <Route path="my-complaints" element={<MyComplaintsPage />} />
+            <Route path="my-refunds" element={<MyRefundsPage />} />
           </Route>
           <Route index element={<StayVibeHomePage />} />
           <Route path="explore" element={<HotelSearchPage />} />

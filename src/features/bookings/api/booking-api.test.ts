@@ -80,6 +80,16 @@ it('posts customer cancellation and preserves the backend fee and pending refund
   expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/bookings/${roomId}/cancel`)
   expect(fetcher.mock.calls[0][1]).toMatchObject({ method: 'POST', signal: expect.any(AbortSignal) })
 })
+  it('loads a server cancellation quote and binds paid cancellation to its version and refund amount', async () => {
+    const quote = { canCancel: true, message: 'Hoàn 100%', expectedVersion: 4, refundAmount: 1000000, currency: 'VND', cutoff: '2030-01-10T07:00:00Z' }
+    response(quote)
+    const { getCancellationQuote, cancelCustomerBooking } = await import('./booking-api')
+    expect(await getCancellationQuote(roomId)).toEqual(quote)
+    expect(fetcher.mock.calls[0][0]).toBe(`/api/v1/bookings/${roomId}/cancellation`)
+    response({ status: 'CANCELLED', currency: 'VND', cancellation: { cancellationFeeAmount: 0, refundAmount: 1000000, refundStatus: 'PENDING' } })
+    await cancelCustomerBooking(roomId, undefined, { expectedVersion: quote.expectedVersion, expectedRefundAmount: quote.refundAmount })
+    expect(JSON.parse(fetcher.mock.calls[1][1]?.body as string)).toEqual({ expectedVersion: 4, expectedRefundAmount: 1000000 })
+  })
 it('propagates price conflicts rather than reporting a successful order', async () => {
   fetcher.mockResolvedValue(new Response(JSON.stringify({ code: 'QUOTE_CHANGED', detail: 'Giá đã thay đổi.' }), { status: 409 }))
   const { createBooking } = await import('./booking-api')

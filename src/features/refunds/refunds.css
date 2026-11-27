@@ -1,0 +1,33 @@
+.refund-workspace { min-width: 0; }
+.refund-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; margin-bottom: 16px; }
+.refund-filter { display: grid; gap: 6px; min-width: 180px; }
+.refund-toolbar .ant-input-search { flex: 1; min-width: 180px; max-width: 420px; }
+.refund-link { cursor: pointer; border: 0; background: none; padding: 0; color: var(--color-primary, #0b5f53); text-decoration: underline; text-underline-offset: 3px; font: inherit; font-weight: 600; }
+.refund-link:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.refund-money, .refund-total { font-variant-numeric: tabular-nums; }
+.refund-workspace .refund-status-PENDING, .refund-detail .refund-status-PENDING { color: #944600 !important; }
+.refund-workspace .refund-status-COMPLETED, .refund-detail .refund-status-COMPLETED { color: #236b09 !important; }
+.refund-total { font-size: 26px; font-weight: 650; margin: 12px 0 24px; }
+.refund-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.refund-heading h2 { margin: 0; font-size: 20px; }
+.refund-detail { overflow-wrap: anywhere; }
+.refund-detail h3 { margin-top: 28px; margin-bottom: 12px; }
+.refund-form { display: grid; gap: 12px; border-top: 1px solid var(--border-color, #dce7e3); padding-top: 12px; margin: 24px 0; }
+.refund-form h3, .refund-form p { margin: 0; }
+.refund-form [role=alert] { color: #a51c30; }
+.refund-prose { white-space: pre-wrap; }
+.refund-history { list-style: none; margin: 0 0 24px; padding: 0; }
+.refund-history li { display: grid; gap: 8px; padding: 16px 0; border-bottom: 1px solid #dce7e3; }
+.refund-history p { margin: 0; }
+.refund-history time, .refund-detail .ant-descriptions-item-label { color: #52635d; }
+.refund-detail > a { display: inline-block; margin-top: 16px; }
+.refund-workspace .ant-select-placeholder, .refund-workspace input::placeholder { color: #64716e; }
+.customer-account-shell .refund-workspace { margin-top: 16px; }
+.refund-mobile-hint { display: none; }
+@media (max-width: 640px) {
+  .refund-toolbar { align-items: stretch; }
+  .refund-filter { width: 100%; }
+  .refund-toolbar .ant-input-search { max-width: none; }
+  .refund-mobile-hint { display: block; font-size: 13px; }
+  .refund-workspace .surface-card { padding: 16px; }
+}

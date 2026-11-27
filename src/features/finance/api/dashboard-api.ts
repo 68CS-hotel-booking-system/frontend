@@ -5,6 +5,7 @@ const amount = z.number().int().nonnegative().safe()
 export const dashboardSchema = z.object({
   bookingCount: amount, bookedAmount: amount, collectedAmount: amount, completedAmount: amount,
   platformAmount: amount, ownerAmount: amount, missingCommissionCount: amount,
+  pendingRefundAmount: amount, refundedAmount: amount, netCollectedAmount: amount,
   hotels: z.array(z.object({
     hotelId: z.uuid(), hotelName: z.string(), contractStatus: z.string(),
     endsAt: z.string().nullable(), acceptingBookings: z.boolean(),
