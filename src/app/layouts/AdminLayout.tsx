@@ -1,6 +1,6 @@
 import '@/shared/styles/admin-dashboard.css'
 import { useEffect, useMemo, useState } from 'react'
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
+import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router'
 import {
   ArrowLeftOutlined,
   CloseOutlined,
@@ -16,7 +16,7 @@ import {
 } from '@ant-design/icons'
 import { App, ConfigProvider, Dropdown, Tooltip, type MenuProps } from 'antd'
 import { errorMessage } from '@/shared/api/api-error'
-import { useAuthAction, useCurrentUser } from '@/features/auth'
+import { useAuthAction, useCurrentUser, useWorkplaces } from '@/features/auth'
 import { MAIN_NAV_GROUPS } from '@/config/navigation.config'
 import { formatRoleLabel } from '@/shared/lib/format'
 
@@ -30,18 +30,30 @@ export function AdminLayout() {
   const logout = useAuthAction('logout')
   const { message } = App.useApp()
   const { currentUser, isAdmin, isOwner } = useCurrentUser()
+  const { isStaff, staffRoles } = useWorkplaces()
 
   const isOwnerOnly = Boolean(
     !isAdmin && (isOwner || currentUser?.roles?.includes('HOTEL_OWNER')),
   )
+  const isStaffOnly = Boolean(!isAdmin && !isOwnerOnly && isStaff)
 
   // Danh mục menu điều hướng tùy biến theo vai trò người dùng từ file cấu hình duy nhất
   const navGroups = useMemo(() => {
+    if (isStaffOnly) {
+      return MAIN_NAV_GROUPS.filter((g) => !g.adminOnly)
+        .map((g) => ({
+          ...g,
+          items: g.items.filter((item) =>
+            Boolean(item.staffRoles?.some((role) => staffRoles.includes(role))),
+          ),
+        }))
+        .filter((g) => g.items.length > 0)
+    }
     return MAIN_NAV_GROUPS.filter((g) => (isAdmin ? true : !g.adminOnly)).map((g) => ({
       ...g,
       items: g.items.filter((item) => (!item.adminOnly || isAdmin) && (!item.ownerOnly || isOwnerOnly)),
     }))
-  }, [isAdmin, isOwnerOnly])
+  }, [isAdmin, isOwnerOnly, isStaffOnly, staffRoles])
 
   // Trạng thái đang ở trong ngữ cảnh 1 khách sạn cụ thể (/hotels/:hotelId/*)
   const isHotelWorkspace =
@@ -96,8 +108,11 @@ export function AdminLayout() {
   const userFullName =
     currentUser?.fullName || (currentUser?.email ? currentUser.email.split('@')[0] : 'Tài khoản')
   const userEmail = currentUser?.email || ''
-  const userRoles =
-    currentUser?.roles && currentUser.roles.length > 0 ? currentUser.roles : ['ADMIN']
+  const userRoles = isStaffOnly
+    ? staffRoles
+    : currentUser?.roles && currentUser.roles.length > 0
+      ? currentUser.roles
+      : ['ADMIN']
   const userInitials =
     userFullName
       .split(' ')
@@ -194,6 +209,10 @@ export function AdminLayout() {
   // Sidebar width: khi thu gọn thì chỉ 68px và chỉ hiện logo; khi mở rộng thì 264px
   const isCollapsed =
     !mobileDrawerOpen && (userCollapsed !== null ? userCollapsed : isHotelWorkspace)
+
+  if (isStaffOnly && (location.pathname === '/admin/overview' || location.pathname === '/admin')) {
+    return <Navigate to="/bookings" replace />
+  }
 
   return (
     <ConfigProvider

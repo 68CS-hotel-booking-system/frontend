@@ -119,6 +119,7 @@ describe('AdminRouteGuard component', () => {
       version: 1,
       roles: ['USER'],
     })
+    qc.setQueryData(['auth', 'workplaces', '11111111-1111-4111-8111-111111111111'], [])
 
     const markup = renderToStaticMarkup(
       <MemoryRouter initialEntries={['/admin/overview']}>
@@ -235,6 +236,48 @@ describe('AdminRouteGuard component', () => {
       </MemoryRouter>,
     )
     expect(markup).not.toContain('admin-content')
+  })
+
+  it('allows hotel staff with active workplace into /bookings while redirecting away from /vouchers', () => {
+    setSession(tokens)
+    const qc = new QueryClient()
+    const staffId = '44444444-4444-4444-8444-444444444444'
+    qc.setQueryData(['auth', 'current-user', 'test-token'], {
+      id: staffId,
+      email: 'letan@stayhub.vn',
+      fullName: 'Lễ Tân',
+      phone: null,
+      status: 'ACTIVE',
+      emailVerified: true,
+      version: 1,
+      roles: ['CUSTOMER'],
+    })
+    qc.setQueryData(['auth', 'workplaces', staffId], [
+      { hotelId: '11111111-1111-4111-8111-111111111111', hotelName: 'Biển Xanh', memberRole: 'RECEPTIONIST' },
+    ])
+
+    const allowedHtml = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/bookings']}>
+        <QueryClientProvider client={qc}>
+          <AdminRouteGuard>
+            <div data-testid="bookings-area">Vận hành đặt phòng</div>
+          </AdminRouteGuard>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+    expect(allowedHtml).toContain('bookings-area')
+
+    const deniedVoucherHtml = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/vouchers']}>
+        <QueryClientProvider client={qc}>
+          <AdminRouteGuard>
+            <div data-testid="vouchers-area">Voucher</div>
+          </AdminRouteGuard>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+    expect(deniedVoucherHtml).not.toContain('vouchers-area')
+    qc.clear()
   })
 })
 

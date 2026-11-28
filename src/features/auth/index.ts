@@ -25,4 +25,6 @@ export { resetVerifyEmailRegistry, executeEmailVerification, mapVerifyEmailError
 export { useSession, useSessionIdentity, useAuthStatus } from './hooks/use-session'
 export { restoreSession, broadcastAuth } from './model/session-manager'
 export { useCurrentUser } from './hooks/use-current-user'
+export { useWorkplaces } from './hooks/use-workplaces'
+export { getMyWorkplaces, type Workplace, type WorkplaceRole } from './api/workplaces-api'
 export { ADMIN_LOGIN_PHOTO } from './assets/admin-login-photo'

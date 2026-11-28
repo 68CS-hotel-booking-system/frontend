@@ -59,11 +59,23 @@ describe('admin login screen', () => {
   it('denies a verified non-admin and offers another account without exposing dashboard content', () => {
     setSession(session)
     client.setQueryData(key, { ...account, roles: ['USER'] })
+    client.setQueryData(['auth', 'workplaces', account.id], [])
     const html = render()
     expect(html).toContain('Tài khoản chưa có quyền quản trị')
     expect(html).toContain('member@example.com')
     expect(html).toContain('Đăng nhập bằng tài khoản khác')
     expect(html).not.toContain('type="password"')
+  })
+
+  it('allows a verified hotel staff member with active workplace to proceed', () => {
+    setSession(session)
+    client.setQueryData(key, { ...account, roles: ['CUSTOMER'] })
+    client.setQueryData(['auth', 'workplaces', account.id], [
+      { hotelId: '22222222-2222-4222-8222-222222222222', hotelName: 'Khách sạn Biển Xanh', memberRole: 'RECEPTIONIST' },
+    ])
+    const html = render()
+    expect(html).not.toContain('Tài khoản chưa có quyền quản trị')
+    expect(html).toContain('Đang xác minh quyền truy cập')
   })
 
   it('allows a verified hotel owner to proceed without denial warning', () => {

@@ -28,6 +28,7 @@ export interface MainNavItem {
   icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>
   adminOnly?: boolean
   ownerOnly?: boolean
+  staffRoles?: ('HOTEL_MANAGER' | 'RECEPTIONIST')[]
   exact?: boolean
   matchPrefix?: string
 }
@@ -70,12 +71,13 @@ export const MAIN_NAV_GROUPS: MainNavGroup[] = [
   {
     title: 'Quản lý cơ sở & Vận hành',
     items: [
-      { key: 'staff', label: 'Nhân sự khách sạn', to: '/staff', icon: TeamOutlined, ownerOnly: true },
+      { key: 'staff', label: 'Nhân sự khách sạn', to: '/staff', icon: TeamOutlined, ownerOnly: true, staffRoles: ['HOTEL_MANAGER'] },
       {
         key: 'hotels',
         label: 'Khách sạn',
         to: '/hotels',
         icon: ShopOutlined,
+        staffRoles: ['HOTEL_MANAGER', 'RECEPTIONIST'],
         matchPrefix: '/hotels',
       },
       {
@@ -83,6 +85,7 @@ export const MAIN_NAV_GROUPS: MainNavGroup[] = [
         label: 'Đặt phòng',
         to: '/bookings',
         icon: CalendarOutlined,
+        staffRoles: ['HOTEL_MANAGER', 'RECEPTIONIST'],
       },
       {
         key: 'customers',
