@@ -80,6 +80,8 @@ export function AdminLayout() {
     currentPageTitle = 'Voucher & Ưu đãi'
   } else if (location.pathname.includes('/complaints')) {
     currentPageTitle = 'Khiếu nại'
+  } else if (location.pathname.includes('/refunds')) {
+    currentPageTitle = 'Hoàn tiền'
   } else if (location.pathname.includes('/finance')) {
     currentPageTitle = 'Quản lý doanh thu'
   } else if (location.pathname.includes('/reports')) {

@@ -1,14 +1,14 @@
 import { useState, type ComponentType } from 'react'
 import { CalendarOutlined, ClockCircleOutlined, EnvironmentOutlined, ReloadOutlined, TeamOutlined } from '@ant-design/icons'
-import { App, Button } from 'antd'
+import { Button, Modal } from 'antd'
 import { Link } from 'react-router'
 import { usePublicHotelDetailQuery } from '@/features/hotels'
 import { PaymentButton } from '@/features/payments'
-import { errorMessage } from '@/shared/api/api-error'
+import { BookingGuestReview } from '@/features/guest-reviews'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
-import { cancelCustomerBooking, type BookingSummary } from '../api/booking-api'
-import { useBookingAction } from '../hooks/use-bookings'
+import { type BookingSummary } from '../api/booking-api'
+import { CancellationDialog } from './CancellationDialog'
 import { tripGroups, useCustomerTrips } from '../hooks/use-customer-trips'
 import { bookingStatusLabels } from '../model/booking-display'
 import { checkoutDate, checkoutMoney } from '../model/client-checkout'
@@ -41,35 +41,8 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
   const bookings = [...new Map(query.data?.pages.flatMap(page => page.flatMap(({ result }) => result.content.map(booking => [booking.id, booking] as const)))).values()]
     .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
   const currentTab = tabs.find(item => item.id === tab)!
-  const cancel = useBookingAction(cancelCustomerBooking)
-  const { message, modal } = App.useApp()
-
-  function confirmCancellation(booking: BookingSummary) {
-    if (booking.status !== 'PENDING_PAYMENT' || cancel.isPending) return
-    modal.confirm({
-      title: 'Hủy đơn đặt phòng?',
-      content: `Hủy đơn ${booking.bookingCode} chưa thanh toán và giải phóng phòng đang giữ? Nếu đang thanh toán qua VNPay, hãy kiểm tra giao dịch trước khi hủy.`,
-      okText: 'Hủy đặt phòng',
-      cancelText: 'Giữ đặt phòng',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          const result = await cancel.mutateAsync(booking.id)
-          if (result.status === 'EXPIRED') {
-            void message.info('Đơn đã hết hạn thanh toán.')
-            return
-          }
-          const { cancellationFeeAmount, refundAmount, refundStatus } = result.cancellation
-          const fee = cancellationFeeAmount ? ` Phí hủy: ${checkoutMoney(cancellationFeeAmount, result.currency)}.` : ''
-          const refund = refundAmount && refundStatus === 'PENDING'
-            ? ` Khoản hoàn ${checkoutMoney(refundAmount, result.currency)} đang chờ xử lý.` : ''
-          void message.success(`Đã hủy đặt phòng.${fee}${refund}`)
-        } catch (error) {
-          void message.error(errorMessage(error))
-        }
-      },
-    })
-  }
+  const [cancellationId, setCancellationId] = useState<string>()
+  const [reviewBookingId, setReviewBookingId] = useState<string>()
 
   return <section className="customer-trips" aria-label="Danh sách đặt phòng">
     <div className="tr-toolbar">
@@ -97,7 +70,7 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
       <>
         <ul className="tr-list">
           {bookings.map(booking => <CustomerTripCard key={booking.id} booking={booking} CoverImage={CoverImage}
-            onDetails={() => setSelectedId(booking.id)} onCancel={() => confirmCancellation(booking)} cancelling={cancel.isPending} />)}
+            onDetails={() => setSelectedId(booking.id)} onCancel={() => setCancellationId(booking.id)} onReview={() => setReviewBookingId(booking.id)} cancelling={Boolean(cancellationId)} />)}
         </ul>
         {query.isError && <ErrorState error={query.error} onRetry={() => void (query.isFetchNextPageError ? query.fetchNextPage() : query.refetch())} />}
         {query.hasNextPage && <Button className="tr-more" loading={query.isFetchingNextPage} disabled={query.isFetching && !query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>Xem thêm</Button>}
@@ -109,11 +82,15 @@ export function CustomerBookingList({ CoverImage }: { CoverImage: Cover }) {
       <Link to="/explore" className="tr-explore">Khám phá chỗ nghỉ</Link>
     </div>}
     <BookingDetailsDrawer selectedId={selectedId} onClose={() => setSelectedId(undefined)} />
+    {cancellationId && <CancellationDialog bookingId={cancellationId} onClose={() => setCancellationId(undefined)} />}
+    <Modal open={Boolean(reviewBookingId)} title="Đánh giá kỳ nghỉ" onCancel={() => setReviewBookingId(undefined)} footer={null} destroyOnHidden maskClosable={false}>
+      {reviewBookingId && <BookingGuestReview bookingId={reviewBookingId} />}
+    </Modal>
   </section>
 }
 
-function CustomerTripCard({ booking, CoverImage, onDetails, onCancel, cancelling }: {
-  booking: BookingSummary; CoverImage: Cover; onDetails: () => void; onCancel: () => void; cancelling: boolean
+function CustomerTripCard({ booking, CoverImage, onDetails, onCancel, onReview, cancelling }: {
+  booking: BookingSummary; CoverImage: Cover; onDetails: () => void; onCancel: () => void; onReview: () => void; cancelling: boolean
 }) {
   const { hotel } = usePublicHotelDetailQuery(booking.hotelId)
   const pending = booking.status === 'PENDING_PAYMENT'
@@ -140,7 +117,9 @@ function CustomerTripCard({ booking, CoverImage, onDetails, onCancel, cancelling
           <div className="tr-buttons">
             {pending && <PaymentButton bookingId={booking.id} disabled={cancelling} />}
             <Button onClick={onDetails}>Xem chi tiết</Button>
-            {pending && <button disabled={cancelling} className="tr-link is-danger" type="button" onClick={onCancel}>Hủy đặt phòng</button>}
+            {booking.status === 'CHECKED_OUT' && <Button onClick={onReview}>Đánh giá kỳ nghỉ</Button>}
+            {(pending || booking.status === 'CONFIRMED') && <button disabled={cancelling} className="tr-link is-danger" type="button" onClick={onCancel}>Hủy đặt phòng</button>}
+            {cancelled && <Link to={`/my-refunds?bookingId=${encodeURIComponent(booking.id)}`}>Theo dõi hoàn tiền</Link>}
           </div>
         </div>
       </div>

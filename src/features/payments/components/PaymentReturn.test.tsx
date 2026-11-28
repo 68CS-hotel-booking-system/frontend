@@ -28,8 +28,9 @@ function renderReturn() {
   </MemoryRouter>)
 }
 
-it('shows confirmed booking only when the server confirms it', () => {
-  expect(renderReturn()).toContain('đơn đặt phòng đã được xác nhận')
+it('reports receipt and links to current booking status without claiming a cancelled booking is still confirmed', () => {
+  expect(renderReturn()).toContain('Xem trạng thái hiện tại của đơn')
+  expect(renderReturn()).toContain('href="/my-bookings"')
 })
 
 it('warns against paying again when money was received without a booking confirmation', () => {
@@ -37,6 +38,8 @@ it('warns against paying again when money was received without a booking confirm
   const html = renderReturn()
   expect(html).toContain('Đã nhận thanh toán, cần kiểm tra đặt phòng')
   expect(html).toContain('không thanh toán lại')
+  expect(html).toContain('Yêu cầu hoàn tiền đã được tạo')
+  expect(html).toContain('/my-refunds?bookingId=')
   expect(html).not.toContain('đơn đặt phòng đã được xác nhận')
 })
 

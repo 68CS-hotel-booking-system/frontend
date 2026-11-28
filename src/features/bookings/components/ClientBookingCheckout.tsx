@@ -7,6 +7,7 @@ import { ApiError, errorMessage } from '@/shared/api/api-error'
 import { bookerFormSchema, type BookerForm } from '../api/booking-api'
 import { checkoutContacts, checkoutDetailHref, checkoutDate, checkoutMoney, type CheckoutSelection } from '../model/client-checkout'
 import { useClientCheckout } from '../hooks/use-client-checkout'
+import { CheckoutVoucher } from '@/features/vouchers'
 import { CheckoutPriceDetails } from './CheckoutPriceDetails'
 import { AdminBookingNotice } from './AdminBookingNotice'
 import '@/shared/styles/checkout-reference.css'
@@ -106,6 +107,7 @@ export function ClientBookingCheckout({ selection, user, hotelName, roomName, co
         {coverUrl && coverUrl !== failedCover && <img src={coverUrl} alt="" width="72" height="72" onError={() => setFailedCover(coverUrl)} />}
         <div><span>Khách sạn</span><h2>{hotelName}</h2><p>{roomName}</p></div>
       </div>
+      <CheckoutVoucher appliedCode={flow.voucherCode} disabled={busy || flow.uncertain || flow.quote.isFetching} onApply={flow.changeVoucher} onRemove={() => flow.changeVoucher(undefined)} />
       <section className="checkout-quote" aria-live="polite">
         {flow.availability.isFetching && <p role="status">Đang kiểm tra phòng trống…</p>}
         {flow.availability.isError && <Alert type="error" title="Không kiểm tra được phòng trống" description={errorMessage(flow.availability.error)} action={<button type="button" onClick={() => void flow.availability.refetch()}>Thử lại</button>} />}

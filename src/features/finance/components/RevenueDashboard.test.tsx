@@ -19,7 +19,7 @@ it('shows completed commission, legacy exclusions and the expired hotel without 
   const client = new QueryClient()
   client.setQueryData(['finance-dashboard', 'owner-test'], {
     bookingCount: 2, bookedAmount: 4000000, collectedAmount: 4000000, completedAmount: 2000000,
-    platformAmount: 200000, ownerAmount: 1800000, missingCommissionCount: 1,
+    platformAmount: 200000, ownerAmount: 1800000, missingCommissionCount: 1, pendingRefundAmount: 500000, refundedAmount: 1000000, netCollectedAmount: 3000000,
     contracts: [contractRevenue],
     hotels: [{ hotelId: '11111111-1111-4111-8111-111111111111', hotelName: 'Khách sạn thử',
       contractStatus: 'EXPIRED', endsAt: '2026-11-01T00:00:00Z', acceptingBookings: false }],
@@ -35,13 +35,15 @@ it('shows completed commission, legacy exclusions and the expired hotel without 
   expect(html).toContain('HD-2026-000001')
   expect(html).toContain('10%')
   expect(html).not.toContain('Đã thanh toán cho owner')
+  expect(html).toContain('Đã hoàn cho khách')
+  expect(html).toContain('3.000.000')
 })
 
 it('identifies platform commission as admin revenue rather than all collected guest money', () => {
   access.isAdmin = true
   const client = new QueryClient()
   client.setQueryData(['finance-dashboard', 'admin-test'], { bookingCount: 1, bookedAmount: 2000000, collectedAmount: 2000000,
-    completedAmount: 2000000, platformAmount: 200000, ownerAmount: 1800000, missingCommissionCount: 0, hotels: [], contracts: [contractRevenue] })
+    completedAmount: 2000000, platformAmount: 200000, ownerAmount: 1800000, missingCommissionCount: 0, pendingRefundAmount: 0, refundedAmount: 0, netCollectedAmount: 2000000, hotels: [], contracts: [contractRevenue] })
   const html = renderToStaticMarkup(<MemoryRouter><QueryClientProvider client={client}><RevenueDashboard /></QueryClientProvider></MemoryRouter>)
   const metric = html.slice(html.indexOf('Doanh thu nền tảng'), html.indexOf('Khoản owner được hưởng'))
   expect(metric).toContain('200.000')
@@ -53,7 +55,7 @@ it('identifies platform commission as admin revenue rather than all collected gu
 it('retains former owner revenue without exposing management links for a transferred hotel', () => {
   const client = new QueryClient()
   client.setQueryData(['finance-dashboard', 'owner-test'], { bookingCount: 1, bookedAmount: 2000000, collectedAmount: 2000000,
-    completedAmount: 2000000, platformAmount: 200000, ownerAmount: 1800000, missingCommissionCount: 0, hotels: [], contracts: [{ ...contractRevenue, canManageHotel: false }] })
+    completedAmount: 2000000, platformAmount: 200000, ownerAmount: 1800000, missingCommissionCount: 0, pendingRefundAmount: 0, refundedAmount: 0, netCollectedAmount: 2000000, hotels: [], contracts: [{ ...contractRevenue, canManageHotel: false }] })
   const html = renderToStaticMarkup(<MemoryRouter><QueryClientProvider client={client}><RevenueDashboard /></QueryClientProvider></MemoryRouter>)
   expect(html).toContain('HD-2026-000001')
   expect(html).toContain('Khách sạn đã đổi chủ')
@@ -72,7 +74,7 @@ it('renders SVG donut, cashflow, contract split and hotel sales status charts fr
     completedAmount: 5000000,
     platformAmount: 500000,
     ownerAmount: 4500000,
-    missingCommissionCount: 0,
+    missingCommissionCount: 0, pendingRefundAmount: 0, refundedAmount: 0, netCollectedAmount: 6000000,
     contracts: [contractRevenue],
     hotels: [
       { hotelId: '11111111-1111-4111-8111-111111111111', hotelName: 'Khách sạn A', contractStatus: 'EFFECTIVE', endsAt: '2026-12-31T00:00:00Z', acceptingBookings: true },

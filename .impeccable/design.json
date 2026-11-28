@@ -1,0 +1,340 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-27T08:30:27.575Z",
+  "title": "Design System: StayHub Guest Reviews",
+  "extensions": {
+    "scope": {
+      "feature": "guest-reviews",
+      "designFile": "src/features/guest-reviews/DESIGN.md",
+      "authority": "Incumbent implementation; scoped Operate conventions only."
+    },
+    "colorMeta": {
+      "customer-accent": {
+        "role": "primary",
+        "displayName": "customer-accent",
+        "canonical": "#c91f4b",
+        "tonalRamp": [
+          "oklch(15% 0.2008 13.9)",
+          "oklch(26% 0.2008 13.9)",
+          "oklch(38% 0.2008 13.9)",
+          "oklch(49% 0.2008 13.9)",
+          "oklch(61% 0.2008 13.9)",
+          "oklch(72% 0.2008 13.9)",
+          "oklch(84% 0.2008 13.9)",
+          "oklch(95% 0.2008 13.9)"
+        ],
+        "rampPurpose": "Generated preview only; no new implementation tokens."
+      },
+      "management-primary": {
+        "role": "primary",
+        "displayName": "management-primary",
+        "canonical": "#0b5f53",
+        "tonalRamp": [
+          "oklch(15% 0.0759 179.8)",
+          "oklch(26% 0.0759 179.8)",
+          "oklch(38% 0.0759 179.8)",
+          "oklch(49% 0.0759 179.8)",
+          "oklch(61% 0.0759 179.8)",
+          "oklch(72% 0.0759 179.8)",
+          "oklch(84% 0.0759 179.8)",
+          "oklch(95% 0.0759 179.8)"
+        ],
+        "rampPurpose": "Generated preview only; no new implementation tokens."
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "surface",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.9)",
+          "oklch(26% 0.0000 89.9)",
+          "oklch(38% 0.0000 89.9)",
+          "oklch(49% 0.0000 89.9)",
+          "oklch(61% 0.0000 89.9)",
+          "oklch(72% 0.0000 89.9)",
+          "oklch(84% 0.0000 89.9)",
+          "oklch(95% 0.0000 89.9)"
+        ],
+        "rampPurpose": "Generated preview only; no new implementation tokens."
+      },
+      "reply-surface": {
+        "role": "neutral",
+        "displayName": "reply-surface",
+        "canonical": "#f4f8f7",
+        "tonalRamp": [
+          "oklch(15% 0.0044 179.7)",
+          "oklch(26% 0.0044 179.7)",
+          "oklch(38% 0.0044 179.7)",
+          "oklch(49% 0.0044 179.7)",
+          "oklch(61% 0.0044 179.7)",
+          "oklch(72% 0.0044 179.7)",
+          "oklch(84% 0.0044 179.7)",
+          "oklch(95% 0.0044 179.7)"
+        ],
+        "rampPurpose": "Generated preview only; no new implementation tokens."
+      },
+      "management-ink": {
+        "role": "neutral",
+        "displayName": "management-ink",
+        "canonical": "#12211d",
+        "tonalRamp": [
+          "oklch(15% 0.0221 175.6)",
+          "oklch(26% 0.0221 175.6)",
+          "oklch(38% 0.0221 175.6)",
+          "oklch(49% 0.0221 175.6)",
+          "oklch(61% 0.0221 175.6)",
+          "oklch(72% 0.0221 175.6)",
+          "oklch(84% 0.0221 175.6)",
+          "oklch(95% 0.0221 175.6)"
+        ],
+        "rampPurpose": "Generated preview only; no new implementation tokens."
+      },
+      "secondary-text": {
+        "role": "neutral",
+        "displayName": "secondary-text",
+        "canonical": "#52635d",
+        "tonalRamp": [
+          "oklch(15% 0.0228 171.9)",
+          "oklch(26% 0.0228 171.9)",
+          "oklch(38% 0.0228 171.9)",
+          "oklch(49% 0.0228 171.9)",
+          "oklch(61% 0.0228 171.9)",
+          "oklch(72% 0.0228 171.9)",
+          "oklch(84% 0.0228 171.9)",
+          "oklch(95% 0.0228 171.9)"
+        ],
+        "rampPurpose": "Generated preview only; no new implementation tokens."
+      },
+      "divider": {
+        "role": "neutral",
+        "displayName": "divider",
+        "canonical": "#dce7e3",
+        "tonalRamp": [
+          "oklch(15% 0.0129 172.3)",
+          "oklch(26% 0.0129 172.3)",
+          "oklch(38% 0.0129 172.3)",
+          "oklch(49% 0.0129 172.3)",
+          "oklch(61% 0.0129 172.3)",
+          "oklch(72% 0.0129 172.3)",
+          "oklch(84% 0.0129 172.3)",
+          "oklch(95% 0.0129 172.3)"
+        ],
+        "rampPurpose": "Generated preview only; no new implementation tokens."
+      },
+      "control-border": {
+        "role": "neutral",
+        "displayName": "control-border",
+        "canonical": "#b7c6c1",
+        "tonalRamp": [
+          "oklch(15% 0.0178 173.9)",
+          "oklch(26% 0.0178 173.9)",
+          "oklch(38% 0.0178 173.9)",
+          "oklch(49% 0.0178 173.9)",
+          "oklch(61% 0.0178 173.9)",
+          "oklch(72% 0.0178 173.9)",
+          "oklch(84% 0.0178 173.9)",
+          "oklch(95% 0.0178 173.9)"
+        ],
+        "rampPurpose": "Generated preview only; no new implementation tokens."
+      },
+      "field-error": {
+        "role": "neutral",
+        "displayName": "field-error",
+        "canonical": "#a51c30",
+        "tonalRamp": [
+          "oklch(15% 0.1703 20.0)",
+          "oklch(26% 0.1703 20.0)",
+          "oklch(38% 0.1703 20.0)",
+          "oklch(49% 0.1703 20.0)",
+          "oklch(61% 0.1703 20.0)",
+          "oklch(72% 0.1703 20.0)",
+          "oklch(84% 0.1703 20.0)",
+          "oklch(95% 0.1703 20.0)"
+        ],
+        "rampPurpose": "Generated preview only; no new implementation tokens."
+      }
+    },
+    "typographyMeta": {
+      "body": {
+        "displayName": "Nội dung",
+        "purpose": "Kế thừa font shell; nội dung nhận xét giữ xuống dòng và giới hạn 72ch."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": [
+      {
+        "name": "guest-reviews-compact",
+        "value": "640px"
+      }
+    ],
+    "vouchers": {
+      "generatedAt": "2026-11-27T13:38:58.054694+00:00",
+      "scope": {
+        "feature": "vouchers",
+        "designFile": "src/features/vouchers/DESIGN.md",
+        "authority": "Incumbent Operate extension; voucher management and existing customer checkout only.",
+        "sources": [
+          "src/features/vouchers/vouchers.css",
+          "src/features/vouchers/components/VoucherPanel.tsx",
+          "src/features/vouchers/components/CheckoutVoucher.tsx",
+          "src/pages/management/VouchersPage.tsx",
+          "src/features/bookings/components/ClientBookingCheckout.tsx"
+        ]
+      },
+      "breakpoints": [
+        {
+          "name": "voucher-compact",
+          "value": "640px",
+          "purpose": "One-column form and detail grid; stacked hotel selector; wrapping row title."
+        }
+      ],
+      "focus": {
+        "management": "2px solid #0b5f53",
+        "customer": "2px solid #c91f4b",
+        "outlineOffset": "3px"
+      },
+      "elevation": "No voucher-specific shadows; retain incumbent Ant Design Modal.",
+      "typography": "Native controls inherit their container font. Global body uses Plus Jakarta Sans; shell Ant Design providers use Be Vietnam Pro. No voucher font override.",
+      "behavior": [
+        "Owner selects a hotel; creates a percent or fixed voucher with immutable terms.",
+        "Money fields use text inputs with numeric inputMode; datetime-local represents Vietnam time and is converted from +07:00 to UTC.",
+        "Pause/resume sends expectedVersion; conflict locks actions until explicit reload.",
+        "Customer applies/removes one code through the server quote; quote error disables confirmation.",
+        "Pending or uncertain booking blocks code changes."
+      ],
+      "review": {
+        "decision": "SHIP",
+        "evidencePrefix": ".impeccable/review/voucher-confirm-",
+        "viewports": [
+          "1440",
+          "390"
+        ],
+        "surfaces": [
+          "owner-form",
+          "owner-list",
+          "checkout-discount",
+          "checkout-error"
+        ],
+        "additionalEvidence": ".impeccable/review/voucher-confirm-owner-form-bottom-390.png",
+        "note": "Review evidence retained by the parent workflow; no new visual review performed during documentation."
+      }
+    }
+  },
+  "components": [
+    {
+      "name": "Guest reviews: Management action",
+      "kind": "button",
+      "description": "Nút trong provider quản lý; giữ trạng thái Ant Design khi triển khai.",
+      "html": "<button class=\"ds-gr-action\">Lưu phản hồi</button>",
+      "css": ".ds-gr-action{font:600 14px \"Be Vietnam Pro\",sans-serif;min-height:40px;padding:4px 15px;border:1px solid #0b5f53;border-radius:10px;background:#0b5f53;color:#fff;cursor:pointer}.ds-gr-action:hover{background:#08473e}.ds-gr-action:focus-visible{outline:2px solid #0b5f53;outline-offset:3px}.ds-gr-action:disabled{opacity:.6;cursor:default}"
+    },
+    {
+      "name": "Guest reviews: Rating radio",
+      "kind": "custom",
+      "refersTo": "guest-rating-option",
+      "description": "Radio form khách hàng; lựa chọn giữ nền hồng và focus rõ.",
+      "html": "<label class=\"ds-gr-rating\"><input type=\"radio\" name=\"ds-gr-score\" checked><span>5 sao</span></label>",
+      "css": ".ds-gr-rating{position:relative;font:600 14px \"Be Vietnam Pro\",sans-serif;cursor:pointer}.ds-gr-rating input{position:absolute;opacity:0;width:1px;height:1px}.ds-gr-rating span{display:inline-block;border:1px solid #b7c6c1;border-radius:10px;padding:10px 12px}.ds-gr-rating input:checked+span{background:#c91f4b;border-color:#c91f4b;color:white}.ds-gr-rating input:focus-visible+span{outline:2px solid #c91f4b;outline-offset:3px}.ds-gr-rating input:disabled+span{opacity:.6;cursor:default}"
+    },
+    {
+      "name": "Guest reviews: Rating filter",
+      "kind": "input",
+      "refersTo": "guest-filter",
+      "description": "Select có nhãn; native control kế thừa font, focus xanh từ feature.",
+      "html": "<label class=\"ds-gr-filter\">Điểm đánh giá<select><option>Tất cả điểm</option><option>5 sao</option><option>4 sao</option></select></label>",
+      "css": ".ds-gr-filter{display:grid;gap:8px;font:14px \"Be Vietnam Pro\",sans-serif;color:#12211d}.ds-gr-filter select{min-height:40px;padding:8px 32px 8px 12px;border:1px solid #b7c6c1;border-radius:10px;background:#fff;color:#12211d;font:inherit}.ds-gr-filter select:focus-visible{outline:2px solid #0b5f53;outline-offset:2px}"
+    },
+    {
+      "name": "Guest reviews: Owner reply",
+      "kind": "card",
+      "refersTo": "guest-owner-reply",
+      "description": "Khối phản hồi công khai trong cùng nhận xét.",
+      "html": "<section class=\"ds-gr-reply\" aria-label=\"Phản hồi của khách sạn\"><strong>Phản hồi từ khách sạn</strong><p>Cảm ơn bạn đã chia sẻ trải nghiệm.</p></section>",
+      "css": ".ds-gr-reply{background:#f4f8f7;border-radius:12px;padding:16px;margin:16px 0;color:#12211d;font:14px \"Be Vietnam Pro\",sans-serif;overflow-wrap:anywhere}.ds-gr-reply p{white-space:pre-wrap;line-height:1.7;max-width:72ch;margin:12px 0 8px}"
+    },
+    {
+      "name": "Guest reviews: Labeled textarea",
+      "kind": "input",
+      "description": "Minh họa textarea quản lý; production dùng Input.TextArea của provider hiện hành.",
+      "html": "<label class=\"ds-gr-field\">Phản hồi công khai của khách sạn<textarea rows=\"4\" maxlength=\"2000\"></textarea></label>",
+      "css": ".ds-gr-field{display:grid;gap:12px;font:600 14px \"Be Vietnam Pro\",sans-serif;color:#12211d}.ds-gr-field textarea{font:400 14px \"Be Vietnam Pro\",sans-serif;line-height:1.7;padding:4px 11px;border:1px solid #dce7e3;border-radius:10px;color:#12211d;resize:vertical}.ds-gr-field textarea:focus-visible{outline:2px solid #0b5f53;outline-offset:2px}.ds-gr-field textarea:disabled{opacity:.6}"
+    },
+    {
+      "name": "Voucher: Owner text input",
+      "kind": "input",
+      "refersTo": "voucher-owner-input",
+      "description": "Native labeled money input; no numeric spinner.",
+      "html": "<label class=\"ds-voucher-field\">Số tiền giảm (VND)<input type=\"text\" inputmode=\"numeric\" value=\"100000\"></label>",
+      "css": ".ds-voucher-field{display:grid;gap:8px;color:#12211d;font:600 14px var(--font-sans,sans-serif)}.ds-voucher-field input{min-height:42px;padding:8px 12px;border:1px solid #b7c6c1;border-radius:8px;background:#fff;color:#12211d;font:inherit}.ds-voucher-field input:focus-visible{outline:2px solid #0b5f53;outline-offset:3px}.ds-voucher-field input[aria-invalid=\"true\"]{border-color:#a51c30}.ds-voucher-field input:disabled{opacity:.6}"
+    },
+    {
+      "name": "Voucher: Hotel selector",
+      "kind": "input",
+      "description": "Labeled native selector within the management context.",
+      "html": "<label class=\"ds-voucher-hotel\">Khách sạn<select><option>Khách sạn đã chọn</option></select></label>",
+      "css": ".ds-voucher-hotel{display:grid;gap:12px;color:#12211d;font:14px var(--font-sans,sans-serif)}.ds-voucher-hotel select{width:min(100%,400px);min-height:42px;padding:8px 12px;border:1px solid #b7c6c1;border-radius:8px;background:#fff;color:#12211d;font:inherit}.ds-voucher-hotel select:focus-visible{outline:2px solid #0b5f53;outline-offset:3px}"
+    },
+    {
+      "name": "Voucher: Unboxed list row",
+      "kind": "custom",
+      "description": "Divider-led terms and occupied-use summary; no individual card.",
+      "html": "<article class=\"ds-voucher-row\"><header><h3>Ưu đãi đặt phòng</h3><span>Đang áp dụng</span></header><code>SUMMER10</code><dl><div><dt>Mức giảm</dt><dd>10%</dd></div><div><dt>Lượt đã giữ / dùng</dt><dd>2 / 100</dd></div></dl></article>",
+      "css": ".ds-voucher-row{padding:24px 0;border-bottom:1px solid #dce7e3;color:#12211d;font:14px var(--font-sans,sans-serif)}.ds-voucher-row header{display:flex;justify-content:space-between;gap:16px;align-items:start;flex-wrap:wrap}.ds-voucher-row h3{margin:0 0 8px}.ds-voucher-row code{font-size:16px;overflow-wrap:anywhere}.ds-voucher-row dl{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;margin:20px 0}.ds-voucher-row dt{color:#52635d;margin-bottom:4px}.ds-voucher-row dd{margin:0;font-variant-numeric:tabular-nums}@media(max-width:640px){.ds-voucher-row dl{grid-template-columns:1fr}}"
+    },
+    {
+      "name": "Voucher: Checkout apply action",
+      "kind": "button",
+      "refersTo": "voucher-checkout-action",
+      "description": "Customer outline action; production disabled during quote refresh or pending/uncertain booking.",
+      "html": "<button class=\"ds-voucher-apply\" type=\"button\">Áp dụng</button>",
+      "css": ".ds-voucher-apply{border:1px solid #c91f4b;border-radius:8px;color:#a6173d;background:#fff;padding:10px 12px;font:14px var(--font-sans,sans-serif);white-space:nowrap;cursor:pointer}.ds-voucher-apply:focus-visible{outline:2px solid #c91f4b;outline-offset:3px}.ds-voucher-apply:disabled{opacity:.55;cursor:default}"
+    },
+    {
+      "name": "Voucher: Checkout code field",
+      "kind": "input",
+      "description": "Single code input with nearby apply action and local validation text.",
+      "html": "<label class=\"ds-voucher-code\">Mã của khách sạn<input type=\"text\" maxlength=\"30\" autocomplete=\"off\"></label>",
+      "css": ".ds-voucher-code{display:grid;gap:8px;font:14px var(--font-sans,sans-serif)}.ds-voucher-code input{min-width:0;border:1px solid #b9aeb1;border-radius:8px;padding:10px;font:inherit}.ds-voucher-code input:focus-visible{outline:2px solid #c91f4b;outline-offset:3px}.ds-voucher-code input:disabled{opacity:.6}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Nhận xét rõ ràng trong giao diện hiện có",
+    "overview": "Tài liệu chỉ ghi nhận feature đánh giá trong hệ giao diện StayHub hiện có (Operate mode). Khách đặt phòng và trang công khai giữ sắc hồng của shell khách hàng; màn quản lý giữ sắc xanh của shell quản trị. Cụm từ trên mô tả cách triển khai, không xác lập thương hiệu hay phương án thiết kế mới.",
+    "keyCharacteristics": [
+      "Danh sách một cột, ưu tiên tác giả, điểm và nội dung nhận xét.",
+      "Phản hồi khách sạn nằm trong nền nhạt riêng, có nhãn rõ ràng.",
+      "Bộ lọc có nhãn, trạng thái lỗi có thao tác thử lại.",
+      "Form dùng quyền và trạng thái từ API; không giả thành công."
+    ],
+    "rules": [
+      {
+        "section": "Colors",
+        "name": "The Context Accent Rule",
+        "body": "Giữ provider của màn chứa feature; không dùng override xanh cho nút gửi đánh giá của khách hàng."
+      },
+      {
+        "section": "Typography",
+        "name": "The Readable Comment Rule",
+        "body": "Giữ xuống dòng và cho phép ngắt chuỗi dài trong nhận xét để nội dung người dùng không làm tràn khung."
+      },
+      {
+        "section": "Components",
+        "name": "The Explicit Reload Rule",
+        "body": "Khi xung đột phiên bản, giữ bản nháp và khóa lưu; người dùng chủ động chọn “Tải phiên bản mới” trước khi tiếp tục. Không tự tải lại khi focus/reconnect để thay bản nháp đang chỉnh sửa."
+      }
+    ],
+    "dos": [
+      "Do giữ theme của shell và ngữ cảnh quyền từ API.",
+      "Do hiển thị điểm bằng số bên cạnh biểu tượng sao và giữ nhãn phản hồi khách sạn.",
+      "Do giữ bản nháp khi gửi lỗi và yêu cầu tải phiên bản mới khi xung đột.",
+      "Do duy trì loading, empty, error, retry và trạng thái chỉ đọc sau khi gửi."
+    ],
+    "donts": [
+      "Don't thêm thao tác sửa/xóa nhận xét khách hàng hoặc quyền phản hồi cho admin.",
+      "Don't lấy trung bình hoặc tổng số đánh giá từ riêng danh sách đang lọc/phân trang.",
+      "Don't thay lỗi API bằng dữ liệu mẫu hoặc thông báo thành công giả.",
+      "Don't mở rộng quy ước của feature này thành thương hiệu hay thiết kế lại các màn khác."
+    ]
+  }
+}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Alert, Button, Descriptions, Drawer, Select, Space, Table, Tag } from 'antd'
 import { PaymentButton } from '@/features/payments'
 import { ComplaintForm } from '@/features/complaints'
+import { BookingGuestReview } from '@/features/guest-reviews'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageLoading } from '@/shared/ui/PageLoading'
 import { bookingStatuses, type BookingDetail, type BookingSummary } from '../api/booking-api'
@@ -62,6 +63,7 @@ function BookingDetails({ booking, hotelId }: { booking: BookingDetail; hotelId?
     ]} expandable={{ expandedRowRender: (item) => <ul>{item.nightlyPrices.map((night) => <li key={night.stayDate}>{night.stayDate}: {amount(night.unitPrice, booking.currency)}</li>)}</ul> }} />
     {hotelId ? <StayOperations booking={booking} hotelId={hotelId} /> : <>
       {booking.status === 'PENDING_PAYMENT' && <PaymentButton bookingId={booking.id} />}
+      {booking.status === 'CHECKED_OUT' && <BookingGuestReview bookingId={booking.id} />}
       <Alert type="info" title="Cần hỗ trợ về đơn này?" description="Gửi khiếu nại để hệ thống tiếp nhận và theo dõi xử lý. Điều kiện gửi được kiểm tra theo trạng thái đơn." />
       <ComplaintForm bookingId={booking.id} />
     </>}

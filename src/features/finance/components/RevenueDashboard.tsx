@@ -38,7 +38,11 @@ export function RevenueDashboard() {
         ))}
       </dl>
       <RevenueCharts data={query.data} isAdmin={isAdmin} />
-      <p className="muted">Hoa hồng và khoản owner được hưởng chỉ tính từ đơn đã trả phòng, theo tỷ lệ lưu lúc đặt. Tiền khách đã thanh toán là khoản nền tảng thu hộ, không phải toàn bộ doanh thu nền tảng. Chi trả owner thực hiện ngoài hệ thống. Chưa bao gồm điều chỉnh hoàn tiền.</p>
+      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {[['Đang chờ / xử lý hoàn', query.data.pendingRefundAmount], ['Đã hoàn cho khách', query.data.refundedAmount], ['Tiền còn lại sau hoàn', query.data.netCollectedAmount]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd className="m-0 font-semibold tabular-nums">{money(Number(value))}</dd></div>)}
+      </dl>
+      <Link to="/refunds">Xem các khoản hoàn tiền</Link>
+      <p className="muted">Hoa hồng và khoản owner được hưởng chỉ tính từ đơn đã trả phòng, theo tỷ lệ lưu lúc đặt. Đơn hủy trước nhận phòng không phát sinh khoản chia. Tiền khách đã thanh toán là khoản nền tảng thu hộ. Tiền còn lại sau hoàn = tiền khách đã thanh toán − tiền đã hoàn; vẫn bao gồm khoản đang chờ hoàn. Chi trả owner thực hiện ngoài hệ thống.</p>
       <details><summary className="cursor-pointer font-medium text-[#0b5f53] focus-visible:outline-2 focus-visible:outline-offset-4">Cách tính phân chia</summary>
         <p className="muted mt-2">Hoa hồng = tiền phòng sau giảm giá × rate hợp đồng, làm tròn đến đồng cho từng đơn rồi cộng vào báo cáo. Khoản owner = tổng tiền đơn − hoa hồng.</p>
       </details>

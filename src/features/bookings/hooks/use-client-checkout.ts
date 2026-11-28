@@ -7,6 +7,8 @@ import { bookingIntentSignature, resolveBookingIdempotencyKey, type BookingIdemp
 import { quoteFingerprint, type CheckoutQuote, type CheckoutSelection } from '../model/client-checkout'
 
 export function useClientCheckout(selection: CheckoutSelection, customerId: string, initialPrice?: { totalAmount: number; currency: string }) {
+  const [voucherCode, setVoucherCode] = useState<string>()
+  const quoteInput = { ...selection.input, ...(voucherCode ? { voucherCode } : {}) }
   const client = useQueryClient()
   const inFlight = useRef(false)
   const idempotencyRef = useRef<BookingIdempotencyState | null>(null)
@@ -17,7 +19,7 @@ export function useClientCheckout(selection: CheckoutSelection, customerId: stri
   const [uncertain, setUncertain] = useState(false)
   const availability = useQuery({ queryKey: ['bookings', 'checkout-availability', selection.hotelId, selection.stay], queryFn: ({ signal }) => getAvailability(selection.hotelId, selection.stay, signal), retry: false })
   const available = !unavailable && !availability.isError && !availability.isFetching && Boolean(availability.data?.roomTypes.some(room => room.roomTypeId === selection.roomTypeId && room.isAvailable))
-  const quote = useQuery({ queryKey: ['bookings', 'checkout-quote', selection.hotelId, selection.input], queryFn: ({ signal }) => quoteStay(selection.hotelId, selection.input, signal), enabled: available, retry: false, staleTime: Infinity, refetchOnMount: 'always', refetchOnWindowFocus: false, refetchOnReconnect: false })
+  const quote = useQuery({ queryKey: ['bookings', 'checkout-quote', selection.hotelId, quoteInput], queryFn: ({ signal }) => quoteStay(selection.hotelId, quoteInput, signal), enabled: available, retry: false, staleTime: Infinity, refetchOnMount: 'always', refetchOnWindowFocus: false, refetchOnReconnect: false })
   const current = replacement ?? quote.data
   const fingerprint = current ? quoteFingerprint(current) : undefined
   const priceChanged = conflict || Boolean(current && initialPrice && (initialPrice.totalAmount !== current.totalAmount || initialPrice.currency !== current.currency))
@@ -26,7 +28,7 @@ export function useClientCheckout(selection: CheckoutSelection, customerId: stri
     const actorToken = getSession()?.accessToken
     if (!current || !available || quote.isFetching || quote.isError || needsAcceptance) throw new Error('Cần kiểm tra và xác nhận báo giá hiện tại.')
     const pendingRetrySignature = uncertain
-      ? bookingIntentSignature({ hotelId: selection.hotelId, input: selection.input, booker, guest, quotedTotalAmount: current.totalAmount })
+      ? bookingIntentSignature({ hotelId: selection.hotelId, input: quoteInput, booker, guest, quotedTotalAmount: current.totalAmount })
       : null
     const isRetryingUncertainIntent = Boolean(pendingRetrySignature && idempotencyRef.current?.signature === pendingRetrySignature)
 
@@ -37,7 +39,7 @@ export function useClientCheckout(selection: CheckoutSelection, customerId: stri
         setUnavailable(true)
         throw new ApiError('Phòng đã chọn không còn phù hợp. Vui lòng quay lại chọn phòng khác.', { kind: 'http', status: 409, code: 'ROOM_UNAVAILABLE' })
       }
-      const latest = await quoteStay(selection.hotelId, selection.input)
+      const latest = await quoteStay(selection.hotelId, quoteInput)
       if (quoteFingerprint(latest) !== quoteFingerprint(current)) {
         setReplacement(latest); setAccepted(undefined); setConflict(true)
         return undefined
@@ -48,13 +50,13 @@ export function useClientCheckout(selection: CheckoutSelection, customerId: stri
     if (!actorToken || getSession()?.accessToken !== actorToken) throw new ApiError('Phiên đăng nhập đã thay đổi. Vui lòng tải lại trang để kiểm tra tài khoản trước khi đặt phòng.', { kind: 'http', status: 401, code: 'CHECKOUT_SESSION_CHANGED' })
     const idempotencyKey = resolveBookingIdempotencyKey(idempotencyRef, {
       hotelId: selection.hotelId,
-      input: selection.input,
+      input: quoteInput,
       booker,
       guest,
       quotedTotalAmount,
     })
     try {
-      const booking = await createBooking(selection.hotelId, selection.input, booker, quotedTotalAmount, undefined, guest, idempotencyKey)
+      const booking = await createBooking(selection.hotelId, quoteInput, booker, quotedTotalAmount, undefined, guest, idempotencyKey)
       idempotencyRef.current = null
       setUncertain(false)
       client.setQueryData(['bookings', 'client-confirmation', customerId, booking.id], booking)
@@ -67,7 +69,7 @@ export function useClientCheckout(selection: CheckoutSelection, customerId: stri
         idempotencyRef.current = null
         setUncertain(false)
         setConflict(true); setAccepted(undefined)
-        const updated = await quoteStay(selection.hotelId, selection.input)
+        const updated = await quoteStay(selection.hotelId, quoteInput)
         setReplacement(updated)
         return undefined
       }
@@ -84,5 +86,9 @@ export function useClientCheckout(selection: CheckoutSelection, customerId: stri
     inFlight.current = true
     try { return await submit.mutateAsync(contacts) } finally { inFlight.current = false }
   }
-  return { availability, available, quote, current, submit, reserve, uncertain, priceChanged, needsAcceptance, acceptPrice: (value: boolean) => setAccepted(value ? fingerprint : undefined) }
+  function changeVoucher(code?: string) {
+    if (inFlight.current || uncertain || submit.data) return
+    setVoucherCode(code); setReplacement(undefined); setAccepted(undefined); setConflict(false); submit.reset()
+  }
+  return { voucherCode, changeVoucher, availability, available, quote, current, submit, reserve, uncertain, priceChanged, needsAcceptance, acceptPrice: (value: boolean) => setAccepted(value ? fingerprint : undefined) }
 }

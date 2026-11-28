@@ -26,6 +26,7 @@ export function bookingIntentSignature({
     hotelId,
     input.checkIn,
     input.checkOut,
+    input.voucherCode?.trim().toUpperCase() || null,
     input.items.map(item => [item.roomTypeId, item.quantity, item.adults, item.children]),
     [normalizedBooker.fullName, normalizedBooker.email, normalizedBooker.phone],
     normalizedGuest ? [normalizedGuest.fullName, normalizedGuest.email, normalizedGuest.phone] : null,

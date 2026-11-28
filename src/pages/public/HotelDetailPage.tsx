@@ -3,6 +3,7 @@ import { Modal } from 'antd'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
 import { usePublicHotelDetailQuery } from '@/features/hotels'
 import { checkoutHref } from '@/features/bookings'
+import { PublicGuestReviews } from '@/features/guest-reviews'
 import { PublicRoomTypePhotos } from '@/features/rooms'
 import { AuthModal, useSession } from '@/features/auth'
 import { ClientGuestPicker, ClientStayDatePicker, ClientHotelGallery, HotelDetailActions, HotelDetailIcon, HotelAmenityIcon, useStayQuote, type StayParams } from '@/features/discovery'
@@ -163,7 +164,7 @@ export function HotelDetailPage() {
           {(hotel.description?.length ?? 0) > 700 && <button className="intro-toggle" type="button" aria-expanded={descriptionOpen} aria-controls="stay-description" onClick={() => setDescriptionOpen(open => !open)}>{descriptionOpen ? 'Thu gọn' : 'Đọc thêm về chỗ ở'}</button>}
         </section>
         <section id="stay-reviews" className="pdp-sec">
-          <div className="sec-head"><h2 className="sec-title">Đánh giá từ khách lưu trú</h2><p className="sec-sub">Chưa có thông tin đánh giá.</p></div>
+          <PublicGuestReviews hotelId={hotelId} />
         </section>
         <section id="stay-policies" className="pdp-sec">
           <div className="sec-head"><h2 className="sec-title">Quy định &amp; thông tin lưu trú</h2><p className="sec-sub">Những điều bạn cần biết trước khi đặt và nhận phòng</p></div>

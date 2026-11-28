@@ -114,6 +114,7 @@ export const MAIN_NAV_GROUPS: MainNavGroup[] = [
         to: '/finance',
         icon: CreditCardOutlined,
       },
+        { key: 'refunds', label: 'Hoàn tiền', to: '/refunds', icon: CreditCardOutlined },
       {
         key: 'reports',
         label: 'Báo cáo doanh thu',

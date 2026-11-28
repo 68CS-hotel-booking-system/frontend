@@ -50,6 +50,7 @@ export const bookerFormSchema = z.object({
 })
 export type BookerForm = z.infer<typeof bookerFormSchema>
 export interface QuoteInput {
+  voucherCode?: string
   checkIn: string; checkOut: string
   items: { roomTypeId: string; quantity: number; adults: number; children: number }[]
 }
@@ -97,9 +98,14 @@ export function getBooking(bookingId: string, hotelId?: string, signal?: AbortSi
   const base = hotelId ? `/management/hotels/${encodeURIComponent(hotelId)}/bookings` : '/bookings'
   return http.request(`${base}/${encodeURIComponent(bookingId)}`, { signal, schema: bookingDetailSchema })
 }
-export function cancelCustomerBooking(bookingId: string, signal?: AbortSignal) {
+export const cancellationQuoteSchema = z.object({ canCancel: z.boolean(), message: z.string(), expectedVersion: money,
+  refundAmount: money, currency: z.string(), cutoff: z.iso.datetime({ offset: true }) })
+export function getCancellationQuote(bookingId: string, signal?: AbortSignal) {
+  return http.request(`/bookings/${encodeURIComponent(bookingId)}/cancellation`, { signal, schema: cancellationQuoteSchema })
+}
+export function cancelCustomerBooking(bookingId: string, signal?: AbortSignal, body?: { expectedVersion: number; expectedRefundAmount: number; reason?: string }) {
   return http.request(`/bookings/${encodeURIComponent(bookingId)}/cancel`, {
-    method: 'POST', signal,
+    method: 'POST', signal, body,
     schema: z.object({
       status: z.enum(['CANCELLED', 'EXPIRED']),
       currency: z.string(),
