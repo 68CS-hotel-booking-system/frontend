@@ -68,9 +68,9 @@ export function ClientSiteHeader({ savedCount, onOpenMobileMenu, isMobileMenuOpe
         {savedCount > 0 && <span aria-hidden="true">{savedCount}</span>}
       </NavLink>
       {session && (
-        <Dropdown open={menuOpen} onOpenChange={setMenuOpen} menu={{ items, onClick: () => setMenuOpen(false) }}
-          trigger={['click']} placement="bottomRight" getPopupContainer={trigger => trigger.parentElement ?? trigger}
-          classNames={{ root: 'cf-account-dropdown ref-theme ref-account-dropdown' }}>
+        <Dropdown onOpenChange={setMenuOpen} menu={{ items }}
+          trigger={['click']} placement="bottomRight"
+          classNames={{ root: 'cf-account-dropdown ref-theme stayhub-client ref-account-dropdown' }}>
           <button type="button" className="ref-user-pill" aria-label={`Menu tài khoản ${userName}`}
             title="Menu tài khoản" aria-haspopup="menu" aria-expanded={menuOpen}>
             <span className="ref-user-initial" aria-hidden="true">{avatar}</span>

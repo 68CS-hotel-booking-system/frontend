@@ -67,6 +67,7 @@
   transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 .stayhub-client .ref-user-pill { padding: 4px; }
+.stayhub-client.ref-account-dropdown { background: transparent; }
 .stayhub-client .ref-user-initial { background: var(--ref-surface-warm); color: var(--ref-accent); }
 .stayhub-client .ref-user-pill:hover,
 .stayhub-icon-link:is(:hover, [aria-current="page"]) {
