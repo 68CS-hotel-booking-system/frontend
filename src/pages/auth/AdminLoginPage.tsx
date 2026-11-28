@@ -1,7 +1,7 @@
 import '@/shared/styles/admin-login.css'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
-import { ADMIN_LOGIN_PHOTO, AdminLoginForm, adminLoginDestination, clearAuthSession, useAuthStatus, useCurrentUser, useSession } from '@/features/auth'
+import { ADMIN_LOGIN_PHOTO, AdminLoginForm, adminLoginDestination, clearAuthSession, useAuthStatus, useCurrentUser, useSession, useWorkplaces } from '@/features/auth'
 import { errorMessage } from '@/shared/api/api-error'
 
 export function AdminLoginPage() {
@@ -11,24 +11,39 @@ export function AdminLoginPage() {
   const session = useSession()
   const { status } = useAuthStatus()
   const { currentUser, isChecking, isAdmin, isOwner, isAuthorized, isError, error, isFetching, refetch } = useCurrentUser()
+  const {
+    isStaff,
+    isChecking: isWorkplacesChecking,
+    isError: isWorkplacesError,
+    error: workplacesError,
+    isFetching: isWorkplacesFetching,
+    refetch: refetchWorkplaces,
+  } = useWorkplaces()
   const [helpOpen, setHelpOpen] = useState(false)
+
+  const canEnter = isAuthorized || isStaff
+  const isStaffOnly = !isAdmin && !isOwner && isStaff
+  const hasError = isError || isWorkplacesError
+  const checking = isChecking || isWorkplacesChecking
 
   const state: unknown = location.state
   const from = state && typeof state === 'object' && 'from' in state ? state.from : undefined
-  const destination = adminLoginDestination(from ?? searchParams.get('returnTo'), {
-    allowManagement: true,
-    isOwnerOnly: isOwner && !isAdmin,
-  })
+  const destination = isStaffOnly
+    ? '/bookings'
+    : adminLoginDestination(from ?? searchParams.get('returnTo'), {
+        allowManagement: true,
+        isOwnerOnly: isOwner && !isAdmin,
+      })
 
   useEffect(() => {
-    if (session && currentUser && isAuthorized && !isChecking && !isError) {
+    if (session && currentUser && canEnter && !checking && !hasError) {
       void navigate(destination, { replace: true })
     }
-  }, [session, currentUser, isAuthorized, isChecking, isError, destination, navigate])
+  }, [session, currentUser, canEnter, checking, hasError, destination, navigate])
 
   const verifying =
     status === 'restoring' ||
-    (Boolean(session) && (isChecking || (!isError && (!currentUser || isAuthorized))))
+    (Boolean(session) && (checking || (!hasError && (!currentUser || canEnter))))
 
   return (
     <div className="admin-login-shell min-h-screen min-h-[100dvh] bg-admin-bg text-admin-ink selection:bg-admin-teal selection:text-admin-surface">
@@ -127,7 +142,7 @@ export function AdminLoginPage() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {isError ? (
+                  {hasError ? (
                     <>
                       <div className="p-4 border border-admin-danger/30 rounded-[10px] bg-admin-surface flex flex-col gap-1.5" role="alert">
                         <div className="flex items-center gap-2 text-admin-danger font-semibold text-sm">
@@ -138,15 +153,15 @@ export function AdminLoginPage() {
                           </svg>
                           <span>Chưa xác minh được tài khoản</span>
                         </div>
-                        <p className="m-0 text-xs text-admin-ink-2 leading-relaxed pl-6">{errorMessage(error)}</p>
+                        <p className="m-0 text-xs text-admin-ink-2 leading-relaxed pl-6">{errorMessage(isError ? error : workplacesError)}</p>
                       </div>
                       <button
                         type="button"
-                        disabled={isFetching}
-                        onClick={() => void refetch()}
+                        disabled={isFetching || isWorkplacesFetching}
+                        onClick={() => void (isError ? refetch() : refetchWorkplaces())}
                         className="admin-login-btn-primary w-full h-11 px-4 rounded-[8px] font-semibold text-sm transition-colors cursor-pointer disabled:opacity-75"
                       >
-                        {isFetching ? 'Đang thử lại…' : 'Thử lại'}
+                        {isFetching || isWorkplacesFetching ? 'Đang thử lại…' : 'Thử lại'}
                       </button>
                     </>
                   ) : (

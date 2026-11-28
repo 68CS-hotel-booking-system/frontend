@@ -5,13 +5,22 @@ import { PageLoading } from '@/shared/ui/PageLoading'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { useAuthStatus, useSession } from '../hooks/use-session'
 import { useCurrentUser } from '../hooks/use-current-user'
+import { useWorkplaces } from '../hooks/use-workplaces'
 
 export function AdminRouteGuard({ children }: { children?: ReactNode }) {
   const session = useSession()
   const { status, error: restoreError, retry } = useAuthStatus()
   const location = useLocation()
   const navigate = useNavigate()
-  const { currentUser, isChecking, isError, error, isAdmin, refetch } = useCurrentUser()
+  const { currentUser, isChecking, isError, error, isAdmin, isOwner, refetch } = useCurrentUser()
+  const {
+    isStaff,
+    isManager,
+    isChecking: isWorkplacesChecking,
+    isError: isWorkplacesError,
+    error: workplacesError,
+    refetch: refetchWorkplaces,
+  } = useWorkplaces()
 
   // 1. Đang trong quá trình khôi phục phiên: chờ hoàn tất, không chuyển hướng hoặc nháy màn đăng nhập khi F5
   if (status === 'restoring') {
@@ -38,12 +47,12 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
     )
   }
 
-  // 4. Đang kiểm tra tài khoản: hiển thị loading, chưa mount AdminLayout hoặc trang con
-  if (isChecking) {
+  // 4. Đang kiểm tra tài khoản hoặc nơi làm việc của nhân sự
+  if (isChecking || isWorkplacesChecking) {
     return <PageLoading />
   }
 
-  // 5. Lỗi mạng hoặc 5xx khi tải /users/me: hiển thị lỗi và nút thử lại, không cho vào admin và không xóa session
+  // 5. Lỗi mạng hoặc 5xx khi tải /users/me hoặc /me/workplaces
   if (isError) {
     return (
       <div className="m3-card max-w-lg mx-auto my-12 shadow-sm">
@@ -52,17 +61,25 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
     )
   }
 
-  // 6. Đã đăng nhập nhưng không có role ADMIN hoặc HOTEL_OWNER: từ chối truy cập
-  const isAuthorized =
-    isAdmin ||
-    Boolean(currentUser?.roles?.includes('HOTEL_OWNER') || currentUser?.roles?.includes('OWNER'))
+  if (isWorkplacesError) {
+    return (
+      <div className="m3-card max-w-lg mx-auto my-12 shadow-sm">
+        <ErrorState error={workplacesError} onRetry={() => void refetchWorkplaces()} />
+      </div>
+    )
+  }
+
+  // 6. Đã đăng nhập nhưng không có role ADMIN, HOTEL_OWNER hoặc phân công nhân sự khách sạn
+  const hasOwnerRole =
+    isOwner || Boolean(currentUser?.roles?.includes('HOTEL_OWNER') || currentUser?.roles?.includes('OWNER'))
+  const isAuthorized = isAdmin || hasOwnerRole || isStaff
   if (!isAuthorized) {
     return (
       <div className="m3-card max-w-lg mx-auto my-12 shadow-sm" role="alert">
         <Result
           status="403"
           title="Bạn không có quyền truy cập"
-          subTitle={`Tài khoản ${currentUser?.email ?? ''} không có quyền quản trị viên (ADMIN) hoặc chủ khách sạn (HOTEL_OWNER) để truy cập khu vực này.`}
+          subTitle={`Tài khoản ${currentUser?.email ?? ''} không có quyền quản trị viên (ADMIN), chủ khách sạn (HOTEL_OWNER) hoặc nhân sự khách sạn để truy cập khu vực này.`}
           extra={
             <Button
               type="primary"
@@ -77,15 +94,30 @@ export function AdminRouteGuard({ children }: { children?: ReactNode }) {
     )
   }
 
-  // 7. Bảo vệ riêng trang Quản trị người dùng: chỉ dành cho ADMIN, nếu là Owner chuyển hướng về Quản lý khách sạn
+  const isStaffOnly = !isAdmin && !hasOwnerRole && isStaff
+
+  // 7. Bảo vệ riêng trang Quản trị hệ thống: chỉ dành cho ADMIN
   if ((location.pathname.startsWith('/admin/users') || location.pathname.startsWith('/admin/hotel-review-requests')) && !isAdmin) {
-    return <Navigate to="/hotels" replace />
+    return <Navigate to={isStaffOnly ? '/bookings' : '/hotels'} replace />
   }
 
   // Các phân hệ vận hành riêng của owner vẫn được bảo vệ khi admin nhập URL trực tiếp.
   const ownerOnlyRoute = ['/staff', '/vouchers'].some(path => location.pathname === path || location.pathname.startsWith(`${path}/`))
   if (isAdmin && ownerOnlyRoute) {
     return <Navigate to="/admin/overview" replace />
+  }
+
+  // Nhân sự khách sạn chỉ truy cập vận hành đặt phòng, khách sạn được phân công (và /staff nếu là quản lý)
+  if (isStaffOnly) {
+    const allowedStaffPath =
+      location.pathname === '/bookings' ||
+      location.pathname.startsWith('/bookings/') ||
+      location.pathname === '/hotels' ||
+      (location.pathname.startsWith('/hotels/') && location.pathname !== '/hotels/new') ||
+      (isManager && (location.pathname === '/staff' || location.pathname.startsWith('/staff/')))
+    if (!allowedStaffPath) {
+      return <Navigate to="/bookings" replace />
+    }
   }
 
   // 8. Đã xác minh có thẩm quyền: cho phép truy cập

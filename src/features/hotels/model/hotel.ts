@@ -69,6 +69,7 @@ export const managementHotelSummarySchema = z.object({
   roomTypeCount: z.number().int().min(0).optional(),
   updatedAt: z.string(),
   version: z.number().optional(),
+  accessLevel: z.enum(['ADMIN', 'OWNER', 'MANAGER', 'RECEPTIONIST']).nullable().optional(),
 })
 export type ManagementHotelSummary = z.infer<typeof managementHotelSummarySchema>
 

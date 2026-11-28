@@ -1,78 +1,321 @@
 import { useState } from 'react'
-import { Alert, Button, Empty, Form, Input, Modal, Pagination, Select, Space, Table, Tag, Typography } from 'antd'
+import {
+  Alert,
+  Button,
+  Empty,
+  Form,
+  Input,
+  Modal,
+  Pagination,
+  Popconfirm,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Typography,
+} from 'antd'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
-import { errorMessage } from '@/shared/api/api-error'
+import { ApiError, errorMessage } from '@/shared/api/api-error'
 import { applyApiFieldErrors } from '@/shared/lib/form-errors'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { useHotelStaff } from '../hooks/use-hotel-staff'
-import { assignmentSchema, type Assignment, type Member, type StaffHotel } from '../api/staff-api'
+import {
+  addMemberSchema,
+  type AddMemberPayload,
+  type Member,
+  type StaffHotel,
+} from '../api/staff-api'
+
+function formatDateTime(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return new Intl.DateTimeFormat('vi-VN', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(date)
+}
 
 export function HotelStaffPanel({ hotel }: { hotel: StaffHotel }) {
   const [page, setPage] = useState(0)
-  const [editing, setEditing] = useState<Member | 'new' | null>(null)
-  const [saved, setSaved] = useState(false)
-  const { query, mutation } = useHotelStaff(hotel.id, page)
-  return <section aria-label={'Nhân sự ' + hotel.name}>
-    <Space wrap style={{ marginBottom: 20 }}>
-      <Typography.Title level={2} style={{ margin: 0 }}>{hotel.name}</Typography.Title>
-      <Button type="primary" onClick={() => { setSaved(false); setEditing('new') }}>Thêm nhân sự</Button>
-    </Space>
-    <p>Quản trị viên phân công quản lý. Chủ khách sạn và quản lý được phân công lễ tân trong khách sạn của mình.</p>
-    <p className="account-table-hint">Vuốt ngang bảng để xem trạng thái và sửa phân công.</p>
-    {saved && <Alert type="success" showIcon title="Đã cập nhật phân công nhân sự." style={{ marginBottom: 16 }} />}
-    {query.isError ? <ErrorState error={query.error} onRetry={() => void query.refetch()} /> :
-      <div className="account-table"><Table<Member> rowKey={(member) => member.userId + member.memberRole} loading={query.isPending}
-        dataSource={query.data?.content ?? []} scroll={{ x: 580 }} pagination={false}
-        locale={{ emptyText: <Empty description="Khách sạn chưa có nhân sự được phân công." /> }}
-        columns={[
-          { title: 'Mã tài khoản', dataIndex: 'userId', render: (id: string) => <Typography.Text className="account-member-id" copyable>{id}</Typography.Text> },
-          { title: 'Vai trò', dataIndex: 'memberRole', render: (role: string) => role === 'HOTEL_MANAGER' ? 'Quản lý' : 'Lễ tân' },
-          { title: 'Trạng thái', dataIndex: 'status', render: (status: string) => <Tag color={status === 'ACTIVE' ? 'green' : 'default'}>{status === 'ACTIVE' ? 'Đang làm việc' : 'Đã thu hồi'}</Tag> },
-          { title: 'Thao tác', render: (_, member) => <Button disabled={!hotel.canAssignManager && member.memberRole === 'HOTEL_MANAGER'}
-            onClick={() => { setSaved(false); setEditing(member) }}>Sửa phân công</Button> },
-        ]} /></div>}
-    {query.data && <Pagination current={page + 1} pageSize={20} total={query.data.totalElements}
-      showSizeChanger={false} onChange={(next) => setPage(next - 1)} style={{ marginTop: 20 }} />}
-    {editing && <AssignmentForm key={typeof editing === 'string' ? editing : editing.userId}
-      hotel={hotel} member={editing === 'new' ? undefined : editing}
-      pending={mutation.isPending} error={mutation.error} onClose={() => setEditing(null)}
-      onSubmit={async (value) => { await mutation.mutateAsync(value); setEditing(null); setSaved(true) }} />}
-  </section>
+  const [modalOpen, setModalOpen] = useState(false)
+  const [notice, setNotice] = useState<{ type: 'success' | 'warning' | 'error'; text: string } | null>(null)
+  const { query, addMutation, statusMutation } = useHotelStaff(hotel.id, page)
+
+  async function handleToggleStatus(member: Member) {
+    setNotice(null)
+    const nextStatus = member.status === 'ACTIVE' ? 'REVOKED' : 'ACTIVE'
+    try {
+      await statusMutation.mutateAsync({
+        memberId: member.id,
+        status: nextStatus,
+        expectedVersion: member.version,
+      })
+      setNotice({
+        type: 'success',
+        text:
+          nextStatus === 'REVOKED'
+            ? 'Đã thu hồi phân công nhân sự.'
+            : 'Đã kích hoạt lại phân công nhân sự.',
+      })
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        setNotice({
+          type: 'warning',
+          text: `${errorMessage(error)} Danh sách đã được tải lại.`,
+        })
+        void query.refetch()
+      } else {
+        setNotice({ type: 'error', text: errorMessage(error) })
+      }
+    }
+  }
+
+  return (
+    <section aria-label={'Nhân sự ' + hotel.name} className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <Typography.Title level={3} style={{ margin: 0 }}>
+            {hotel.name}
+          </Typography.Title>
+          <p className="muted mt-1 mb-0">
+            Chủ khách sạn phân công quản lý và lễ tân. Quản lý khách sạn chỉ phân công lễ tân.
+            Nhân sự đăng nhập tại cổng quản trị bằng tài khoản đã xác minh email.
+          </p>
+        </div>
+        <Button
+          type="primary"
+          onClick={() => {
+            setNotice(null)
+            addMutation.reset()
+            setModalOpen(true)
+          }}
+        >
+          Thêm nhân sự
+        </Button>
+      </div>
+
+      {notice && (
+        <Alert
+          type={notice.type}
+          showIcon
+          closable
+          onClose={() => setNotice(null)}
+          title={notice.text}
+        />
+      )}
+
+      {query.isError ? (
+        <ErrorState error={query.error} onRetry={() => void query.refetch()} />
+      ) : (
+        <div className="account-table">
+          <Table<Member>
+            rowKey="id"
+            loading={query.isPending}
+            dataSource={query.data?.content ?? []}
+            scroll={{ x: 680 }}
+            pagination={false}
+            locale={{
+              emptyText: <Empty description="Khách sạn chưa có nhân sự được phân công." />,
+            }}
+            columns={[
+              {
+                title: 'Nhân sự',
+                key: 'staff',
+                render: (_, member) => (
+                  <div>
+                    <div className="font-medium text-[#12211d]">
+                      {member.fullName || 'Chưa cập nhật tên'}
+                    </div>
+                    <div className="text-xs text-[#5f736e]">{member.email}</div>
+                  </div>
+                ),
+              },
+              {
+                title: 'Vai trò',
+                dataIndex: 'memberRole',
+                render: (role: Member['memberRole']) =>
+                  role === 'HOTEL_MANAGER' ? 'Quản lý khách sạn' : 'Lễ tân',
+              },
+              {
+                title: 'Trạng thái',
+                dataIndex: 'status',
+                render: (status: Member['status']) => (
+                  <Tag color={status === 'ACTIVE' ? 'green' : 'default'}>
+                    {status === 'ACTIVE' ? 'Đang làm việc' : 'Đã thu hồi'}
+                  </Tag>
+                ),
+              },
+              {
+                title: 'Ngày phân công',
+                dataIndex: 'assignedAt',
+                render: (assignedAt: string) => formatDateTime(assignedAt),
+              },
+              {
+                title: 'Thao tác',
+                key: 'actions',
+                render: (_, member) => {
+                  const locked = !hotel.canAssignManager && member.memberRole === 'HOTEL_MANAGER'
+                  const isRevoking = member.status === 'ACTIVE'
+                  return (
+                    <Popconfirm
+                      title={
+                        isRevoking
+                          ? 'Thu hồi quyền nhân sự này?'
+                          : 'Kích hoạt lại phân công nhân sự này?'
+                      }
+                      description={
+                        isRevoking
+                          ? 'Nhân sự sẽ mất quyền truy cập vận hành của khách sạn ngay lập tức.'
+                          : 'Nhân sự sẽ có lại quyền vận hành với vai trò hiện tại.'
+                      }
+                      okText={isRevoking ? 'Thu hồi' : 'Kích hoạt lại'}
+                      cancelText="Hủy"
+                      disabled={locked || statusMutation.isPending}
+                      onConfirm={() => void handleToggleStatus(member)}
+                    >
+                      <Button
+                        danger={isRevoking}
+                        disabled={locked}
+                        loading={statusMutation.isPending}
+                      >
+                        {isRevoking ? 'Thu hồi' : 'Kích hoạt lại'}
+                      </Button>
+                    </Popconfirm>
+                  )
+                },
+              },
+            ]}
+          />
+        </div>
+      )}
+
+      {query.data && query.data.totalElements > 20 && (
+        <Pagination
+          current={page + 1}
+          pageSize={20}
+          total={query.data.totalElements}
+          showSizeChanger={false}
+          onChange={(next) => setPage(next - 1)}
+        />
+      )}
+
+      {modalOpen && (
+        <AddMemberModal
+          hotel={hotel}
+          pending={addMutation.isPending}
+          error={addMutation.error}
+          onClose={() => setModalOpen(false)}
+          onSubmit={async (values) => {
+            await addMutation.mutateAsync(values)
+            setModalOpen(false)
+            setNotice({ type: 'success', text: 'Đã phân công nhân sự thành công.' })
+          }}
+        />
+      )}
+    </section>
+  )
 }
-function AssignmentForm({ hotel, member, pending, error, onClose, onSubmit }: {
-  hotel: StaffHotel; member?: Member; pending: boolean; error: unknown;
-  onClose: () => void; onSubmit: (value: Assignment) => Promise<void>;
+
+function AddMemberModal({
+  hotel,
+  pending,
+  error,
+  onClose,
+  onSubmit,
+}: {
+  hotel: StaffHotel
+  pending: boolean
+  error: unknown
+  onClose: () => void
+  onSubmit: (value: AddMemberPayload) => Promise<void>
 }) {
-  const form = useForm<Assignment>({
-    resolver: zodResolver(assignmentSchema), defaultValues: {
-      userId: member?.userId ?? '', memberRole: member?.memberRole ?? 'RECEPTIONIST',
-      status: member?.status ?? 'ACTIVE', expectedVersion: member?.version ?? null,
+  const form = useForm<AddMemberPayload>({
+    resolver: zodResolver(addMemberSchema),
+    defaultValues: {
+      email: '',
+      memberRole: 'RECEPTIONIST',
     },
   })
-  return <Modal open title={member ? 'Sửa phân công' : 'Thêm nhân sự'} footer={null}
-    onCancel={onClose} closable={!pending} mask={{ closable: !pending }}>
-    <form onSubmit={form.handleSubmit(async (values) => {
-      try { await onSubmit(values) } catch (problem) { applyApiFieldErrors(problem, form.setError, ['userId','memberRole','status']) }
-    })}>
-      <p>Chọn tài khoản đã xác minh email. Mã tài khoản có trong hồ sơ cá nhân hoặc danh sách quản trị.</p>
-      <Form.Item label="Mã tài khoản" htmlFor="staff-user" layout="vertical" required
-        validateStatus={form.formState.errors.userId ? 'error' : ''} help={form.formState.errors.userId?.message}>
-        <Controller name="userId" control={form.control} render={({ field }) => <Input {...field} id="staff-user" readOnly={Boolean(member)} />} />
-      </Form.Item>
-      <Form.Item label="Vai trò tại khách sạn" htmlFor="staff-role" layout="vertical">
-        <Controller name="memberRole" control={form.control} render={({ field }) =>
-          <Select {...field} id="staff-role" disabled={Boolean(member)} options={[
-            { value: 'RECEPTIONIST', label: 'Lễ tân' },
-            ...(hotel.canAssignManager ? [{ value: 'HOTEL_MANAGER', label: 'Quản lý khách sạn' }] : []),
-          ]} />} />
-      </Form.Item>
-      <Form.Item label="Trạng thái phân công" htmlFor="staff-status" layout="vertical">
-        <Controller name="status" control={form.control} render={({ field }) =>
-          <Select {...field} id="staff-status" options={[{ value: 'ACTIVE', label: 'Đang làm việc' }, { value: 'REVOKED', label: 'Thu hồi phân công' }]} />} />
-      </Form.Item>
-      {error ? <Alert type="error" showIcon title={errorMessage(error)} style={{ marginBottom: 16 }} /> : null}
-      <Space><Button onClick={onClose} disabled={pending}>Hủy</Button><Button type="primary" htmlType="submit" loading={pending}>Lưu phân công</Button></Space>
-    </form>
-  </Modal>
+
+  return (
+    <Modal
+      open
+      title="Thêm nhân sự"
+      footer={null}
+      onCancel={onClose}
+      closable={!pending}
+      mask={{ closable: !pending }}
+    >
+      <form
+        onSubmit={form.handleSubmit(async (values) => {
+          try {
+            await onSubmit(values)
+          } catch (problem) {
+            applyApiFieldErrors(problem, form.setError, ['email', 'memberRole'])
+          }
+        })}
+      >
+        <p className="muted mb-4">
+          Nhập email của tài khoản đang hoạt động và đã xác minh email trên hệ thống StayHub.
+        </p>
+
+        <Form.Item
+          label="Email tài khoản"
+          htmlFor="staff-email"
+          layout="vertical"
+          required
+          validateStatus={form.formState.errors.email ? 'error' : ''}
+          help={form.formState.errors.email?.message}
+        >
+          <Controller
+            name="email"
+            control={form.control}
+            render={({ field }) => (
+              <Input
+                {...field}
+                id="staff-email"
+                type="email"
+                placeholder="nhanvien@example.com"
+                disabled={pending}
+              />
+            )}
+          />
+        </Form.Item>
+
+        <Form.Item label="Vai trò tại khách sạn" htmlFor="staff-role" layout="vertical">
+          <Controller
+            name="memberRole"
+            control={form.control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                id="staff-role"
+                disabled={pending}
+                options={[
+                  { value: 'RECEPTIONIST', label: 'Lễ tân' },
+                  ...(hotel.canAssignManager
+                    ? [{ value: 'HOTEL_MANAGER', label: 'Quản lý khách sạn' }]
+                    : []),
+                ]}
+              />
+            )}
+          />
+        </Form.Item>
+
+        {error ? (
+          <Alert type="error" showIcon title={errorMessage(error)} style={{ marginBottom: 16 }} />
+        ) : null}
+
+        <Space>
+          <Button onClick={onClose} disabled={pending}>
+            Hủy
+          </Button>
+          <Button type="primary" htmlType="submit" loading={pending}>
+            Thêm nhân sự
+          </Button>
+        </Space>
+      </form>
+    </Modal>
+  )
 }

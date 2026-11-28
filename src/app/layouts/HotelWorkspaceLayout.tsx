@@ -1,7 +1,7 @@
 import '@/shared/styles/hotel-management.css'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Button, Result, Tooltip } from 'antd'
-import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router'
+import { Link, Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router'
 import {
   ArrowLeftOutlined,
   EyeOutlined,
@@ -40,11 +40,16 @@ interface HotelWorkspaceNavProps {
   hotel: {
     imageCount?: number
     roomTypes?: unknown[]
+    accessLevel?: 'ADMIN' | 'OWNER' | 'MANAGER' | 'RECEPTIONIST' | null
   }
 }
 
 function HotelWorkspaceNav({ hotelId, hotel }: HotelWorkspaceNavProps) {
   const location = useLocation()
+  const isStaffAccess = hotel.accessLevel === 'MANAGER' || hotel.accessLevel === 'RECEPTIONIST'
+  const navItems = isStaffAccess
+    ? HOTEL_WORKSPACE_NAV_ITEMS.filter((item) => item.key === 'bookings')
+    : HOTEL_WORKSPACE_NAV_ITEMS
   const navRef = useRef<HTMLElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
@@ -135,7 +140,7 @@ function HotelWorkspaceNav({ hotelId, hotel }: HotelWorkspaceNavProps) {
         className="flex items-center gap-1 sm:gap-2 overflow-x-auto whitespace-nowrap scrollbar-none scroll-smooth py-0.5 select-none"
         aria-label="Các hạng mục quản lý khách sạn"
       >
-        {HOTEL_WORKSPACE_NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const targetPath = item.path ? `/hotels/${hotelId}/${item.path}` : `/hotels/${hotelId}`
           const isOverview = !item.path
           const isActive = isOverview
@@ -202,12 +207,16 @@ function HotelWorkspaceNav({ hotelId, hotel }: HotelWorkspaceNavProps) {
 
 export function HotelWorkspaceLayout() {
   const { hotelId = '' } = useParams<{ hotelId: string }>()
+  const location = useLocation()
   const navigate = useNavigate()
   const { isAdmin } = useCurrentUser()
-  const latestReview = useHotelReviewRequests(hotelId, 0, 1)
   const detailQuery = useManagementHotelDetailQuery(hotelId)
-  const roomTypesQuery = useManagementRoomTypesQuery(hotelId, detailQuery.isSuccess)
-  const imagesQuery = useHotelImagesQuery(hotelId, detailQuery.isSuccess)
+  const isStaffAccess =
+    detailQuery.data?.accessLevel === 'MANAGER' || detailQuery.data?.accessLevel === 'RECEPTIONIST'
+  const loadFullWorkspace = detailQuery.isSuccess && !isStaffAccess
+  const latestReview = useHotelReviewRequests(isStaffAccess ? '' : hotelId, 0, 1)
+  const roomTypesQuery = useManagementRoomTypesQuery(hotelId, loadFullWorkspace)
+  const imagesQuery = useHotelImagesQuery(hotelId, loadFullWorkspace)
 
   const latestReviewStatus = latestReview.data?.content[0]?.status
   const currentHotelStatus = detailQuery.data?.status
@@ -216,7 +225,7 @@ export function HotelWorkspaceLayout() {
     if (latestReviewStatus === 'APPROVED' && currentHotelStatus === 'DRAFT') void refetchHotel()
   }, [latestReviewStatus, currentHotelStatus, refetchHotel])
 
-  const amenitiesQuery = useScopedAmenitiesQuery({ hotelId })
+  const amenitiesQuery = useScopedAmenitiesQuery({ hotelId: isStaffAccess ? '' : hotelId })
   const resourceState = (query: { isPending: boolean; isError: boolean }) =>
     query.isError ? 'error' as const : query.isPending ? 'loading' as const : undefined
   const resourceStates = {
@@ -253,6 +262,10 @@ export function HotelWorkspaceLayout() {
         />
       </div>
     )
+  }
+
+  if (isStaffAccess && (location.pathname === `/hotels/${hotelId}` || location.pathname === `/hotels/${hotelId}/`)) {
+    return <Navigate to={`/hotels/${hotelId}/bookings`} replace />
   }
 
   const hotel = {

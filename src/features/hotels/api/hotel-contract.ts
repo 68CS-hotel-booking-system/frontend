@@ -21,6 +21,7 @@ export const hotelResponseSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   version: z.number(),
+  accessLevel: z.enum(['ADMIN', 'OWNER', 'MANAGER', 'RECEPTIONIST']).nullable().optional(),
 })
 
 export const hotelPageResponseSchema = z.object({

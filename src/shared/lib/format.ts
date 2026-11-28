@@ -42,6 +42,12 @@ export function formatRoleLabel(role: string | null | undefined): string {
     case 'OWNER':
     case 'ROLE_OWNER':
       return 'Chủ khách sạn'
+    case 'HOTEL_MANAGER':
+    case 'ROLE_HOTEL_MANAGER':
+      return 'Quản lý khách sạn'
+    case 'RECEPTIONIST':
+    case 'ROLE_RECEPTIONIST':
+      return 'Lễ tân'
     case 'CUSTOMER':
     case 'ROLE_CUSTOMER':
     case 'USER':
