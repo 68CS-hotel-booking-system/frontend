@@ -4,9 +4,6 @@ import { PageLoading } from '@/shared/ui/PageLoading'
 import { HotelSearchPage } from '@/pages/public/HotelSearchPage'
 
 import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider, ScrollRestoration } from 'react-router'
-import {
-  BarChartOutlined,
-} from '@ant-design/icons'
 import { AppLayout } from '@/app/layouts/AppLayout'
 import { ClientExperiences, ClientSavedStays, ClientTripServices } from '@/features/discovery'
 
@@ -45,7 +42,7 @@ const HotelReviewRequestsPage = lazy(() => import('@/pages/management/hotels/Hot
 const HotelProfileEditGuard = lazy(() => import('@/pages/management/hotels/HotelProfileEditGuard').then(module => ({ default: module.HotelProfileEditGuard })))
 const AdminOverviewPage = lazy(() => import('@/pages/admin/AdminOverviewPage').then(module => ({ default: module.AdminOverviewPage })))
 const HotelManagementListPage = lazy(() => import('@/pages/management/HotelManagementListPage').then(module => ({ default: module.HotelManagementListPage })))
-const ManagementPlaceholderPage = lazy(() => import('@/pages/management/ManagementPlaceholderPage').then(module => ({ default: module.ManagementPlaceholderPage })))
+const ReportsPage = lazy(() => import('@/pages/management/ReportsPage').then(module => ({ default: module.ReportsPage })))
 const HotelOverviewPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelOverviewPage })))
 const HotelInfoPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelInfoPage })))
 const HotelPhotosPage = lazy(() => import('@/pages/management/hotels').then(module => ({ default: module.HotelPhotosPage })))
@@ -113,17 +110,7 @@ const router = createBrowserRouter(createRoutesFromElements(<>
           <Route path="complaints/:complaintId" element={<ComplaintsPage />} />
           <Route path="finance" element={<FinanceDashboardPage />} />
           <Route path="refunds" element={<RefundsPage />} />
-          <Route
-            path="reports"
-            element={
-              <ManagementPlaceholderPage
-                kicker="BÁO CÁO & PHÂN TÍCH"
-                title="Báo cáo Doanh thu & Vận hành"
-                description="Thống kê hiệu suất kinh doanh, tỷ lệ lấp đầy phòng (ADR, RevPAR) và báo cáo tăng trưởng theo tháng."
-                icon={<BarChartOutlined />}
-              />
-            }
-          />
+          <Route path="reports" element={<ReportsPage />} />
           <Route path="contracts" element={<HotelModulePage module="contracts" />} />
 
           {/* Redirects từ routes cũ */}

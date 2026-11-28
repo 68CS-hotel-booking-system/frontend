@@ -39,6 +39,14 @@ describe('staff navigation', () => {
       isValidElement(route.element) && (route.element as ReactElement).type === AdminRouteGuard,
     )).toBe(true)
   })
+
+  it('keeps /reports inside the protected management layout', () => {
+    const matches = matchRoutes(captured.routes, '/reports')!
+    expect(matches.at(-1)?.route.path).toBe('reports')
+    expect(matches.some(({ route }) =>
+      isValidElement(route.element) && (route.element as ReactElement).type === AdminRouteGuard,
+    )).toBe(true)
+  })
 })
 
 it('opens saved stays from the account area while keeping the public entry available', () => {
